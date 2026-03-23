@@ -1,0 +1,9 @@
+# Validação e Resolução de Conflitos
+
+Sempre que um novo "Plantão Extra" ou "Troca de Plantão" for registrado, execute as seguintes verificações:
+
+1. **Detecção de Sobreposição**: Consulte o banco de dados do usuário e verifique se o novo período (`Data_Hora_Inicio` até `Data_Hora_Fim`) colide com qualquer plantão já existente [11].
+2. **Bloqueio de Ação**: Se houver colisão, NÃO insira o registro no banco de dados [11].
+3. **Árvore de Decisão**: Apresente ao usuário uma notificação de conflito e sugira as seguintes ações [11]:
+   - Opção A: Marcar o plantão original conflitante como "Trocado" ou "Cancelado".
+   - Opção B: Ajustar o horário do novo plantão extra.

@@ -3,7 +3,7 @@ import './globals.css';
 import AppShell from '../components/AppShell';
 
 export const metadata: Metadata = {
-  title: 'Meu Plantão — Controle de Escalas Médicas',
+  title: 'Plantão.pro — Controle de Escalas Médicas',
   description: 'Gerencie suas escalas de plantão de forma inteligente',
 };
 
