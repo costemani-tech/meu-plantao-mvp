@@ -121,7 +121,7 @@ export default function EscalasPage() {
         <p>Gera plantões automaticamente até <strong>31/12/{anoAtual}</strong></p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+      <div className="mobile-stack" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
         {/* Formulário */}
         <div className="card">
           <h2 style={{ fontWeight: 700, marginBottom: 20, fontSize: 16 }}>Nova Escala</h2>
@@ -139,7 +139,7 @@ export default function EscalasPage() {
             )}
           </div>
 
-          <div className="form-group" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <div className="form-group mobile-stack" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <div>
               <label className="form-label" style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
                 📆 Dia do 1º Plantão *

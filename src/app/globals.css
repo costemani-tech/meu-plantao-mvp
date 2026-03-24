@@ -447,7 +447,6 @@ body {
   border-radius: 50%;
 }
 
-/* Layout Responsivo */
 @media (max-width: 768px) {
   .app-shell { 
     flex-direction: column; 
@@ -458,6 +457,45 @@ body {
   .nav-section { display: none !important; }
   .main-content {
     padding: 24px 16px;
+  }
+  
+  /* Utilitario de Empilhamento Global Vertical (Mobile) */
+  .mobile-stack {
+    grid-template-columns: 1fr !important;
+  }
+
+  .page-header h1 {
+    font-size: 22px !important;
+  }
+  
+  .card {
+    padding: 16px !important;
+  }
+
+  /* Refinamento do Calendário para caber na tela do Smartphone */
+  .cal-header {
+    font-size: 11px;
+    padding-bottom: 8px;
+    gap: 2px;
+  }
+  .cal-day-header {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .calendar-grid {
+    gap: 4px;
+  }
+  .cal-day {
+    padding: 6px 4px;
+    border-radius: 6px;
+  }
+  .cal-day-num {
+    font-size: 12px;
+    margin-bottom: 2px;
+  }
+  .cal-dot {
+    width: 5px;
+    height: 5px;
   }
 }
 

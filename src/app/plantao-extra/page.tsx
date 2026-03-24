@@ -76,7 +76,7 @@ export default function PlantaoExtraPage() {
         <p>Cadastre aqui os plantões avulsos, substituições e ganhos extras fora da escala fixa.</p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 500px)', justifyContent: 'start' }}>
+      <div className="mobile-stack" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 500px)', justifyContent: 'start' }}>
         <div className="card">
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
             <div style={{ background: 'rgba(34,211,181,0.1)', color: 'var(--accent-teal)', width: 48, height: 48, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}>
@@ -107,7 +107,7 @@ export default function PlantaoExtraPage() {
             />
           </div>
 
-          <div className="form-group" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 20 }}>
+          <div className="form-group mobile-stack" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 20 }}>
             <div>
               <label className="form-label" style={{ display: 'flex', gap: 6 }}>
                 ▶️ Hora Início *

@@ -68,7 +68,7 @@ export default function LocaisPage() {
         <p>Gerencie os hospitais, clínicas e atendimentos Home Care</p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.4fr', gap: 24 }}>
+      <div className="mobile-stack" style={{ display: 'grid', gridTemplateColumns: '1fr 1.4fr', gap: 24 }}>
         <div className="card" style={{ height: 'fit-content' }}>
           <h2 style={{ fontWeight: 700, marginBottom: 20, fontSize: 16 }}>Novo Local</h2>
 

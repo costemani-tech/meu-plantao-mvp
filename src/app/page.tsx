@@ -108,7 +108,7 @@ export default function DashboardPage() {
       </div>
 
       {loading ? (
-        <div className="stats-grid" style={{ gridTemplateColumns: '1fr 1fr' }}>
+        <div className="stats-grid mobile-stack" style={{ gridTemplateColumns: '1fr 1fr' }}>
           {[1, 2].map(i => (
             <div key={i} className="skeleton" style={{ height: 84, borderRadius: 'var(--radius-lg)' }} />
           ))}
