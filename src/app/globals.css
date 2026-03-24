@@ -464,6 +464,10 @@ body {
     grid-template-columns: 1fr !important;
   }
 
+  .mobile-only {
+    display: flex !important;
+  }
+
   .page-header h1 {
     font-size: 22px !important;
   }

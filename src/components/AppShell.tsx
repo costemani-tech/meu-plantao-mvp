@@ -145,30 +145,43 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       </aside>
       <main className="main-content" style={{ position: 'relative' }}>
         {pathname !== '/login' && (
-          <Link href="/notificacoes" style={{
-            position: 'absolute', top: 24, right: 32, zIndex: 50,
-            background: 'var(--bg-secondary)', padding: 12, borderRadius: '50%',
-            boxShadow: 'var(--shadow-sm)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-            color: 'var(--text-primary)', border: '1px solid var(--border-subtle)', transition: 'all 0.2s',
-            cursor: 'pointer'
-          }}
-          onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'}
-          onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
-          >
-            <div style={{ position: 'relative', display: 'flex' }}>
-              <Bell size={22} />
-              {unreadCount > 0 && (
-                <span className="bell-badge" style={{ 
-                  position: 'absolute', top: -6, right: -6, 
-                  background: '#EF4444', color: 'white', fontSize: 10, fontWeight: 800, 
-                  borderRadius: '50%', width: 18, height: 18, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  border: '2px solid var(--bg-secondary)', transition: 'transform 0.2s'
-                }}>
-                  {unreadCount > 9 ? '9+' : unreadCount}
-                </span>
-              )}
-            </div>
-          </Link>
+          <div style={{ position: 'absolute', top: 24, right: 24, zIndex: 50, display: 'flex', gap: 12 }}>
+            <button 
+              onClick={toggleTheme} 
+              className="mobile-only"
+              style={{
+                background: 'var(--bg-secondary)', padding: 10, borderRadius: '50%',
+                boxShadow: 'var(--shadow-sm)', alignItems: 'center', justifyContent: 'center',
+                color: 'var(--text-primary)', border: '1px solid var(--border-subtle)', cursor: 'pointer',
+                transition: 'all 0.2s', width: 44, height: 44
+              }}
+              title="Trocar Tema"
+            >
+              {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
+            </button>
+
+            <Link href="/notificacoes" style={{
+              background: 'var(--bg-secondary)', padding: 10, borderRadius: '50%',
+              boxShadow: 'var(--shadow-sm)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: 'var(--text-primary)', border: '1px solid var(--border-subtle)', transition: 'all 0.2s',
+              cursor: 'pointer', width: 44, height: 44
+            }}
+            >
+              <div style={{ position: 'relative', display: 'flex' }}>
+                <Bell size={20} />
+                {unreadCount > 0 && (
+                  <span className="bell-badge" style={{ 
+                    position: 'absolute', top: -4, right: -4, 
+                    background: '#EF4444', color: 'white', fontSize: 10, fontWeight: 800, 
+                    borderRadius: '50%', width: 16, height: 16, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    border: '2px solid var(--bg-secondary)', transition: 'transform 0.2s'
+                  }}>
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
+              </div>
+            </Link>
+          </div>
         )}
 
         {/* TOAST FLUTUANTE DE NOTIFICAÇÃO REALTIME */}

@@ -13,8 +13,6 @@ export default function DashboardPage() {
   const [totalMes, setTotalMes] = useState(0);
   const [locaisAtivos, setLocaisAtivos] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [repassesAbertos, setRepassesAbertos] = useState<any[]>([]);
-  const [meusRepasses, setMeusRepasses] = useState<any[]>([]);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -67,14 +65,6 @@ export default function DashboardPage() {
       .select('*', { count: 'exact', head: true });
       
     setLocaisAtivos(countLocais || 0);
-
-    const [{ data: rps }, { data: meusRps }] = await Promise.all([
-      supabase.rpc('listar_repasses_abertos'),
-      supabase.from('repasses').select('*, plantao:plantoes(*, local:locais_trabalho(*))').eq('ofertante_id', user.id).order('created_at', { ascending: false }).limit(3)
-    ]);
-    
-    setRepassesAbertos(rps ? rps.filter((r: any) => r.ofertante_id !== user.id) : []);
-    setMeusRepasses(meusRps || []);
 
     setLoading(false);
   }, []);
@@ -132,79 +122,6 @@ export default function DashboardPage() {
                 <div className="stat-sub">Hospitais / Home Care</div>
               </div>
             </div>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24, marginTop: 32 }}>
-            
-            <div className="card" style={{ height: 'fit-content' }}>
-              <h2 style={{ fontWeight: 700, marginBottom: 16, fontSize: 15, display: 'flex', alignItems: 'center', gap: 8, color: '#f59e0b' }}>
-                <ArrowRightLeft size={20} />
-                Meus Repasses (Histórico)
-              </h2>
-              {meusRepasses.length === 0 ? (
-                <div style={{ color: 'var(--text-muted)', fontSize: 13, background: 'var(--bg-primary)', padding: 16, borderRadius: 8 }}>
-                  Você ainda não ofereceu nenhum plantão.
-                </div>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  {meusRepasses.map((mr: any) => {
-                    const statusColor = mr.status === 'aberto' ? '#f59e0b' : 'var(--accent-green)';
-                    const plantao = mr.plantao;
-                    return (
-                      <div key={mr.id} style={{ background: 'var(--bg-primary)', padding: 12, borderRadius: 8, borderLeft: `3px solid ${statusColor}` }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: 6 }}>
-                          <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>{plantao?.local?.nome || 'Local Removido'}</span>
-                          <span style={{ fontSize: 10, background: 'var(--bg-secondary)', color: statusColor, padding: '2px 6px', borderRadius: 4, fontWeight: 600 }}>
-                            {mr.status === 'aberto' ? 'AGUARDANDO COLEGA...' : 'ASSUMIDO! ✅'}
-                          </span>
-                        </div>
-                        {plantao && (
-                          <div style={{ fontSize: 12, color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: 6 }}>
-                            <Calendar size={12} /> {new Date(plantao.data_hora_inicio).toLocaleDateString('pt-BR')}  <Clock size={12} style={{ marginLeft: 4 }}/> {new Date(plantao.data_hora_inicio).toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                  <a href="/repasses" style={{ fontSize: 12, color: 'var(--accent-blue)', textDecoration: 'none', textAlign: 'center', marginTop: 4, display: 'block', fontWeight: 600 }}>Abrir Oportunidades Totais →</a>
-                </div>
-              )}
-            </div>
-
-            <div className="card" style={{ height: 'fit-content', border: '1px solid rgba(139, 92, 246, 0.2)' }}>
-              <h2 style={{ fontWeight: 700, marginBottom: 16, fontSize: 15, display: 'flex', alignItems: 'center', gap: 8, color: 'var(--accent-violet)' }}>
-                <ArrowRightLeft size={20} />
-                Mural da Clínica (Repasses em Aberto)
-              </h2>
-              {repassesAbertos.length === 0 ? (
-                <div style={{ color: 'var(--text-muted)', fontSize: 13, background: 'var(--bg-primary)', padding: 16, borderRadius: 8 }}>
-                  Nenhum colega da rede oferecendo plantões hoje.
-                </div>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  {repassesAbertos.slice(0, 3).map((r: any) => (
-                    <div key={r.repasse_id} style={{ background: 'var(--bg-primary)', padding: 12, borderRadius: 8, borderLeft: '3px solid var(--accent-violet)' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: 6 }}>
-                        <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>{r.local_nome}</span>
-                        <span style={{ fontSize: 10, background: 'var(--bg-secondary)', padding: '2px 6px', borderRadius: 4, fontWeight: 600 }}>Da clínica: {r.ofertante_email.split('@')[0]}</span>
-                      </div>
-                      <div style={{ fontSize: 12, color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12 }}>
-                        <Calendar size={12} /> {new Date(r.data_hora_inicio).toLocaleDateString('pt-BR')}  <Clock size={12} style={{ marginLeft: 4 }}/> {new Date(r.data_hora_inicio).toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'})}
-                      </div>
-                      <a href="/repasses" className="btn" style={{ display: 'block', textAlign: 'center', background: 'var(--accent-violet)', color: 'white', padding: '6px', borderRadius: 6, fontSize: 12, fontWeight: 600, textDecoration: 'none' }}>
-                        Ir para o Mural
-                      </a>
-                    </div>
-                  ))}
-                  {repassesAbertos.length > 3 && (
-                    <div style={{ textAlign: 'center', fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
-                      + {repassesAbertos.length - 3} plantão(ões) no Mural
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-
           </div>
 
           <div className="card" style={{ marginTop: 32 }}>
