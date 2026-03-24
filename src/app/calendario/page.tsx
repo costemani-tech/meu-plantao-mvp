@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { supabase, Plantao, LocalTrabalho } from '../../lib/supabase';
-import { ArrowRightLeft } from 'lucide-react';
+import { Calendar, Clock } from 'lucide-react';
 
 interface PlantaoComLocal extends Plantao {
   local?: LocalTrabalho;
@@ -31,25 +31,6 @@ export default function CalendarioPage() {
     setPlantoes((data as PlantaoComLocal[]) ?? []);
     setLoading(false);
   }, [ano, mes]);
-
-  const handleOferecer = async (plantao_id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!confirm('Deseja realmente enviar este plantão para o Mural de Repasses? Ele ficará disponível para outros colegas da rede assumirem.')) return;
-    
-    setLoading(true);
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { setLoading(false); return; }
-
-    const { error } = await supabase.from('repasses').insert({ plantao_id, ofertante_id: user.id });
-    if (!error) {
-      alert('Plantão enviado ao Mural de Repasses com sucesso!');
-      await supabase.from('plantoes').update({ status: 'Repassando' }).eq('id', plantao_id);
-      fetchPlantoes();
-    } else {
-      alert('Erro ao tentar oferecer (Pode já estar no mural ativo).');
-      fetchPlantoes();
-    }
-  };
 
   // Fetch ao montar e quando o mês/ano muda
   useEffect(() => { fetchPlantoes(); }, [fetchPlantoes]);
@@ -161,26 +142,19 @@ export default function CalendarioPage() {
             {plantoes.map(p => (
               <div key={p.id} className="shift-item">
                 <div className="shift-color-bar" style={{ backgroundColor: p.local?.cor_calendario ?? '#4f8ef7' }} />
-                <div className="shift-info">
-                  <div className="shift-local">{p.local?.nome ?? 'Local não informado'}</div>
-                  <div className="shift-time">
-                    {new Date(p.data_hora_inicio).toLocaleString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
-                    {' → '}
-                    {new Date(p.data_hora_fim).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                <div className="shift-info" style={{ flex: 1, padding: '4px 0' }}>
+                  <div className="shift-local" style={{ fontWeight: 700, fontSize: 13, color: 'var(--text-primary)', marginBottom: 6 }}>
+                    {p.local?.nome ?? 'Local não informado'}
+                  </div>
+                  <div className="shift-time" style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--text-secondary)' }}>
+                    <Calendar size={13} /> 
+                    <span style={{ textTransform: 'capitalize' }}>
+                      {new Date(p.data_hora_inicio).toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' }).replace('.', '')}
+                    </span>
+                    <Clock size={13} style={{ marginLeft: 6 }} /> 
+                    {new Date(p.data_hora_inicio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} às {new Date(p.data_hora_fim).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                   </div>
                 </div>
-
-                {p.status === 'Agendado' && (
-                  <button 
-                    onClick={(e) => handleOferecer(p.id, e)} 
-                    className="btn btn-secondary" 
-                    style={{ fontSize: 12, padding: '6px 12px', marginRight: 12, display: 'flex', alignItems: 'center', gap: 6 }}
-                  >
-                    <ArrowRightLeft size={14} /> Oferecer
-                  </button>
-                )}
-
-                <div className={`shift-status ${p.status.toLowerCase().replace(' ', '-')}`}>{p.status}</div>
               </div>
             ))}
           </div>
