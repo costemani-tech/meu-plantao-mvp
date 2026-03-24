@@ -144,15 +144,20 @@ export default function DashboardPage() {
                       className="shift-color-bar"
                       style={{ backgroundColor: p.local?.cor_calendario ?? '#4f8ef7' }}
                     />
-                    <div className="shift-info" style={{ flex: 1 }}>
-                      <div className="shift-local" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <div className="shift-info" style={{ flex: 1, padding: '4px 0' }}>
+                      <div className="shift-local" style={{ fontWeight: 700, fontSize: 13, color: 'var(--text-primary)', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
                         {p.local?.nome ?? 'Local não informado'}
                         {p.local?.is_home_care && (
                           <span style={{ fontSize: 10, background: 'rgba(34,211,181,0.1)', color: 'var(--accent-teal)', padding: '2px 6px', borderRadius: 4 }}>🏠 Home Care</span>
                         )}
                       </div>
-                      <div className="shift-time" style={{ marginTop: 4, display: 'flex', alignItems: 'center', gap: 4 }}>
-                        {formatDate(p.data_hora_inicio)} — {new Date(p.data_hora_fim).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                      <div className="shift-time" style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--text-secondary)', marginBottom: 8 }}>
+                        <Calendar size={13} /> 
+                        <span style={{ textTransform: 'capitalize' }}>
+                          {new Date(p.data_hora_inicio).toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' }).replace('.', '')}
+                        </span>
+                        <Clock size={13} style={{ marginLeft: 6 }} /> 
+                        {new Date(p.data_hora_inicio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} às {new Date(p.data_hora_fim).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                       </div>
                     </div>
                     <a 
@@ -165,18 +170,6 @@ export default function DashboardPage() {
                       📆 Salvar na Agenda
                     </a>
 
-                    {p.local?.endereco && !p.local?.is_home_care && (
-                      <a 
-                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.local.endereco)}`} 
-                        target="_blank" 
-                        rel="noreferrer"
-                        className="btn btn-secondary"
-                        style={{ padding: '6px 12px', fontSize: 12, marginRight: 12, backgroundColor: 'rgba(79, 142, 247, 0.1)', color: 'var(--accent-blue)', border: 'none' }}
-                      >
-                        📍 Mapa
-                      </a>
-                    )}
-                    <div className={`shift-status ${p.status.toLowerCase()}`}>{p.status}</div>
                   </div>
                 ))}
               </div>

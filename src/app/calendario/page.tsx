@@ -16,6 +16,7 @@ export default function CalendarioPage() {
   const [ano, setAno] = useState(new Date().getFullYear());
   const [mes, setMes] = useState(new Date().getMonth());
   const [loading, setLoading] = useState(false);
+  const [diaSelecionado, setDiaSelecionado] = useState<number | null>(null);
 
   const fetchPlantoes = useCallback(async () => {
     setLoading(true);
@@ -101,6 +102,8 @@ export default function CalendarioPage() {
             return (
               <div
                 key={idx}
+                onClick={() => cell.mesAtual && setDiaSelecionado(cell.dia)}
+                style={{ cursor: cell.mesAtual ? 'pointer' : 'default' }}
                 className={`cal-day ${cell.mesAtual ? '' : 'other-month'} ${cell.mesAtual && isHoje(cell.dia) ? 'today' : ''}`}
               >
                 <div className="cal-day-num">{cell.dia}</div>
@@ -125,41 +128,44 @@ export default function CalendarioPage() {
         </div>
       </div>
 
-      {/* Lista de plantões do mês */}
-      <div style={{ marginTop: 24 }}>
-        <h2 style={{ fontWeight: 700, marginBottom: 16, fontSize: 16 }}>
-          Plantões de {MESES[mes]} ({plantoes.length})
-        </h2>
-        {plantoes.length === 0 ? (
-          <div className="card">
-            <div className="empty-state">
-              <div className="empty-icon">📅</div>
-              <p>Nenhum plantão neste mês. Crie uma escala para gerar plantões automaticamente.</p>
+      {/* Modal Popup de Detalhes do Dia Selecionado */}
+      {diaSelecionado !== null && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(2px)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }} onClick={() => setDiaSelecionado(null)}>
+          <div className="card" style={{ width: '100%', maxWidth: 400, boxShadow: '0 20px 40px rgba(0,0,0,0.2)' }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <h2 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>
+                {diaSelecionado} de {MESES[mes]}
+              </h2>
+              <button className="btn btn-secondary" onClick={() => setDiaSelecionado(null)} style={{ padding: '6px 12px', fontSize: 12 }}>X</button>
             </div>
-          </div>
-        ) : (
-          <div className="shift-list">
-            {plantoes.map(p => (
-              <div key={p.id} className="shift-item">
-                <div className="shift-color-bar" style={{ backgroundColor: p.local?.cor_calendario ?? '#4f8ef7' }} />
-                <div className="shift-info" style={{ flex: 1, padding: '4px 0' }}>
-                  <div className="shift-local" style={{ fontWeight: 700, fontSize: 13, color: 'var(--text-primary)', marginBottom: 6 }}>
-                    {p.local?.nome ?? 'Local não informado'}
+            
+            {plantoesNoDia(diaSelecionado).length === 0 ? (
+              <p style={{ color: 'var(--text-muted)', fontSize: 13, background: 'var(--bg-secondary)', padding: 12, borderRadius: 8 }}>🎉 Dia de folga livre! Nenhum plantão agendado para esta data.</p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {plantoesNoDia(diaSelecionado).map(p => (
+                  <div key={p.id} style={{ padding: 16, background: 'var(--bg-primary)', border: '1px solid var(--border-subtle)', borderRadius: 12, borderLeft: `4px solid ${p.local?.cor_calendario ?? '#4f8ef7'}` }}>
+                    <div style={{ fontWeight: 800, fontSize: 14, color: 'var(--text-primary)', marginBottom: 6 }}>{p.local?.nome ?? 'Local Indefinido'}</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: 'var(--text-secondary)' }}>
+                      <Clock size={14} /> {new Date(p.data_hora_inicio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} às {new Date(p.data_hora_fim).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                    </div>
+                    {p.local?.endereco && !p.local?.is_home_care && (
+                      <a 
+                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.local.endereco)}`} 
+                        target="_blank" 
+                        rel="noreferrer"
+                        style={{ display: 'inline-block', marginTop: 12, fontSize: 12, color: 'var(--accent-blue)', textDecoration: 'none', fontWeight: 600 }}
+                      >
+                        Abrir Rota no Mapa ↗
+                      </a>
+                    )}
                   </div>
-                  <div className="shift-time" style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--text-secondary)' }}>
-                    <Calendar size={13} /> 
-                    <span style={{ textTransform: 'capitalize' }}>
-                      {new Date(p.data_hora_inicio).toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' }).replace('.', '')}
-                    </span>
-                    <Clock size={13} style={{ marginLeft: 6 }} /> 
-                    {new Date(p.data_hora_inicio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} às {new Date(p.data_hora_fim).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-                  </div>
-                </div>
+                ))}
               </div>
-            ))}
+            )}
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </>
   );
 }
