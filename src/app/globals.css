@@ -468,6 +468,12 @@ body {
     display: flex !important;
   }
 
+  .mobile-col {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 16px;
+  }
+
   .page-header h1 {
     font-size: 22px !important;
   }
