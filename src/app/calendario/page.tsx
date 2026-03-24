@@ -133,13 +133,13 @@ export default function CalendarioPage() {
         <h2 style={{ fontWeight: 700, marginBottom: 16, fontSize: 16 }}>
           Próximos Plantões ({MESES[mes]})
         </h2>
-        {plantoes.filter(p => new Date(p.data_hora_inicio).getTime() >= new Date().setHours(0,0,0,0)).slice(0, 10).length === 0 ? (
+        {plantoes.filter(p => new Date(p.data_hora_inicio).getTime() >= new Date().setHours(0,0,0,0)).slice(0, 5).length === 0 ? (
           <div className="card">
              <p style={{ color: 'var(--text-muted)', fontSize: 13, textAlign: 'center' }}>Nenhum plantão futuro para este mês.</p>
           </div>
         ) : (
           <div className="shift-list">
-            {plantoes.filter(p => new Date(p.data_hora_inicio).getTime() >= new Date().setHours(0,0,0,0)).slice(0, 10).map(p => (
+            {plantoes.filter(p => new Date(p.data_hora_inicio).getTime() >= new Date().setHours(0,0,0,0)).slice(0, 5).map(p => (
               <div key={p.id} className="shift-item" onClick={() => setDiaSelecionado(new Date(p.data_hora_inicio).getDate())} style={{ cursor: 'pointer' }}>
                 <div className="shift-color-bar" style={{ backgroundColor: p.local?.cor_calendario ?? '#4f8ef7' }} />
                 <div className="shift-info" style={{ flex: 1, padding: '4px 0' }}>
