@@ -449,12 +449,76 @@ body {
 
 /* Layout Responsivo */
 @media (max-width: 768px) {
-  .app-shell { flex-direction: column; }
+  .app-shell { 
+    flex-direction: column; 
+    padding-bottom: 72px; /* Espaço para o menu inferior nativo no mobile */
+  }
   .sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--border-subtle); padding: 16px; flex-direction: row; align-items: center; justify-content: space-between; }
   .sidebar-logo { margin-bottom: 0; }
   .nav-section { display: none !important; }
   .main-content {
     padding: 24px 16px;
+  }
+}
+
+/* NAVEGAÇÃO MOBILE INFERIOR NATIVA iOS/ANDROID */
+.mobile-nav {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .mobile-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 72px;
+    background: var(--bg-primary);
+    border-top: 1px solid var(--border-subtle);
+    z-index: 1000;
+    padding: 8px 12px;
+    justify-content: space-around;
+    align-items: center;
+    box-shadow: 0 -4px 15px rgba(0,0,0,0.03);
+  }
+
+  /* Área segura para iPhones com barra embaixo (Home Indicator) */
+  @supports (padding-bottom: env(safe-area-inset-bottom)) {
+    .mobile-nav {
+      padding-bottom: calc(8px + env(safe-area-inset-bottom));
+      height: calc(72px + env(safe-area-inset-bottom));
+    }
+  }
+
+  .mobile-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    text-decoration: none;
+    color: var(--text-muted);
+    font-size: 10px;
+    font-weight: 600;
+    width: 60px;
+    transition: all 0.2s ease;
+  }
+
+  .mobile-nav-item span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+
+  .mobile-nav-item.active {
+    color: var(--accent-blue);
+  }
+
+  .mobile-nav-item.active .nav-icon {
+    color: var(--accent-blue);
+    transform: scale(1.1);
   }
 }
 

@@ -191,6 +191,31 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
         {children}
       </main>
+
+      {/* Navegação Mobile Inferior - Exclusiva para Celulares */}
+      {pathname !== '/login' && (
+        <nav className="mobile-nav">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            // Simplificando textos compridos para caber no rodapé do celular
+            let shortLabel = item.label;
+            if (item.label === 'Mission Control') shortLabel = 'Início';
+            if (item.label === 'Plantão Extra') shortLabel = 'Extra';
+            
+            return (
+              <Link
+                href={item.href}
+                key={item.href}
+                className={`mobile-nav-item ${pathname === item.href ? 'active' : ''}`}
+                title={item.label}
+              >
+                <Icon className="nav-icon" size={24} strokeWidth={pathname === item.href ? 2.5 : 2} />
+                <span>{shortLabel}</span>
+              </Link>
+            );
+          })}
+        </nav>
+      )}
     </div>
   );
 }
