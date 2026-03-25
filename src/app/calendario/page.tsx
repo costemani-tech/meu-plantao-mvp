@@ -19,18 +19,33 @@ export default function CalendarioPage() {
   const [diaSelecionado, setDiaSelecionado] = useState<number | null>(null);
 
   const fetchPlantoes = useCallback(async () => {
-    setLoading(true);
-    const inicioMes = new Date(ano, mes, 1).toISOString();
-    const fimMes = new Date(ano, mes + 1, 0, 23, 59, 59).toISOString();
-    const { data } = await supabase
-      .from('plantoes')
-      .select('*, local:locais_trabalho(*)')
-      .gte('data_hora_inicio', inicioMes)
-      .lte('data_hora_inicio', fimMes)
-      .neq('status', 'Cancelado')
-      .order('data_hora_inicio', { ascending: true });
-    setPlantoes((data as PlantaoComLocal[]) ?? []);
-    setLoading(false);
+    const cachedData = localStorage.getItem(`calendario_cache_${ano}_${mes}`);
+    if (cachedData) {
+      setPlantoes(JSON.parse(cachedData));
+      setLoading(false);
+    } else {
+      setLoading(true);
+    }
+
+    try {
+      const inicioMes = new Date(ano, mes, 1).toISOString();
+      const fimMes = new Date(ano, mes + 1, 0, 23, 59, 59).toISOString();
+      const { data } = await supabase
+        .from('plantoes')
+        .select('*, local:locais_trabalho(*)')
+        .gte('data_hora_inicio', inicioMes)
+        .lte('data_hora_inicio', fimMes)
+        .neq('status', 'Cancelado')
+        .order('data_hora_inicio', { ascending: true });
+        
+      const freshData = (data as PlantaoComLocal[]) ?? [];
+      setPlantoes(freshData);
+      localStorage.setItem(`calendario_cache_${ano}_${mes}`, JSON.stringify(freshData));
+    } catch (e) {
+      console.warn("Offline mode - mantendo dados antigos do cache.");
+    } finally {
+      setLoading(false);
+    }
   }, [ano, mes]);
 
   // Fetch ao montar e quando o mês/ano muda

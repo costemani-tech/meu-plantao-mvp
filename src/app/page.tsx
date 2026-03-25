@@ -14,64 +14,78 @@ export default function DashboardPage() {
   const [locaisAtivos, setLocaisAtivos] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  const fetchData = useCallback(async () => {
-    setLoading(true);
-    
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    const agora = new Date();
-    const isoAgora = agora.toISOString();
-    
-    // 1. Buscar todos os plantões futuros para agrupar 1 por local
-    const { data: plantoesFuturos } = await supabase
-      .from('plantoes')
-      .select('*, local:locais_trabalho(*)')
-      .eq('status', 'Agendado')
-      .gte('data_hora_fim', isoAgora)
-      .order('data_hora_inicio', { ascending: true });      
-      
-    const arrayPlantoes = (plantoesFuturos as PlantaoComLocal[]) || [];
-    
-    // Agrupar: manter apenas o plantão mais próximo para cada local diferente
-    const locaisVistos = new Set<string>();
-    const plantoesFiltrados: PlantaoComLocal[] = [];
-    
-    for (const p of arrayPlantoes) {
-      if (!locaisVistos.has(p.local_id)) {
-        locaisVistos.add(p.local_id);
-        plantoesFiltrados.push(p);
-      }
+  const fetchPlantoes = useCallback(async () => {
+    // 1. OFFLINE FIRST: Carrega o cache armazenado no disco local
+    const cachedData = localStorage.getItem('plantoes_cache');
+    if (cachedData) {
+      setPlantoes(JSON.parse(cachedData));
+      setLoading(false);
+    } else {
+      setLoading(true);
     }
-    
-    setPlantoes(plantoesFiltrados.slice(0, 6)); // Mostrar no máximo 6 locais diferentes
 
-    // 2. Calcular Plantões no Mês
-    const inicioMes = new Date(agora.getFullYear(), agora.getMonth(), 1).toISOString();
-    const fimMes = new Date(agora.getFullYear(), agora.getMonth() + 1, 0, 23, 59, 59).toISOString();
-    
-    const { count: countMes } = await supabase
-      .from('plantoes')
-      .select('*', { count: 'exact', head: true })
-      .gte('data_hora_inicio', inicioMes)
-      .lte('data_hora_inicio', fimMes)
-      .neq('status', 'Cancelado');
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return; // Middleware lidará na raiz, mas para evitar erros silenciamos aqui
+
+      const hoje = new Date().toISOString();
       
-    setTotalMes(countMes || 0);
+      const plantoesQuery = supabase
+        .from('plantoes')
+        .select(`
+          *,
+          local:locais_trabalho(*)
+        `)
+        .gte('data_hora_inicio', hoje)
+        .order('data_hora_inicio', { ascending: true })
+        .limit(20);
 
-    // 3. Locais Ativos
-    const { count: countLocais } = await supabase
-      .from('locais_trabalho')
-      .select('*', { count: 'exact', head: true });
+      const { data: plantoesData } = await plantoesQuery;
+
+      if (plantoesData) {
+        // Agrupar por local (apenas o mais próximo de cada)
+        const porLocal = new Map<string, any>();
+        plantoesData.forEach(p => {
+          if (p.local?.id && !porLocal.has(p.local.id)) {
+            porLocal.set(p.local.id, p);
+          }
+        });
+        
+        const freshData = Array.from(porLocal.values());
+        
+        // 2. OFFLINE FIRST: Salva dado fresco no disco
+        setPlantoes(freshData);
+        localStorage.setItem('plantoes_cache', JSON.stringify(freshData));
+      }
       
-    setLocaisAtivos(countLocais || 0);
-
-    setLoading(false);
+      const inicioMes = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
+      const fimMes = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0, 23, 59, 59).toISOString();
+      
+      const { count: countMes } = await supabase
+        .from('plantoes')
+        .select('*', { count: 'exact', head: true })
+        .gte('data_hora_inicio', inicioMes)
+        .lte('data_hora_inicio', fimMes)
+        .neq('status', 'Cancelado');
+        
+      setTotalMes(countMes || 0);
+  
+      // 3. Locais Ativos
+      const { count: countLocais } = await supabase
+        .from('locais_trabalho')
+        .select('*', { count: 'exact', head: true });
+        
+      setLocaisAtivos(countLocais || 0);
+    } catch (err) {
+      console.warn("Retornando dados do Cache (Modo Offline / Sem Conexão).", err);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    fetchPlantoes();
+  }, [fetchPlantoes]);
 
   const formatDate = (iso: string) =>
     new Date(iso).toLocaleString('pt-BR', {

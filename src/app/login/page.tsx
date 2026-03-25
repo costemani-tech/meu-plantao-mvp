@@ -4,9 +4,7 @@ import { useState } from 'react';
 import { supabase } from '../../lib/supabase';
 
 export default function LoginPage() {
-  const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' } | null>(null);
 
@@ -15,40 +13,26 @@ export default function LoginPage() {
     setTimeout(() => setToast(null), 4000);
   };
 
-  const handleAuth = async (e: React.FormEvent) => {
+  const signInWithEmailOTP = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) {
-      showToast('Preencha e-mail e senha.', 'error');
+    if (!email) {
+      showToast('Preencha seu e-mail corporativo ou pessoal.', 'error');
       return;
     }
 
     setLoading(true);
-    let authError = null;
-
-    if (isLogin) {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      authError = error;
-      if (!error) {
-        window.location.href = '/'; // Redireciona via browser para o middleware atualizar a sessão
-        return; 
+    const { error } = await supabase.auth.signInWithOtp({ 
+      email,
+      options: {
+        emailRedirectTo: typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : undefined,
       }
+    });
+
+    if (error) {
+      showToast(error.message, 'error');
     } else {
-      const { error } = await supabase.auth.signUp({ 
-        email, 
-        password,
-        options: {
-          emailRedirectTo: typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : undefined
-        }
-      });
-      authError = error;
-      if (!error) {
-        showToast('Cadastro realizado! Verifique sua caixa de e-mail para confirmar a conta.', 'success');
-        setIsLogin(true); // volta para a tela de login
-      }
-    }
-
-    if (authError) {
-      showToast(authError.message, 'error');
+      showToast('Enviamos um Link Mágico para o seu e-mail. Basta clicar nele para entrar!', 'success');
+      setEmail('');
     }
     setLoading(false);
   };
@@ -84,7 +68,7 @@ export default function LoginPage() {
             Meu Plantão
           </h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: 14, marginTop: 4 }}>
-            Sua central médica pessoal
+            Sua central médica pessoal segura
           </p>
         </div>
 
@@ -110,30 +94,18 @@ export default function LoginPage() {
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
           <div style={{ flex: 1, height: 1, background: 'var(--border-subtle)' }} />
-          <span style={{ fontSize: 12, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 1 }}>ou</span>
+          <span style={{ fontSize: 12, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 1 }}>ou link mágico (sem senha)</span>
           <div style={{ flex: 1, height: 1, background: 'var(--border-subtle)' }} />
         </div>
 
-        <form onSubmit={handleAuth}>
+        <form onSubmit={signInWithEmailOTP}>
           <div className="form-group">
-            <label className="form-label" style={{ fontSize: 11 }}>E-mail corporativo ou pessoal</label>
             <input 
               type="email" 
               className="form-input" 
-              placeholder="seu@email.com" 
+              placeholder="Digite seu e-mail" 
               value={email}
               onChange={e => setEmail(e.target.value)}
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label className="form-label" style={{ fontSize: 11 }}>Senha</label>
-            <input 
-              type="password" 
-              className="form-input" 
-              placeholder="••••••••" 
-              value={password}
-              onChange={e => setPassword(e.target.value)}
               required
             />
           </div>
@@ -144,23 +116,12 @@ export default function LoginPage() {
             style={{ width: '100%', justifyContent: 'center', marginTop: 12, padding: '12px' }}
             disabled={loading}
           >
-            {loading ? '⏳ Processando...' : (isLogin ? 'Entrar' : 'Criar Conta')}
+            {loading ? '⏳ Solicitando Acesso...' : 'Receber Link de Acesso'}
           </button>
         </form>
 
-        <div style={{ textAlign: 'center', marginTop: 24, fontSize: 14 }}>
-          <span style={{ color: 'var(--text-secondary)' }}>
-            {isLogin ? 'Ainda não tem conta? ' : 'Já possui uma conta? '}
-          </span>
-          <button 
-            onClick={() => setIsLogin(!isLogin)}
-            style={{ 
-              background: 'none', border: 'none', color: 'var(--accent-blue)', 
-              fontWeight: 600, cursor: 'pointer', padding: 4 
-            }}
-          >
-            {isLogin ? 'Cadastre-se' : 'Faça Login'}
-          </button>
+        <div style={{ textAlign: 'center', marginTop: 24, fontSize: 12, color: 'var(--text-muted)' }}>
+          Esqueceu senhas? Nós também. Enviamos um passe direto para o seu e-mail aprovado.
         </div>
       </div>
       
