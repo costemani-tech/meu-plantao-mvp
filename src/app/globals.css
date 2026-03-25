@@ -456,7 +456,7 @@ body {
   .sidebar-logo { margin-bottom: 0; }
   .nav-section { display: none !important; }
   .main-content {
-    padding: 24px 16px;
+    padding: 84px 16px 24px 16px;
   }
   
   /* Utilitario de Empilhamento Global Vertical (Mobile) */
