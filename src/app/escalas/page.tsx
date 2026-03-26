@@ -4,6 +4,11 @@ import { useEffect, useState, useCallback } from 'react';
 import { supabase, LocalTrabalho } from '../../lib/supabase';
 import { gerarProximosPlantoes, formatarDataHora, SlotPlantao } from '../../lib/scale-generator';
 
+const CORES_PRESET = [
+  '#4f8ef7', '#7c6af7', '#22d3b5', '#f97316',
+  '#ef4444', '#22c55e', '#f59e0b', '#ec4899',
+];
+
 const REGRAS = ['12x36', '24x48', '24x72', 'Outro'] as const;
 type Regra = typeof REGRAS[number] | string;
 
@@ -31,10 +36,11 @@ export default function EscalasPage() {
   const [regra, setRegra] = useState<Regra>('12x36');
   const [horasTrabalhoOutro, setHorasTrabalhoOutro] = useState('12');
   const [horasDescansoOutro, setHorasDescansoOutro] = useState('60');
-  
+
   const [isCreatingLocal, setIsCreatingLocal] = useState(false);
   const [novoLocalNome, setNovoLocalNome] = useState('');
   const [novoLocalIsHomeCare, setNovoLocalIsHomeCare] = useState(false);
+  const [novoLocalCor, setNovoLocalCor] = useState(CORES_PRESET[0]);
   const [savingLocal, setSavingLocal] = useState(false);
 
   const [preview, setPreview] = useState<SlotPlantao[]>([]);
@@ -78,20 +84,21 @@ export default function EscalasPage() {
   const salvarNovoLocal = async () => {
     if (!novoLocalNome.trim()) { showToast('Informe o nome do local.', 'error'); return; }
     setSavingLocal(true);
-    const { data, error } = await supabase.from('locais_trabalho').insert({ 
-      nome: novoLocalNome.trim(), 
-      cor_calendario: '#4f8ef7',
-      is_home_care: novoLocalIsHomeCare 
+    const { data, error } = await supabase.from('locais_trabalho').insert({
+      nome: novoLocalNome.trim(),
+      cor_calendario: novoLocalCor,
+      is_home_care: novoLocalIsHomeCare
     }).select().single();
-    
+
     if (error) {
       showToast('Erro ao criar local: ' + error.message, 'error');
     } else if (data) {
-      setLocais(prev => [...prev, data as LocalTrabalho].sort((a,b) => a.nome.localeCompare(b.nome)));
+      setLocais(prev => [...prev, data as LocalTrabalho].sort((a, b) => a.nome.localeCompare(b.nome)));
       setLocalId(data.id);
       setIsCreatingLocal(false);
       setNovoLocalNome('');
       setNovoLocalIsHomeCare(false);
+      setNovoLocalCor(CORES_PRESET[0]);
       showToast('Local criado e selecionado!', 'success');
     }
     setSavingLocal(false);
@@ -169,8 +176,8 @@ export default function EscalasPage() {
           <div className="form-group">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
               <label className="form-label" style={{ margin: 0 }}>Local de Trabalho *</label>
-              <button 
-                type="button" 
+              <button
+                type="button"
                 onClick={() => setIsCreatingLocal(!isCreatingLocal)}
                 style={{ background: 'none', border: 'none', color: 'var(--accent-blue)', fontSize: 13, fontWeight: 600, cursor: 'pointer', padding: 0 }}
               >
@@ -189,20 +196,45 @@ export default function EscalasPage() {
                   style={{ marginBottom: 8 }}
                 />
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-                  <input 
-                    type="checkbox" 
-                    id="homecareCheckbox" 
-                    checked={novoLocalIsHomeCare} 
-                    onChange={e => setNovoLocalIsHomeCare(e.target.checked)} 
+                  <input
+                    type="checkbox"
+                    id="homecareCheckbox"
+                    checked={novoLocalIsHomeCare}
+                    onChange={e => setNovoLocalIsHomeCare(e.target.checked)}
                     style={{ width: 16, height: 16, accentColor: 'var(--accent-teal)' }}
                   />
                   <label htmlFor="homecareCheckbox" style={{ fontSize: 13, color: 'var(--text-secondary)', cursor: 'pointer' }}>
                     É atendimento <strong>Home Care</strong> 🏠
                   </label>
                 </div>
-                <button 
-                  className="btn btn-primary" 
-                  onClick={salvarNovoLocal} 
+
+                <div style={{ marginBottom: 16 }}>
+                  <label className="form-label" style={{ fontSize: 12 }}>Cor no Calendário</label>
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 4 }}>
+                    {CORES_PRESET.map(c => (
+                      <button
+                        type="button"
+                        key={c}
+                        onClick={() => setNovoLocalCor(c)}
+                        style={{
+                          width: 24,
+                          height: 24,
+                          borderRadius: '50%',
+                          background: c,
+                          border: novoLocalCor === c ? '2px solid white' : '2px solid transparent',
+                          boxShadow: novoLocalCor === c ? '0 0 0 1px var(--text-primary)' : 'none',
+                          cursor: 'pointer',
+                          padding: 0
+                        }}
+                        title="Escolher Cor"
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                <button
+                  className="btn btn-primary"
+                  onClick={salvarNovoLocal}
                   disabled={savingLocal}
                   style={{ width: '100%', padding: '6px 12px', fontSize: 13 }}
                 >
@@ -270,21 +302,21 @@ export default function EscalasPage() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 12, padding: 12, background: 'var(--bg-secondary)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
                 <div>
                   <label className="form-label" style={{ fontSize: 11 }}>Trabalho (horas)</label>
-                  <input 
-                    type="number" 
-                    className="form-input" 
-                    value={horasTrabalhoOutro} 
-                    onChange={e => setHorasTrabalhoOutro(e.target.value)} 
+                  <input
+                    type="number"
+                    className="form-input"
+                    value={horasTrabalhoOutro}
+                    onChange={e => setHorasTrabalhoOutro(e.target.value)}
                     placeholder="Ex: 12"
                   />
                 </div>
                 <div>
                   <label className="form-label" style={{ fontSize: 11 }}>Descanso (horas)</label>
-                  <input 
-                    type="number" 
-                    className="form-input" 
-                    value={horasDescansoOutro} 
-                    onChange={e => setHorasDescansoOutro(e.target.value)} 
+                  <input
+                    type="number"
+                    className="form-input"
+                    value={horasDescansoOutro}
+                    onChange={e => setHorasDescansoOutro(e.target.value)}
                     placeholder="Ex: 60"
                   />
                 </div>
@@ -347,7 +379,7 @@ export default function EscalasPage() {
                       <div className="date-preview-date" style={{ fontWeight: 600, color: 'var(--text-primary)', display: 'flex', gap: 6, alignItems: 'center' }}>
                         {new Date(slot.inicio).toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit', year: '2-digit' })}
                         <span style={{ color: 'var(--text-secondary)' }}>
-                           {new Date(slot.inicio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                          {new Date(slot.inicio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                         </span>
                       </div>
                     </div>
