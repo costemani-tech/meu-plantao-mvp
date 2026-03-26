@@ -41,6 +41,7 @@ export default function EscalasPage() {
   const [novoLocalNome, setNovoLocalNome] = useState('');
   const [novoLocalIsHomeCare, setNovoLocalIsHomeCare] = useState(false);
   const [novoLocalCor, setNovoLocalCor] = useState(CORES_PRESET[0]);
+  const [novoLocalEndereco, setNovoLocalEndereco] = useState('');
   const [savingLocal, setSavingLocal] = useState(false);
 
   const [preview, setPreview] = useState<SlotPlantao[]>([]);
@@ -87,6 +88,7 @@ export default function EscalasPage() {
     const { data, error } = await supabase.from('locais_trabalho').insert({
       nome: novoLocalNome.trim(),
       cor_calendario: novoLocalCor,
+      endereco: novoLocalIsHomeCare ? null : novoLocalEndereco.trim(),
       is_home_care: novoLocalIsHomeCare
     }).select().single();
 
@@ -99,6 +101,7 @@ export default function EscalasPage() {
       setNovoLocalNome('');
       setNovoLocalIsHomeCare(false);
       setNovoLocalCor(CORES_PRESET[0]);
+      setNovoLocalEndereco('');
       showToast('Local criado e selecionado!', 'success');
     }
     setSavingLocal(false);
@@ -207,6 +210,19 @@ export default function EscalasPage() {
                     É atendimento <strong>Home Care</strong> 🏠
                   </label>
                 </div>
+
+                {!novoLocalIsHomeCare && (
+                  <div style={{ marginBottom: 12 }}>
+                    <label className="form-label" style={{ fontSize: 12 }}>Endereço (Opcional)</label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      placeholder="Ex: Av. Paulista, 1000 - Bela Vista"
+                      value={novoLocalEndereco}
+                      onChange={e => setNovoLocalEndereco(e.target.value)}
+                    />
+                  </div>
+                )}
 
                 <div style={{ marginBottom: 16 }}>
                   <label className="form-label" style={{ fontSize: 12 }}>Cor no Calendário</label>
