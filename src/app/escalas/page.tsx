@@ -4,8 +4,8 @@ import { useEffect, useState, useCallback } from 'react';
 import { supabase, LocalTrabalho } from '../../lib/supabase';
 import { gerarProximosPlantoes, formatarDataHora, SlotPlantao } from '../../lib/scale-generator';
 
-const REGRAS = ['12x36', '24x48', '24x72'] as const;
-type Regra = typeof REGRAS[number];
+const REGRAS = ['12x36', '24x48', '24x72', 'Outro'] as const;
+type Regra = typeof REGRAS[number] | string;
 
 interface Toast { msg: string; type: 'success' | 'error' }
 interface ResultadoAPI {
@@ -16,10 +16,11 @@ interface ResultadoAPI {
   error?: string;
 }
 
-const DESCRICAO_REGRA: Record<Regra, string> = {
+const DESCRICAO_REGRA: Record<string, string> = {
   '12x36': '12h trabalhadas + 36h de folga (ciclo 48h)',
   '24x48': '24h trabalhadas + 48h de folga (ciclo 72h)',
   '24x72': '24h trabalhadas + 72h de folga (ciclo 96h)',
+  'Outro': 'Personalize suas horas de trabalho e folga',
 };
 
 export default function EscalasPage() {
@@ -28,10 +29,20 @@ export default function EscalasPage() {
   const [dataInicioSo, setDataInicioSo] = useState('');
   const [horaInicio, setHoraInicio] = useState('07:00'); // valor padrão comum para plantões
   const [regra, setRegra] = useState<Regra>('12x36');
+  const [horasTrabalhoOutro, setHorasTrabalhoOutro] = useState('12');
+  const [horasDescansoOutro, setHorasDescansoOutro] = useState('60');
+  
+  const [isCreatingLocal, setIsCreatingLocal] = useState(false);
+  const [novoLocalNome, setNovoLocalNome] = useState('');
+  const [novoLocalIsHomeCare, setNovoLocalIsHomeCare] = useState(false);
+  const [savingLocal, setSavingLocal] = useState(false);
+
   const [preview, setPreview] = useState<SlotPlantao[]>([]);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<Toast | null>(null);
   const [ultimoResultado, setUltimoResultado] = useState<ResultadoAPI | null>(null);
+
+  const regraFinal = regra === 'Outro' ? `${horasTrabalhoOutro}x${horasDescansoOutro}` : regra;
 
   // Computa a data ISO completa baseada na separação de data e hora
   const dataCompletaISO = (dataInicioSo && horaInicio) ? `${dataInicioSo}T${horaInicio}:00` : '';
@@ -50,12 +61,41 @@ export default function EscalasPage() {
 
   // Preview das 5 primeiras datas em tempo real (permanece no frontend)
   useEffect(() => {
-    if (dataCompletaISO && regra) {
-      setPreview(gerarProximosPlantoes(new Date(dataCompletaISO), regra, 5));
+    if (dataCompletaISO && regraFinal) {
+      // Evita NaN no preview se o usuário não digitou horas válidas
+      const hr = parseInt(horasTrabalhoOutro, 10);
+      const hd = parseInt(horasDescansoOutro, 10);
+      if (regra === 'Outro' && (isNaN(hr) || isNaN(hd) || hr <= 0 || hd < 0)) {
+        setPreview([]);
+        return;
+      }
+      setPreview(gerarProximosPlantoes(new Date(dataCompletaISO), regraFinal, 5));
     } else {
       setPreview([]);
     }
-  }, [dataCompletaISO, regra]);
+  }, [dataCompletaISO, regraFinal, regra, horasTrabalhoOutro, horasDescansoOutro]);
+
+  const salvarNovoLocal = async () => {
+    if (!novoLocalNome.trim()) { showToast('Informe o nome do local.', 'error'); return; }
+    setSavingLocal(true);
+    const { data, error } = await supabase.from('locais_trabalho').insert({ 
+      nome: novoLocalNome.trim(), 
+      cor_calendario: '#4f8ef7',
+      is_home_care: novoLocalIsHomeCare 
+    }).select().single();
+    
+    if (error) {
+      showToast('Erro ao criar local: ' + error.message, 'error');
+    } else if (data) {
+      setLocais(prev => [...prev, data as LocalTrabalho].sort((a,b) => a.nome.localeCompare(b.nome)));
+      setLocalId(data.id);
+      setIsCreatingLocal(false);
+      setNovoLocalNome('');
+      setNovoLocalIsHomeCare(false);
+      showToast('Local criado e selecionado!', 'success');
+    }
+    setSavingLocal(false);
+  };
 
   const salvarEscala = async () => {
     if (!localId || !dataInicioSo || !horaInicio) {
@@ -77,7 +117,7 @@ export default function EscalasPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           data_inicio: new Date(dataCompletaISO).toISOString(),
-          regra,
+          regra: regraFinal,
           local_id: localId,
         }),
       });
@@ -111,7 +151,7 @@ export default function EscalasPage() {
     setSaving(false);
   };
 
-  const duracaoHoras = (r: Regra) => (r === '12x36' ? 12 : 24);
+  const duracaoHoras = (r: string) => parseInt(r.split('x')[0], 10) || 12;
   const anoAtual = new Date().getFullYear();
 
   return (
@@ -127,15 +167,60 @@ export default function EscalasPage() {
           <h2 style={{ fontWeight: 700, marginBottom: 20, fontSize: 16 }}>Nova Escala</h2>
 
           <div className="form-group">
-            <label className="form-label">Local de Trabalho *</label>
-            <select className="form-select" value={localId} onChange={e => setLocalId(e.target.value)}>
-              <option value="">Selecione um local...</option>
-              {locais.map(l => <option key={l.id} value={l.id}>{l.nome}</option>)}
-            </select>
-            {locais.length === 0 && (
-              <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6 }}>
-                Nenhum local cadastrado. Vá para a página <strong>Locais</strong> primeiro.
-              </p>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+              <label className="form-label" style={{ margin: 0 }}>Local de Trabalho *</label>
+              <button 
+                type="button" 
+                onClick={() => setIsCreatingLocal(!isCreatingLocal)}
+                style={{ background: 'none', border: 'none', color: 'var(--accent-blue)', fontSize: 13, fontWeight: 600, cursor: 'pointer', padding: 0 }}
+              >
+                {isCreatingLocal ? 'Cancelar' : '➕ Criar Novo'}
+              </button>
+            </div>
+
+            {isCreatingLocal ? (
+              <div style={{ padding: 12, border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-md)', background: 'var(--bg-secondary)', marginBottom: 8 }}>
+                <input
+                  type="text"
+                  className="form-input"
+                  placeholder="Nome do novo local"
+                  value={novoLocalNome}
+                  onChange={e => setNovoLocalNome(e.target.value)}
+                  style={{ marginBottom: 8 }}
+                />
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                  <input 
+                    type="checkbox" 
+                    id="homecareCheckbox" 
+                    checked={novoLocalIsHomeCare} 
+                    onChange={e => setNovoLocalIsHomeCare(e.target.checked)} 
+                    style={{ width: 16, height: 16, accentColor: 'var(--accent-teal)' }}
+                  />
+                  <label htmlFor="homecareCheckbox" style={{ fontSize: 13, color: 'var(--text-secondary)', cursor: 'pointer' }}>
+                    É atendimento <strong>Home Care</strong> 🏠
+                  </label>
+                </div>
+                <button 
+                  className="btn btn-primary" 
+                  onClick={salvarNovoLocal} 
+                  disabled={savingLocal}
+                  style={{ width: '100%', padding: '6px 12px', fontSize: 13 }}
+                >
+                  {savingLocal ? '⏳ Salvando...' : 'Salvar e Selecionar'}
+                </button>
+              </div>
+            ) : (
+              <>
+                <select className="form-select" value={localId} onChange={e => setLocalId(e.target.value)}>
+                  <option value="">Selecione um local...</option>
+                  {locais.map(l => <option key={l.id} value={l.id}>{l.nome}</option>)}
+                </select>
+                {locais.length === 0 && (
+                  <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6 }}>
+                    Ainda não há locais. Clique em "Criar Novo" acima.
+                  </p>
+                )}
+              </>
             )}
           </div>
 
@@ -171,7 +256,7 @@ export default function EscalasPage() {
             <select
               className="form-select"
               value={regra}
-              onChange={e => setRegra(e.target.value as Regra)}
+              onChange={e => setRegra(e.target.value)}
             >
               {REGRAS.map(r => (
                 <option key={r} value={r}>{r}</option>
@@ -180,6 +265,31 @@ export default function EscalasPage() {
             <p style={{ fontSize: 12, color: 'var(--accent-teal)', marginTop: 6, fontWeight: 500 }}>
               {DESCRICAO_REGRA[regra]}
             </p>
+
+            {regra === 'Outro' && (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 12, padding: 12, background: 'var(--bg-secondary)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
+                <div>
+                  <label className="form-label" style={{ fontSize: 11 }}>Trabalho (horas)</label>
+                  <input 
+                    type="number" 
+                    className="form-input" 
+                    value={horasTrabalhoOutro} 
+                    onChange={e => setHorasTrabalhoOutro(e.target.value)} 
+                    placeholder="Ex: 12"
+                  />
+                </div>
+                <div>
+                  <label className="form-label" style={{ fontSize: 11 }}>Descanso (horas)</label>
+                  <input 
+                    type="number" 
+                    className="form-input" 
+                    value={horasDescansoOutro} 
+                    onChange={e => setHorasDescansoOutro(e.target.value)} 
+                    placeholder="Ex: 60"
+                  />
+                </div>
+              </div>
+            )}
           </div>
 
           <button
@@ -242,7 +352,7 @@ export default function EscalasPage() {
                       </div>
                     </div>
                     <div className="date-preview-duration" style={{ background: 'var(--bg-primary)', padding: '4px 8px', borderRadius: 6, fontSize: 11, fontWeight: 700, color: 'var(--text-secondary)' }}>
-                      {duracaoHoras(regra)}h
+                      {duracaoHoras(regraFinal)}h
                     </div>
                   </div>
                 ))}

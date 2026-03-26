@@ -62,6 +62,22 @@ export default function CalendarioPage() {
     };
   }, [fetchPlantoes]);
 
+  const removerPlantao = async (id: string) => {
+    if (!confirm('Deseja realmente remover este plantão da sua agenda?')) return;
+    
+    setPlantoes(prev => prev.filter(p => p.id !== id));
+    
+    const { error } = await supabase.from('plantoes').delete().eq('id', id);
+    if (error) {
+      alert('Erro ao remover: ' + error.message);
+      fetchPlantoes(); 
+    } else {
+      const freshData = plantoes.filter(p => p.id !== id);
+      localStorage.setItem(`calendario_cache_${ano}_${mes}`, JSON.stringify(freshData));
+      window.dispatchEvent(new CustomEvent('plantoes-atualizados'));
+    }
+  };
+
   const plantoesNoDia = (dia: number): PlantaoComLocal[] =>
     plantoes.filter(p => {
       const d = new Date(p.data_hora_inicio);
@@ -193,7 +209,16 @@ export default function CalendarioPage() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {plantoesNoDia(diaSelecionado).map(p => (
                   <div key={p.id} style={{ padding: 16, background: 'var(--bg-primary)', border: '1px solid var(--border-subtle)', borderRadius: 12, borderLeft: `4px solid ${p.local?.cor_calendario ?? '#4f8ef7'}` }}>
-                    <div style={{ fontWeight: 800, fontSize: 14, color: 'var(--text-primary)', marginBottom: 6 }}>{p.local?.nome ?? 'Local Indefinido'}</div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <div style={{ fontWeight: 800, fontSize: 14, color: 'var(--text-primary)', marginBottom: 6 }}>{p.local?.nome ?? 'Local Indefinido'}</div>
+                      <button 
+                        onClick={() => removerPlantao(p.id)}
+                        title="Remover Plantão"
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, opacity: 0.7, fontSize: 14 }}
+                      >
+                        🗑️
+                      </button>
+                    </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: 'var(--text-secondary)' }}>
                       <Clock size={14} /> {new Date(p.data_hora_inicio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} às {new Date(p.data_hora_fim).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                     </div>

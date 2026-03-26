@@ -4,7 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 
 // Tipos
-type Regra = '12x36' | '24x48' | '24x72';
+type Regra = '12x36' | '24x48' | '24x72' | string;
 
 interface PlantaoSlot {
   inicio: Date;
@@ -15,18 +15,19 @@ interface PlantaoSlot {
 // Skill @calcular-proximos-plantoes
 // Motor matemático executado server-side
 // ─────────────────────────────────────────────
-const CICLO_HORAS: Record<Regra, { trabalho: number; ciclo: number }> = {
-  '12x36': { trabalho: 12, ciclo: 48 },
-  '24x48': { trabalho: 24, ciclo: 72 },
-  '24x72': { trabalho: 24, ciclo: 96 },
-};
+function parseRegra(regra: Regra): { trabalho: number; ciclo: number } {
+  const parts = regra.split('x');
+  const trabalho = parseInt(parts[0], 10);
+  const descanso = parseInt(parts[1], 10);
+  return { trabalho, ciclo: trabalho + descanso };
+}
 
 function gerarPlantoesAte(
   dataInicio: Date,
   regra: Regra,
   dataFim: Date
 ): PlantaoSlot[] {
-  const { trabalho, ciclo } = CICLO_HORAS[regra];
+  const { trabalho, ciclo } = parseRegra(regra);
   const slots: PlantaoSlot[] = [];
 
   let cursor = new Date(dataInicio);
@@ -85,9 +86,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (!['12x36', '24x48', '24x72'].includes(regra)) {
+    if (!/^\d+x\d+$/.test(regra)) {
       return NextResponse.json(
-        { error: 'Regra inválida. Use: 12x36, 24x48 ou 24x72' },
+        { error: 'Regra inválida. Formato esperado: {trabalho}x{descanso} (ex: 12x36)' },
         { status: 400 }
       );
     }

@@ -6,7 +6,7 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 // O createBrowserClient cuida automaticamente de transformar o LocalStorage em Cookies!
 export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey);
 
-export type Regra = '12x36' | '24x48' | '24x72';
+export type Regra = '12x36' | '24x48' | '24x72' | 'Outro' | string;
 
 export interface Usuario {
   id: string;

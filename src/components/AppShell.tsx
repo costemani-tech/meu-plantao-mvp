@@ -11,7 +11,6 @@ const navItems = [
   { icon: CalendarDays, label: 'Calendário', href: '/calendario' },
   { icon: Settings2, label: 'Escalas', href: '/escalas' },
   { icon: PlusCircle, label: 'Plantão Extra', href: '/plantao-extra' },
-  { icon: Building2, label: 'Locais', href: '/locais' },
 ];
 
 export default function AppShell({ children }: { children: React.ReactNode }) {

@@ -17,6 +17,16 @@ export interface SlotPlantao {
 }
 
 /**
+ * Helper para extrair horas trabalhadas e totais de um formato como "12x36"
+ */
+function parseRegra(regra: Regra): { duracaoTrabalho: number; cicloHoras: number } {
+  const parts = regra.split('x');
+  const duracaoTrabalho = parseInt(parts[0], 10);
+  const duracaoDescanso = parseInt(parts[1], 10);
+  return { duracaoTrabalho, cicloHoras: duracaoTrabalho + duracaoDescanso };
+}
+
+/**
  * Gera os próximos `quantidade` slots de plantão a partir de uma data de início,
  * seguindo a regra de escala definida.
  */
@@ -25,8 +35,7 @@ export function gerarProximosPlantoes(
   regra: Regra,
   quantidade: number = 5
 ): SlotPlantao[] {
-  const { duracaoTrabalho, duracaoDescanso } = regras[regra];
-  const cicloHoras = duracaoTrabalho + duracaoDescanso;
+  const { duracaoTrabalho, cicloHoras } = parseRegra(regra);
   const slots: SlotPlantao[] = [];
 
   let cursor = new Date(dataInicio);
@@ -55,8 +64,7 @@ export function gerarPlantoesParaPeriodo(
   const dataFim = new Date(dataInicio);
   dataFim.setDate(dataFim.getDate() + dias);
 
-  const { duracaoTrabalho, duracaoDescanso } = regras[regra];
-  const cicloHoras = duracaoTrabalho + duracaoDescanso;
+  const { duracaoTrabalho, cicloHoras } = parseRegra(regra);
   const slots: SlotPlantao[] = [];
 
   let cursor = new Date(dataInicio);
