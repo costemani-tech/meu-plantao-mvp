@@ -35,7 +35,15 @@ export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname
 
   // Rotas que não exigem login
-  const isPublicRoute = pathname.startsWith('/login') || pathname.startsWith('/demo') || pathname.startsWith('/api') || pathname.startsWith('/_next') || pathname.startsWith('/auth/callback')
+  const isPublicRoute =
+    pathname.startsWith('/login') ||
+    pathname.startsWith('/demo') ||
+    pathname.startsWith('/api') ||
+    pathname.startsWith('/_next') ||
+    pathname.startsWith('/auth/callback') ||
+    pathname === '/manifest.json' ||
+    pathname.startsWith('/icons/') ||
+    pathname === '/favicon.ico'
   const isLoginPage = pathname.startsWith('/login')
 
   // Redireciona para /login se não estiver logado
