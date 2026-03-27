@@ -179,11 +179,17 @@ export default function CalendarioPage() {
                         key={p.id}
                         className="cal-dot"
                         style={{
-                          backgroundColor: (p as unknown as { status_conflito?: boolean }).status_conflito
-                            ? '#f59e0b'
-                            : (p.local?.cor_calendario ?? '#4f8ef7')
+                          backgroundColor:
+                            (p as unknown as { is_extra?: boolean; status_conflito?: boolean }).is_extra
+                              ? '#8b5cf6'
+                              : (p as unknown as { status_conflito?: boolean }).status_conflito
+                                ? '#f59e0b'
+                                : (p.local?.cor_calendario ?? '#4f8ef7')
                         }}
-                        title={`${p.local?.nome}${ (p as unknown as { status_conflito?: boolean }).status_conflito ? ' ⚠️ Conflito' : ''}`}
+                        title={`${p.local?.nome}${
+                          (p as unknown as { is_extra?: boolean }).is_extra ? ' 💰 Extra' :
+                          (p as unknown as { status_conflito?: boolean }).status_conflito ? ' ⚠️ Conflito' : ''
+                        }`}
                       />
                     ))}
                     {ps.length > 3 && (
@@ -210,10 +216,13 @@ export default function CalendarioPage() {
           <div className="shift-list">
             {plantoes.filter(p => new Date(p.data_hora_inicio).getTime() >= new Date().setHours(0,0,0,0)).slice(0, 5).map(p => (
               <div key={p.id} className="shift-item" onClick={() => setDiaSelecionado(new Date(p.data_hora_inicio).getDate())} style={{ cursor: 'pointer' }}>
-                <div className="shift-color-bar" style={{ backgroundColor: (p as unknown as { status_conflito?: boolean }).status_conflito ? '#f59e0b' : (p.local?.cor_calendario ?? '#4f8ef7') }} />
+                <div className="shift-color-bar" style={{ backgroundColor: (p as unknown as { is_extra?: boolean; status_conflito?: boolean }).is_extra ? '#8b5cf6' : (p as unknown as { status_conflito?: boolean }).status_conflito ? '#f59e0b' : (p.local?.cor_calendario ?? '#4f8ef7') }} />
                 <div className="shift-info" style={{ flex: 1, padding: '4px 0' }}>
-                  <div className="shift-local" style={{ fontWeight: 700, fontSize: 13, color: 'var(--text-primary)', marginBottom: 6 }}>
+                  <div className="shift-local" style={{ fontWeight: 700, fontSize: 13, color: 'var(--text-primary)', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
                     {p.local?.nome ?? 'Local não informado'}
+                    {(p as unknown as { is_extra?: boolean }).is_extra && (
+                      <span style={{ fontSize: 10, fontWeight: 700, color: '#8b5cf6', background: 'rgba(139,92,246,0.12)', padding: '2px 6px', borderRadius: 4 }}>💰 Extra</span>
+                    )}
                   </div>
                   <div className="shift-time" style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--text-secondary)' }}>
                     <Calendar size={13} /> 
@@ -250,6 +259,9 @@ export default function CalendarioPage() {
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                       <div style={{ fontWeight: 800, fontSize: 14, color: 'var(--text-primary)', marginBottom: 6 }}>
                         {p.local?.nome ?? 'Local Indefinido'}
+                        {(p as unknown as { is_extra?: boolean }).is_extra && (
+                          <span style={{ marginLeft: 8, fontSize: 11, fontWeight: 700, color: '#8b5cf6', background: 'rgba(139,92,246,0.12)', padding: '2px 6px', borderRadius: 4 }}>💰 Extra</span>
+                        )}
                         { (p as unknown as { status_conflito?: boolean }).status_conflito && (
                           <span style={{ marginLeft: 8, fontSize: 11, fontWeight: 600, color: '#f59e0b', background: 'rgba(245,158,11,0.12)', padding: '2px 6px', borderRadius: 4 }}>⚠️ Conflito</span>
                         )}
@@ -299,7 +311,7 @@ export default function CalendarioPage() {
                 onClick={removerSomenteEste}
                 disabled={excluindo}
               >
-                🗑️ Remover só este plantão
+                🗑️ {modalExclusao.is_extra ? 'Remover Plantão' : 'Remover só este plantão'}
               </button>
               {!modalExclusao.is_extra && modalExclusao.escala_id && (
                 <button
