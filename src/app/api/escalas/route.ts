@@ -72,16 +72,17 @@ export async function POST(req: NextRequest) {
     const usuario_id = user.id;
 
     const body = await req.json();
-    const { data_inicio, regra, local_id } = body as {
+    const { data_inicio, regra, local_id, forcar_conflito } = body as {
       data_inicio: string;
       regra: Regra;
       local_id: string;
+      forcar_conflito?: boolean;
     };
 
     // Validação básica
     if (!data_inicio || !regra || !local_id) {
       return NextResponse.json(
-        { error: 'Campos obrigatórios: data_inicio, regra, local_id, usuario_id' },
+        { error: 'Campos obrigatórios: data_inicio, regra, local_id' },
         { status: 400 }
       );
     }
@@ -94,19 +95,75 @@ export async function POST(req: NextRequest) {
     }
 
     // Cliente Supabase server-side com Service Role Key
-    // (nunca exposta ao browser — sem prefixo NEXT_PUBLIC_)
     const supabaseAdmin = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
-    // 1️⃣ Cria o registro da escala (template/regra)
+    // 1️⃣ Determina o horizonte e gera os slots antecipadamente para checar conflito
+    const anoAtual = new Date().getFullYear();
+    const dataFim = new Date(anoAtual, 11, 31, 23, 59, 59);
+    const slots = gerarPlantoesAte(new Date(data_inicio), regra, dataFim);
+
+    if (slots.length === 0) {
+      return NextResponse.json(
+        { error: 'Nenhum plantão gerado. Verifique se a data de início está antes de 31/12/' + anoAtual },
+        { status: 400 }
+      );
+    }
+
+    // 2️⃣ Detecção de conflito — verifica sobreposição com plantões existentes do usuário
+    if (!forcar_conflito) {
+      const inicioJanela = slots[0].inicio.toISOString();
+      const fimJanela = slots[slots.length - 1].fim.toISOString();
+
+      // Busca plantões existentes do usuário no mesmo período
+      const { data: plantoesExistentes } = await supabaseAdmin
+        .from('plantoes')
+        .select('id, data_hora_inicio, data_hora_fim')
+        .eq('usuario_id', usuario_id)
+        .neq('status', 'Cancelado')
+        .gte('data_hora_fim', inicioJanela)
+        .lte('data_hora_inicio', fimJanela);
+
+      if (plantoesExistentes && plantoesExistentes.length > 0) {
+        // Verifica sobreposição real slot a slot
+        const conflitos: Array<{ inicio: string; fim: string }> = [];
+        for (const slot of slots) {
+          const choca = plantoesExistentes.some(p =>
+            new Date(p.data_hora_inicio) < slot.fim &&
+            new Date(p.data_hora_fim) > slot.inicio
+          );
+          if (choca) {
+            conflitos.push({
+              inicio: slot.inicio.toISOString(),
+              fim: slot.fim.toISOString(),
+            });
+            if (conflitos.length >= 3) break; // mostra no máximo 3 exemplos
+          }
+        }
+
+        if (conflitos.length > 0) {
+          return NextResponse.json(
+            {
+              conflito: true,
+              total_conflitos: conflitos.length,
+              exemplos: conflitos,
+              message: `Você já tem plantões neste período. Encontramos ${conflitos.length} sobreposição(ões).`,
+            },
+            { status: 409 }
+          );
+        }
+      }
+    }
+
+    // 3️⃣ Cria o registro da escala (template/regra)
     const { data: escala, error: erroEscala } = await supabaseAdmin
       .from('escalas')
       .insert({
         usuario_id,
         local_id,
-        data_inicio: new Date(data_inicio).toISOString().split('T')[0], // só a data
+        data_inicio: new Date(data_inicio).toISOString().split('T')[0],
         regra,
       })
       .select()
@@ -119,21 +176,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 2️⃣ Determina o horizonte: 31/12 do ano corrente às 23:59:59
-    const anoAtual = new Date().getFullYear();
-    const dataFim = new Date(anoAtual, 11, 31, 23, 59, 59); // mês 11 = Dezembro
-
-    // 3️⃣ Executa o motor matemático da skill @calcular-proximos-plantoes
-    const slots = gerarPlantoesAte(new Date(data_inicio), regra, dataFim);
-
-    if (slots.length === 0) {
-      return NextResponse.json(
-        { error: 'Nenhum plantão gerado. Verifique se a data de início está antes de 31/12/' + anoAtual },
-        { status: 400 }
-      );
-    }
-
-    // 4️⃣ Monta o array para bulk insert
+    // 4️⃣ Monta o array para bulk insert (com status_conflito se forçado)
     const plantoes = slots.map((s) => ({
       escala_id: escala.id,
       usuario_id,
@@ -141,6 +184,7 @@ export async function POST(req: NextRequest) {
       data_hora_inicio: s.inicio.toISOString(),
       data_hora_fim: s.fim.toISOString(),
       status: 'Agendado',
+      status_conflito: forcar_conflito === true,
     }));
 
     // 5️⃣ Bulk insert na tabela plantoes
@@ -149,7 +193,6 @@ export async function POST(req: NextRequest) {
       .insert(plantoes);
 
     if (erroInsert) {
-      // Rollback manual: remove a escala criada antes de retornar erro
       await supabaseAdmin.from('escalas').delete().eq('id', escala.id);
       return NextResponse.json(
         { error: 'Erro ao inserir plantões: ' + erroInsert.message },
@@ -165,6 +208,7 @@ export async function POST(req: NextRequest) {
       periodo_ate: dataFim.toLocaleDateString('pt-BR'),
       primeiro_plantao: slots[0].inicio.toISOString(),
       ultimo_plantao: slots[slots.length - 1].inicio.toISOString(),
+      com_conflito: forcar_conflito === true,
     });
   } catch (err) {
     console.error('Erro interno em /api/escalas:', err);

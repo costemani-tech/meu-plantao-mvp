@@ -19,6 +19,19 @@ interface ResultadoAPI {
   total_plantoes?: number;
   periodo_ate?: string;
   error?: string;
+  com_conflito?: boolean;
+}
+interface ConflitoDados {
+  conflito: true;
+  total_conflitos: number;
+  exemplos: Array<{ inicio: string; fim: string }>;
+  message: string;
+}
+interface EscalaAtiva {
+  id: string;
+  regra: string;
+  data_inicio: string;
+  local?: { nome: string; cor_calendario: string };
 }
 
 const DESCRICAO_REGRA: Record<string, string> = {
@@ -49,6 +62,17 @@ export default function EscalasPage() {
   const [toast, setToast] = useState<Toast | null>(null);
   const [ultimoResultado, setUltimoResultado] = useState<ResultadoAPI | null>(null);
 
+  // Estados de conflito
+  const [pendingConflito, setPendingConflito] = useState<ConflitoDados | null>(null);
+  const [pendingPayload, setPendingPayload] = useState<{ data_inicio: string; regra: string; local_id: string } | null>(null);
+
+  // Estados de gestão de escalas
+  const [escalasAtivas, setEscalasAtivas] = useState<EscalaAtiva[]>([]);
+  const [menuEscalaId, setMenuEscalaId] = useState<string | null>(null);
+  const [modalEncerrar, setModalEncerrar] = useState<{ id: string; nome: string } | null>(null);
+  const [dataEncerramento, setDataEncerramento] = useState('');
+  const [deletando, setDeletando] = useState(false);
+
   const regraFinal = regra === 'Outro' ? `${horasTrabalhoOutro}x${horasDescansoOutro}` : regra;
 
   // Computa a data ISO completa baseada na separação de data e hora
@@ -59,7 +83,16 @@ export default function EscalasPage() {
     setLocais((data as LocalTrabalho[]) ?? []);
   }, []);
 
-  useEffect(() => { fetchLocais(); }, [fetchLocais]);
+  const fetchEscalas = useCallback(async () => {
+    const { data } = await supabase
+      .from('escalas')
+      .select('id, regra, data_inicio, local:locais_trabalho(nome, cor_calendario)')
+      .order('created_at', { ascending: false });
+    setEscalasAtivas((data as unknown as EscalaAtiva[]) ?? []);
+  }, []);
+
+  useEffect(() => { fetchLocais(); fetchEscalas(); }, [fetchLocais, fetchEscalas]);
+
 
   const showToast = (msg: string, type: 'success' | 'error') => {
     setToast({ msg, type });
@@ -107,7 +140,7 @@ export default function EscalasPage() {
     setSavingLocal(false);
   };
 
-  const salvarEscala = async () => {
+  const salvarEscala = async (forcar_conflito = false) => {
     if (!localId || !dataInicioSo || !horaInicio) {
       showToast('Preencha o Local, o Dia e a Hora do plantão.', 'error');
       return;
@@ -116,49 +149,84 @@ export default function EscalasPage() {
     setSaving(true);
     setUltimoResultado(null);
 
-    // ──────────────────────────────────────────────────
-    // Chama o Route Handler backend (POST /api/escalas)
-    // O cálculo e o insert ocorrem server-side com
-    // validação JWT (Cookie SSR) ativada.
-    // ──────────────────────────────────────────────────
+    const payload = {
+      data_inicio: new Date(dataCompletaISO).toISOString(),
+      regra: regraFinal,
+      local_id: localId,
+      ...(forcar_conflito && { forcar_conflito: true }),
+    };
+
     try {
       const response = await fetch('/api/escalas', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          data_inicio: new Date(dataCompletaISO).toISOString(),
-          regra: regraFinal,
-          local_id: localId,
-        }),
+        body: JSON.stringify(payload),
       });
 
-      const resultado: ResultadoAPI = await response.json();
+      const resultado = await response.json();
+
+      // ── CONFLITO DETECTADO (409) ──
+      if (response.status === 409 && resultado.conflito) {
+        setPendingConflito(resultado as ConflitoDados);
+        setPendingPayload({ data_inicio: payload.data_inicio, regra: payload.regra, local_id: payload.local_id });
+        setSaving(false);
+        return;
+      }
 
       if (!response.ok || !resultado.success) {
         showToast('❌ Erro: ' + (resultado.error ?? 'Falha ao criar escala.'), 'error');
       } else {
-        showToast(
-          `✅ ${resultado.total_plantoes} plantões gerados até ${resultado.periodo_ate}!`,
-          'success'
-        );
-        setUltimoResultado(resultado);
-
-        // Notifica outras páginas (ex: Calendário) para refazer o fetch
+        const sufixo = resultado.com_conflito ? ' (com sobreposição confirmada)' : '';
+        showToast(`✅ ${resultado.total_plantoes} plantões gerados até ${resultado.periodo_ate}!${sufixo}`, 'success');
+        setUltimoResultado(resultado as ResultadoAPI);
         window.dispatchEvent(new CustomEvent('plantoes-atualizados'));
-
-        // Limpa o formulário
         setLocalId('');
         setDataInicioSo('');
         setHoraInicio('07:00');
         setRegra('12x36');
         setPreview([]);
+        fetchEscalas();
       }
     } catch (err) {
-      showToast('❌ Erro de conexão com o servidor. Verifique o .env.local.', 'error');
+      showToast('❌ Erro de conexão com o servidor.', 'error');
       console.error(err);
     }
 
     setSaving(false);
+  };
+
+  const confirmarConflito = async () => {
+    if (!pendingPayload) return;
+    setPendingConflito(null);
+    await salvarEscala(true);
+  };
+
+  const excluirEscala = async (id: string, modo: 'completo' | 'encerrar_em', dataCorte?: string) => {
+    setDeletando(true);
+    try {
+      const response = await fetch(`/api/escalas/${id}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ modo, ...(dataCorte && { data_encerramento: new Date(dataCorte).toISOString() }) }),
+      });
+      const resultado = await response.json();
+      if (!response.ok) {
+        showToast('❌ ' + (resultado.error ?? 'Erro ao excluir escala.'), 'error');
+      } else {
+        const msg = modo === 'completo'
+          ? '🗑️ Escala excluída completamente!'
+          : `✂️ Escala encerrada em ${new Date(dataCorte!).toLocaleDateString('pt-BR')}. ${resultado.plantoes_removidos} plantões futuros removidos.`;
+        showToast(msg, 'success');
+        setModalEncerrar(null);
+        setDataEncerramento('');
+        fetchEscalas();
+        window.dispatchEvent(new CustomEvent('plantoes-atualizados'));
+      }
+    } catch {
+      showToast('❌ Erro de conexão.', 'error');
+    }
+    setDeletando(false);
+    setMenuEscalaId(null);
   };
 
   const duracaoHoras = (r: string) => parseInt(r.split('x')[0], 10) || 12;
@@ -343,7 +411,7 @@ export default function EscalasPage() {
           <button
             className="btn btn-primary"
             style={{ width: '100%', justifyContent: 'center', marginTop: 8 }}
-            onClick={salvarEscala}
+            onClick={() => salvarEscala()}
             disabled={saving}
           >
             {saving ? '⏳ Processando no servidor...' : '🚀 Criar Escala e Gerar Plantões'}
@@ -440,6 +508,117 @@ export default function EscalasPage() {
           </div>
         </div>
       </div>
+
+      {/* ══════════════════════════════════════════
+          SEÇÃO: Minhas Escalas Ativas
+         ══════════════════════════════════════════ */}
+      {escalasAtivas.length > 0 && (
+        <div style={{ marginTop: 32 }}>
+          <h2 style={{ fontWeight: 700, fontSize: 16, marginBottom: 16 }}>📋 Minhas Escalas Ativas</h2>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {escalasAtivas.map(e => (
+              <div key={e.id} className="card" style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div style={{ width: 12, height: 12, borderRadius: '50%', background: e.local?.cor_calendario ?? '#4f8ef7', flexShrink: 0 }} />
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--text-primary)' }}>{e.local?.nome ?? 'Local desconhecido'}</div>
+                    <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                      {e.regra} · a partir de {new Date(e.data_inicio + 'T12:00:00').toLocaleDateString('pt-BR')}
+                    </div>
+                  </div>
+                </div>
+                <div style={{ position: 'relative' }}>
+                  <button
+                    onClick={() => setMenuEscalaId(menuEscalaId === e.id ? null : e.id)}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: 'var(--text-muted)', padding: '4px 8px', borderRadius: 6 }}
+                    title="Opções da escala"
+                  >⋮</button>
+                  {menuEscalaId === e.id && (
+                    <div style={{ position: 'absolute', right: 0, top: '100%', zIndex: 100, background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)', borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,0.15)', minWidth: 200, overflow: 'hidden' }}>
+                      <button
+                        onClick={() => { if (confirm('Tem certeza? Isso apagará TODOS os plantões desta escala, incluindo os passados.')) excluirEscala(e.id, 'completo'); }}
+                        style={{ width: '100%', padding: '12px 16px', background: 'none', border: 'none', textAlign: 'left', cursor: 'pointer', color: '#ef4444', fontWeight: 600, fontSize: 13, display: 'flex', alignItems: 'center', gap: 8 }}
+                      >🗑️ Excluir Escala Completa</button>
+                      <div style={{ borderTop: '1px solid var(--border-subtle)' }} />
+                      <button
+                        onClick={() => { setModalEncerrar({ id: e.id, nome: e.local?.nome ?? 'Escala' }); setMenuEscalaId(null); }}
+                        style={{ width: '100%', padding: '12px 16px', background: 'none', border: 'none', textAlign: 'left', cursor: 'pointer', color: 'var(--text-primary)', fontWeight: 600, fontSize: 13, display: 'flex', alignItems: 'center', gap: 8 }}
+                      >✂️ Encerrar na Data X</button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ══ MODAL: Conflito de Horário (Amarelo) ══ */}
+      {pendingConflito && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(2px)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+          <div className="card" style={{ maxWidth: 440, width: '100%', border: '2px solid #f59e0b', boxShadow: '0 20px 40px rgba(245,158,11,0.2)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+              <span style={{ fontSize: 24 }}>⚠️</span>
+              <h2 style={{ fontSize: 16, fontWeight: 800, color: '#92400e' }}>Conflito de Horário Detectado</h2>
+            </div>
+            <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 12, lineHeight: 1.6 }}>
+              {pendingConflito.message}
+            </p>
+            <div style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)', borderRadius: 8, padding: 12, marginBottom: 16 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: '#92400e', marginBottom: 6 }}>Exemplos de sobreposição:</div>
+              {pendingConflito.exemplos.map((ex, i) => (
+                <div key={i} style={{ fontSize: 12, color: 'var(--text-secondary)', padding: '3px 0' }}>
+                  {new Date(ex.inicio).toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' })} · {new Date(ex.inicio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} às {new Date(ex.fim).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                </div>
+              ))}
+            </div>
+            <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 16 }}>
+              Você já tem um plantão neste horário. Deseja confirmar a duplicidade?
+            </p>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button className="btn btn-secondary" style={{ flex: 1 }} onClick={() => { setPendingConflito(null); setPendingPayload(null); }}>Cancelar</button>
+              <button
+                className="btn btn-primary"
+                style={{ flex: 1, background: '#f59e0b', borderColor: '#f59e0b' }}
+                onClick={confirmarConflito}
+                disabled={saving}
+              >{saving ? '⏳ Salvando...' : '✅ Confirmar Duplicidade'}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ══ MODAL: Encerrar na Data X ══ */}
+      {modalEncerrar && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(2px)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+          <div className="card" style={{ maxWidth: 400, width: '100%', boxShadow: '0 20px 40px rgba(0,0,0,0.15)' }}>
+            <h2 style={{ fontSize: 16, fontWeight: 800, marginBottom: 8 }}>✂️ Encerrar Escala</h2>
+            <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 16, lineHeight: 1.6 }}>
+              Escolha a data de encerramento para <strong>{modalEncerrar.nome}</strong>.<br />
+              Plantões <em>a partir desta data</em> serão removidos. O histórico anterior é preservado.
+            </p>
+            <div className="form-group">
+              <label className="form-label">Data de encerramento</label>
+              <input
+                type="date"
+                className="form-input"
+                value={dataEncerramento}
+                min={new Date().toISOString().split('T')[0]}
+                onChange={e => setDataEncerramento(e.target.value)}
+              />
+            </div>
+            <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
+              <button className="btn btn-secondary" style={{ flex: 1 }} onClick={() => { setModalEncerrar(null); setDataEncerramento(''); }}>Cancelar</button>
+              <button
+                className="btn btn-primary"
+                style={{ flex: 1 }}
+                disabled={!dataEncerramento || deletando}
+                onClick={() => excluirEscala(modalEncerrar.id, 'encerrar_em', dataEncerramento)}
+              >{deletando ? '⏳ Encerrando...' : 'Confirmar Encerramento'}</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {toast && <div className={`toast ${toast.type}`}>{toast.msg}</div>}
     </>

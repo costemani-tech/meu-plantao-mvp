@@ -144,8 +144,12 @@ export default function CalendarioPage() {
                       <div
                         key={p.id}
                         className="cal-dot"
-                        style={{ backgroundColor: p.local?.cor_calendario ?? '#4f8ef7' }}
-                        title={p.local?.nome}
+                        style={{
+                          backgroundColor: (p as unknown as { status_conflito?: boolean }).status_conflito
+                            ? '#f59e0b'
+                            : (p.local?.cor_calendario ?? '#4f8ef7')
+                        }}
+                        title={`${p.local?.nome}${ (p as unknown as { status_conflito?: boolean }).status_conflito ? ' ⚠️ Conflito' : ''}`}
                       />
                     ))}
                     {ps.length > 3 && (
@@ -208,9 +212,14 @@ export default function CalendarioPage() {
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {plantoesNoDia(diaSelecionado).map(p => (
-                  <div key={p.id} style={{ padding: 16, background: 'var(--bg-primary)', border: '1px solid var(--border-subtle)', borderRadius: 12, borderLeft: `4px solid ${p.local?.cor_calendario ?? '#4f8ef7'}` }}>
+                  <div key={p.id} style={{ padding: 16, background: (p as unknown as { status_conflito?: boolean }).status_conflito ? 'rgba(245,158,11,0.06)' : 'var(--bg-primary)', border: '1px solid var(--border-subtle)', borderRadius: 12, borderLeft: `4px solid ${ (p as unknown as { status_conflito?: boolean }).status_conflito ? '#f59e0b' : (p.local?.cor_calendario ?? '#4f8ef7')}` }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                      <div style={{ fontWeight: 800, fontSize: 14, color: 'var(--text-primary)', marginBottom: 6 }}>{p.local?.nome ?? 'Local Indefinido'}</div>
+                      <div style={{ fontWeight: 800, fontSize: 14, color: 'var(--text-primary)', marginBottom: 6 }}>
+                        {p.local?.nome ?? 'Local Indefinido'}
+                        { (p as unknown as { status_conflito?: boolean }).status_conflito && (
+                          <span style={{ marginLeft: 8, fontSize: 11, fontWeight: 600, color: '#f59e0b', background: 'rgba(245,158,11,0.12)', padding: '2px 6px', borderRadius: 4 }}>⚠️ Conflito</span>
+                        )}
+                      </div>
                       <button 
                         onClick={() => removerPlantao(p.id)}
                         title="Remover Plantão"
