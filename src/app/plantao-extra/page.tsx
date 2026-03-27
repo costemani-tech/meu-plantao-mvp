@@ -76,6 +76,9 @@ export default function PlantaoExtraPage() {
 
       if (error) throw error;
 
+      // ↓ Notifica o calendário para limpar cache e refazer fetch com is_extra correto
+      window.dispatchEvent(new CustomEvent('plantoes-atualizados'));
+
       showToast('✅ Plantão Extra salvo com sucesso no calendário!', 'success');
       setDataPlantao('');
       setConflitoPendente(null);
