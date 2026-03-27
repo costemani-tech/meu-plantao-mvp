@@ -17,6 +17,8 @@ export default function CalendarioPage() {
   const [mes, setMes] = useState(new Date().getMonth());
   const [loading, setLoading] = useState(false);
   const [diaSelecionado, setDiaSelecionado] = useState<number | null>(null);
+  const [modalExclusao, setModalExclusao] = useState<PlantaoComLocal | null>(null);
+  const [excluindo, setExcluindo] = useState(false);
 
   const fetchPlantoes = useCallback(async () => {
     const cachedData = localStorage.getItem(`calendario_cache_${ano}_${mes}`);
@@ -62,20 +64,52 @@ export default function CalendarioPage() {
     };
   }, [fetchPlantoes]);
 
-  const removerPlantao = async (id: string) => {
-    if (!confirm('Deseja realmente remover este plantão da sua agenda?')) return;
-    
+  const abrirModalExclusao = (p: PlantaoComLocal) => {
+    setModalExclusao(p);
+  };
+
+  const removerSomenteEste = async () => {
+    if (!modalExclusao) return;
+    setExcluindo(true);
+    const id = modalExclusao.id;
     setPlantoes(prev => prev.filter(p => p.id !== id));
-    
+    setModalExclusao(null);
     const { error } = await supabase.from('plantoes').delete().eq('id', id);
     if (error) {
-      alert('Erro ao remover: ' + error.message);
-      fetchPlantoes(); 
+      fetchPlantoes();
     } else {
-      const freshData = plantoes.filter(p => p.id !== id);
-      localStorage.setItem(`calendario_cache_${ano}_${mes}`, JSON.stringify(freshData));
+      localStorage.removeItem(`calendario_cache_${ano}_${mes}`);
       window.dispatchEvent(new CustomEvent('plantoes-atualizados'));
     }
+    setExcluindo(false);
+  };
+
+  const removerEstEFuturos = async () => {
+    if (!modalExclusao) return;
+    const p = modalExclusao;
+    if (!p.escala_id) {
+      // Plantão extra sem escala — só remove este
+      await removerSomenteEste();
+      return;
+    }
+    setExcluindo(true);
+    setModalExclusao(null);
+    try {
+      const response = await fetch(`/api/escalas/${p.escala_id}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          modo: 'encerrar_em',
+          data_encerramento: p.data_hora_inicio,
+        }),
+      });
+      if (response.ok) {
+        localStorage.removeItem(`calendario_cache_${ano}_${mes}`);
+        fetchPlantoes();
+        window.dispatchEvent(new CustomEvent('plantoes-atualizados'));
+      }
+    } catch { /* silencioso */ }
+    setExcluindo(false);
   };
 
   const plantoesNoDia = (dia: number): PlantaoComLocal[] =>
@@ -176,7 +210,7 @@ export default function CalendarioPage() {
           <div className="shift-list">
             {plantoes.filter(p => new Date(p.data_hora_inicio).getTime() >= new Date().setHours(0,0,0,0)).slice(0, 5).map(p => (
               <div key={p.id} className="shift-item" onClick={() => setDiaSelecionado(new Date(p.data_hora_inicio).getDate())} style={{ cursor: 'pointer' }}>
-                <div className="shift-color-bar" style={{ backgroundColor: p.local?.cor_calendario ?? '#4f8ef7' }} />
+                <div className="shift-color-bar" style={{ backgroundColor: (p as unknown as { status_conflito?: boolean }).status_conflito ? '#f59e0b' : (p.local?.cor_calendario ?? '#4f8ef7') }} />
                 <div className="shift-info" style={{ flex: 1, padding: '4px 0' }}>
                   <div className="shift-local" style={{ fontWeight: 700, fontSize: 13, color: 'var(--text-primary)', marginBottom: 6 }}>
                     {p.local?.nome ?? 'Local não informado'}
@@ -221,7 +255,7 @@ export default function CalendarioPage() {
                         )}
                       </div>
                       <button 
-                        onClick={() => removerPlantao(p.id)}
+                        onClick={() => abrirModalExclusao(p)}
                         title="Remover Plantão"
                         style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, opacity: 0.7, fontSize: 14 }}
                       >
@@ -245,6 +279,46 @@ export default function CalendarioPage() {
                 ))}
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Exclusão com 3 opções */}
+      {modalExclusao && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(2px)', zIndex: 999999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }} onClick={() => setModalExclusao(null)}>
+          <div className="card" style={{ maxWidth: 380, width: '100%', boxShadow: '0 20px 40px rgba(0,0,0,0.2)' }} onClick={e => e.stopPropagation()}>
+            <h2 style={{ fontSize: 15, fontWeight: 800, marginBottom: 6 }}>Remover Plantão 🗑️</h2>
+            <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 20, lineHeight: 1.5 }}>
+              <strong>{modalExclusao.local?.nome}</strong><br />
+              {new Date(modalExclusao.data_hora_inicio).toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })} · {new Date(modalExclusao.data_hora_inicio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <button
+                className="btn btn-secondary"
+                style={{ justifyContent: 'flex-start', textAlign: 'left', padding: '12px 16px', fontSize: 13, fontWeight: 600 }}
+                onClick={removerSomenteEste}
+                disabled={excluindo}
+              >
+                🗑️ Remover só este plantão
+              </button>
+              {modalExclusao.escala_id && (
+                <button
+                  className="btn btn-secondary"
+                  style={{ justifyContent: 'flex-start', textAlign: 'left', padding: '12px 16px', fontSize: 13, fontWeight: 600, color: '#ef4444', borderColor: 'rgba(239,68,68,0.3)' }}
+                  onClick={removerEstEFuturos}
+                  disabled={excluindo}
+                >
+                  ✂️ Remover este e todos os futuros desta escala
+                </button>
+              )}
+              <button
+                className="btn btn-secondary"
+                style={{ padding: '10px 16px', fontSize: 13 }}
+                onClick={() => setModalExclusao(null)}
+              >
+                Cancelar
+              </button>
+            </div>
           </div>
         </div>
       )}
