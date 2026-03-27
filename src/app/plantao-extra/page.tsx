@@ -15,6 +15,8 @@ export default function PlantaoExtraPage() {
 
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<Toast | null>(null);
+  const [conflitoPendente, setConflitoPendente] = useState<{ inicio: string; fim: string } | null>(null);
+  const [payloadPendente, setPayloadPendente] = useState<{ inicioIso: string; fimIso: string } | null>(null);
 
   const fetchLocais = useCallback(async () => {
     const { data } = await supabase.from('locais_trabalho').select('*').order('nome');
@@ -28,7 +30,7 @@ export default function PlantaoExtraPage() {
     setTimeout(() => setToast(null), 5000);
   };
 
-  const salvarPlantaoExtra = async () => {
+  const salvarPlantaoExtra = async (forcarConflito = false) => {
     if (!localId || !dataPlantao || !horaInicio || !horaFim) {
       showToast('Por favor, preencha todos os campos.', 'error');
       return;
@@ -39,18 +41,35 @@ export default function PlantaoExtraPage() {
     try {
       const inicioIso = new Date(`${dataPlantao}T${horaInicio}:00`).toISOString();
       let dataFimObj = new Date(`${dataPlantao}T${horaFim}:00`);
-      
-      // Se a hora de fim for menor que a hora de início, assumimos que virou o dia (ex: 19:00 até 07:00)
-      if (horaFim < horaInicio) {
-        dataFimObj.setDate(dataFimObj.getDate() + 1);
-      }
+      if (horaFim < horaInicio) dataFimObj.setDate(dataFimObj.getDate() + 1);
       const fimIso = dataFimObj.toISOString();
+
+      // ── Verifica conflito de horário antes de inserir ──
+      if (!forcarConflito) {
+        const { data: existentes } = await supabase
+          .from('plantoes')
+          .select('id, data_hora_inicio, data_hora_fim')
+          .neq('status', 'Cancelado')
+          .lt('data_hora_inicio', fimIso)
+          .gt('data_hora_fim', inicioIso);
+
+        if (existentes && existentes.length > 0) {
+          setSaving(false);
+          setPayloadPendente({ inicioIso, fimIso });
+          setConflitoPendente({ inicio: inicioIso, fim: fimIso });
+          return;
+        }
+      }
+
+      const payload = payloadPendente && forcarConflito
+        ? { inicioIso: payloadPendente.inicioIso, fimIso: payloadPendente.fimIso }
+        : { inicioIso: new Date(`${dataPlantao}T${horaInicio}:00`).toISOString(), fimIso: (() => { let d = new Date(`${dataPlantao}T${horaFim}:00`); if (horaFim < horaInicio) d.setDate(d.getDate()+1); return d.toISOString(); })() };
 
       const { error } = await supabase.from('plantoes').insert({
         local_id: localId,
-        escala_id: null, // Plantão avulso
-        data_hora_inicio: inicioIso,
-        data_hora_fim: fimIso,
+        escala_id: null,
+        data_hora_inicio: payload.inicioIso,
+        data_hora_fim: payload.fimIso,
         is_extra: true,
         status: 'Agendado'
       });
@@ -58,12 +77,12 @@ export default function PlantaoExtraPage() {
       if (error) throw error;
 
       showToast('✅ Plantão Extra salvo com sucesso no calendário!', 'success');
-      
-      // Reseta os inputs mantendo os horários padrão
       setDataPlantao('');
-      
-    } catch (err: any) {
-      showToast('❌ Erro ao salvar: ' + err.message, 'error');
+      setConflitoPendente(null);
+      setPayloadPendente(null);
+
+    } catch (err: unknown) {
+      showToast('❌ Erro ao salvar: ' + (err as Error).message, 'error');
     } finally {
       setSaving(false);
     }
@@ -137,13 +156,38 @@ export default function PlantaoExtraPage() {
           <button
             className="btn btn-primary"
             style={{ width: '100%', justifyContent: 'center', marginTop: 16, padding: '14px', background: 'var(--accent-teal)' }}
-            onClick={salvarPlantaoExtra}
+            onClick={() => salvarPlantaoExtra()}
             disabled={saving}
           >
             {saving ? '⏳ Inserindo no calendário...' : '💵 Salvar Plantão Avulso'}
           </button>
         </div>
       </div>
+
+      {/* Modal de Conflito para Plantão Extra */}
+      {conflitoPendente && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(2px)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+          <div className="card" style={{ maxWidth: 400, width: '100%', border: '2px solid #f59e0b', boxShadow: '0 20px 40px rgba(245,158,11,0.2)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+              <span style={{ fontSize: 22 }}>⚠️</span>
+              <h2 style={{ fontSize: 15, fontWeight: 800, color: '#92400e' }}>Conflito de Horário</h2>
+            </div>
+            <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 16, lineHeight: 1.6 }}>
+              Você já tem um plantão das <strong>{new Date(conflitoPendente.inicio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</strong> às <strong>{new Date(conflitoPendente.fim).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</strong> nesta data.<br/><br/>
+              Deseja confirmar a duplicidade mesmo assim?
+            </p>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button className="btn btn-secondary" style={{ flex: 1 }} onClick={() => { setConflitoPendente(null); setPayloadPendente(null); }}>Cancelar</button>
+              <button
+                className="btn btn-primary"
+                style={{ flex: 1, background: '#f59e0b', borderColor: '#f59e0b' }}
+                onClick={() => salvarPlantaoExtra(true)}
+                disabled={saving}
+              >{saving ? '⏳...' : '✅ Confirmar'}</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {toast && <div className={`toast ${toast.type}`}>{toast.msg}</div>}
     </>

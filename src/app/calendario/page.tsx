@@ -301,7 +301,7 @@ export default function CalendarioPage() {
               >
                 🗑️ Remover só este plantão
               </button>
-              {modalExclusao.escala_id && (
+              {!modalExclusao.is_extra && modalExclusao.escala_id && (
                 <button
                   className="btn btn-secondary"
                   style={{ justifyContent: 'flex-start', textAlign: 'left', padding: '12px 16px', fontSize: 13, fontWeight: 600, color: '#ef4444', borderColor: 'rgba(239,68,68,0.3)' }}
