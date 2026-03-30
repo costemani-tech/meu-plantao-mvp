@@ -12,6 +12,9 @@ export default function PlantaoExtraPage() {
   const [dataPlantao, setDataPlantao] = useState('');
   const [horaInicio, setHoraInicio] = useState('07:00');
   const [horaFim, setHoraFim] = useState('19:00');
+  
+  const [tipoExtra, setTipoExtra] = useState<'Remunerado' | 'Folga'>('Remunerado');
+  const [valorGanho, setValorGanho] = useState('');
 
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<Toast | null>(null);
@@ -93,7 +96,8 @@ export default function PlantaoExtraPage() {
         data_hora_inicio: payload.inicioIso,
         data_hora_fim: payload.fimIso,
         is_extra: true,
-        status: 'Agendado'
+        status: tipoExtra === 'Folga' ? 'Trocado' : 'Agendado',
+        valor_ganho: tipoExtra === 'Remunerado' ? (parseFloat(valorGanho.replace(',', '.')) || 0) : 0
       });
 
       if (error) throw error;
@@ -177,6 +181,34 @@ export default function PlantaoExtraPage() {
               />
             </div>
           </div>
+
+          {/* Novos Campos de Valor e Tipo */}
+          <div className="form-group" style={{ marginTop: 20 }}>
+            <label className="form-label">Tipo de Plantão Extra *</label>
+            <div style={{ display: 'flex', gap: 12, marginTop: 8 }}>
+              <label style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8, padding: 12, border: '1px solid var(--border-subtle)', borderRadius: 8, cursor: 'pointer', background: tipoExtra === 'Remunerado' ? 'var(--bg-secondary)' : 'transparent' }}>
+                <input type="radio" name="tipoExtra" value="Remunerado" checked={tipoExtra === 'Remunerado'} onChange={() => setTipoExtra('Remunerado')} />
+                <span>💰 Remunerado</span>
+              </label>
+              <label style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8, padding: 12, border: '1px solid var(--border-subtle)', borderRadius: 8, cursor: 'pointer', background: tipoExtra === 'Folga' ? 'var(--bg-secondary)' : 'transparent' }}>
+                <input type="radio" name="tipoExtra" value="Folga" checked={tipoExtra === 'Folga'} onChange={() => setTipoExtra('Folga')} />
+                <span>🔄 Troca/Folga</span>
+              </label>
+            </div>
+          </div>
+
+          {tipoExtra === 'Remunerado' && (
+            <div className="form-group" style={{ marginTop: 20 }}>
+              <label className="form-label">Valor do Plantão (R$)</label>
+              <input
+                type="number"
+                className="form-input"
+                placeholder="Ex: 1200.00"
+                value={valorGanho}
+                onChange={e => setValorGanho(e.target.value)}
+              />
+            </div>
+          )}
 
           <button
             className="btn btn-primary"

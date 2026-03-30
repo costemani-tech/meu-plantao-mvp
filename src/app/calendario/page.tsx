@@ -1,8 +1,11 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { supabase, Plantao, LocalTrabalho } from '../../lib/supabase';
 import { Calendar, Clock } from 'lucide-react';
+import { jsPDF } from 'jspdf';
+import html2canvas from 'html2canvas';
+import { ReportTemplate } from '../../components/ReportTemplate';
 
 interface PlantaoComLocal extends Plantao {
   local?: LocalTrabalho;
@@ -20,6 +23,11 @@ export default function CalendarioPage() {
   const [diaSelecionado, setDiaSelecionado] = useState<number | null>(null);
   const [modalExclusao, setModalExclusao] = useState<PlantaoComLocal | null>(null);
   const [excluindo, setExcluindo] = useState(false);
+  const [gerandoPdf, setGerandoPdf] = useState(false);
+  const [showProModal, setShowProModal] = useState(false);
+  const reportRef = useRef<HTMLDivElement>(null);
+  
+  const isPro = false; // Trava Freemium
 
   const fetchPlantoes = useCallback(async () => {
     const cachedData = localStorage.getItem(`calendario_cache_${ano}_${mes}`);
@@ -165,6 +173,35 @@ export default function CalendarioPage() {
     if (mes === 11) { setMes(0); setAno(a => a + 1); } else setMes(m => m + 1);
   };
 
+  const exportPDF = async () => {
+    if (!isPro) {
+      setShowProModal(true);
+      return;
+    }
+    
+    if (!reportRef.current) return;
+    
+    setGerandoPdf(true);
+    try {
+      await new Promise(r => setTimeout(r, 100)); // Render tick
+      
+      const canvas = await html2canvas(reportRef.current, { scale: 2, useCORS: true });
+      const imgData = canvas.toDataURL('image/png');
+      
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`meu-plantao-${MESES[mes]}-${ano}.pdf`);
+    } catch (error) {
+      console.error('Erro ao gerar PDF', error);
+      alert('Ocorreu um erro ao gerar o relatório.');
+    } finally {
+      setGerandoPdf(false);
+    }
+  };
+
   const cells: Array<{ dia: number; mesAtual: boolean }> = [];
   for (let i = primeiroDiaMes - 1; i >= 0; i--) cells.push({ dia: diasAnterior - i, mesAtual: false });
   for (let d = 1; d <= diasNoMes; d++) cells.push({ dia: d, mesAtual: true });
@@ -186,6 +223,14 @@ export default function CalendarioPage() {
           </span>
           <button className="btn btn-secondary" onClick={proximoMes}>→</button>
         </div>
+        <button 
+          className="btn btn-primary mobile-only-margin" 
+          onClick={exportPDF} 
+          disabled={gerandoPdf}
+          style={{ background: 'linear-gradient(135deg, #10b981, #059669)', border: 'none', gap: '8px' }}
+        >
+          {gerandoPdf ? '⏳ Gerando...' : '📥 Relatório Mensal'}
+        </button>
       </div>
 
       <div className="card">
@@ -366,6 +411,27 @@ export default function CalendarioPage() {
           </div>
         </div>
       )}
+
+      {/* Componente PDF Invisível */}
+      <ReportTemplate ref={reportRef} plantoes={plantoes} mesNome={MESES[mes]} ano={ano} />
+
+      {/* MODAL PRO PAYWALL - PDF */}
+      {showProModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+          <div className="card" style={{ maxWidth: 400, width: '100%', textAlign: 'center' }}>
+            <span style={{ fontSize: 48, display: 'block', marginBottom: 16 }}>⭐</span>
+            <h2 style={{ fontSize: 20, fontWeight: 800, marginBottom: 8, color: 'var(--text-primary)' }}>Upgrade para o Pro</h2>
+            <p style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 24, lineHeight: 1.5 }}>
+              Tenha um Dashboard completo em PDF com soma de horas, saldo financeiro de extras e controle de folgas! Assine o Pro.
+            </p>
+            <div style={{ display: 'flex', gap: 12 }}>
+              <button className="btn btn-secondary" style={{ flex: 1, justifyContent: 'center' }} onClick={() => setShowProModal(false)}>Voltar</button>
+              <button className="btn btn-primary" style={{ flex: 1, justifyContent: 'center', background: 'linear-gradient(to right, #f59e0b, #d97706)', border: 'none' }} onClick={() => setShowProModal(false)}>Assinar Pro</button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </>
   );
 }
