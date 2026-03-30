@@ -137,8 +137,8 @@ export default function CalendarioPage() {
       const cor = getCor(p);
 
       if (crossesMidnight) {
-        if (dInicio.getDate() === dia) return `linear-gradient(to right, transparent 50%, ${cor} 50%)`;
-        return `linear-gradient(to right, ${cor} 50%, transparent 50%)`;
+        if (dInicio.getDate() === dia) return `linear-gradient(to bottom, transparent 50%, ${cor} 50%)`;
+        return `linear-gradient(to bottom, ${cor} 50%, transparent 50%)`;
       }
       return cor;
     }
@@ -146,7 +146,7 @@ export default function CalendarioPage() {
     if (ps.length >= 2) {
       const cor1 = getCor(ps[0]);
       const cor2 = getCor(ps[1]);
-      return `linear-gradient(to right, ${cor1} 50%, ${cor2} 50%)`;
+      return `linear-gradient(to bottom, ${cor1} 50%, ${cor2} 50%)`;
     }
     return 'transparent';
   };
