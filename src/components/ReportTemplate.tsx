@@ -72,7 +72,6 @@ export const ReportTemplate = React.forwardRef<HTMLDivElement, ReportTemplatePro
         style={{
           width: '100%',
           maxWidth: '800px',
-          minHeight: '1131px', // Aprox A4 ratio
           background: '#ffffff',
           padding: '24px', // padding reduzido para caber bem no mobile
           fontFamily: 'Inter, sans-serif',

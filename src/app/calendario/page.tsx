@@ -190,6 +190,7 @@ export default function CalendarioPage() {
             // Força as dimensões pro layout não quebrar durante a "foto"
             el.style.width = '800px';
             el.style.maxWidth = '800px';
+            el.style.minHeight = '1131px';
             el.style.padding = '40px'; // Restaura o padding do desktop para o PDF
           }
         }
@@ -462,8 +463,8 @@ export default function CalendarioPage() {
           </div>
 
           {/* Área Rolável contendo o ReportTemplate Visível para Leitura na Tela */}
-          <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', padding: '16px', display: 'flex', justifyContent: 'center' }}>
-            <div style={{ width: '100%', maxWidth: '800px', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 10px 30px rgba(0,0,0,0.5)', marginBottom: '40px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', padding: '16px' }}>
+            <div style={{ width: '100%', maxWidth: '800px', margin: '0 auto', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 10px 30px rgba(0,0,0,0.5)', marginBottom: '80px', background: '#fff' }}>
                 <ReportTemplate ref={reportRef} plantoes={plantoes} mesNome={MESES[mes]} ano={ano} />
             </div>
           </div>
