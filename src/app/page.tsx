@@ -13,6 +13,7 @@ export default function DashboardPage() {
   const [totalMes, setTotalMes] = useState(0);
   const [locaisAtivos, setLocaisAtivos] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [showProModal, setShowProModal] = useState('');
 
   const fetchPlantoes = useCallback(async () => {
     // 1. OFFLINE FIRST: Carrega o cache armazenado no disco local
@@ -138,7 +139,30 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div className="card" style={{ marginTop: 32 }}>
+          {/* CENTRAL PRO */}
+          <div className="card" style={{ marginTop: 24, padding: 20 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+              <h2 style={{ fontWeight: 800, fontSize: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ color: '#f59e0b' }}>⭐</span> Central Pro
+              </h2>
+              <span style={{ fontSize: 11, background: 'rgba(245,158,11,0.1)', color: '#f59e0b', padding: '4px 8px', borderRadius: 12, fontWeight: 700 }}>
+                RECURSOS PREMIUM
+              </span>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
+              <button className="btn btn-secondary" style={{ justifyContent: 'center', gap: 8, padding: 16 }} onClick={() => setShowProModal('Exportação em PDF')}>
+                🔒 Exportar PDF
+              </button>
+              <button className="btn btn-secondary" style={{ justifyContent: 'center', gap: 8, padding: 16 }} onClick={() => setShowProModal('Controle Financeiro')}>
+                🔒 Controle Financeiro
+              </button>
+              <button className="btn btn-secondary" style={{ justifyContent: 'center', gap: 8, padding: 16 }} onClick={() => setShowProModal('Compartilhamento de Agenda')}>
+                🔒 Compartilhar Agenda
+              </button>
+            </div>
+          </div>
+
+          <div className="card" style={{ marginTop: 24 }}>
             <h2 style={{ fontWeight: 700, marginBottom: 16, fontSize: 16 }}>
               Próximos Plantões por Local
             </h2>
@@ -190,6 +214,24 @@ export default function DashboardPage() {
             )}
           </div>
         </>
+      )}
+
+      {/* MODAL PRO PAYWALL */}
+      {showProModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+          <div className="card" style={{ maxWidth: 400, width: '100%', textAlign: 'center' }}>
+            <span style={{ fontSize: 48, display: 'block', marginBottom: 16 }}>⭐</span>
+            <h2 style={{ fontSize: 20, fontWeight: 800, marginBottom: 8, color: 'var(--text-primary)' }}>Upgrade para o Pro</h2>
+            <p style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 24, lineHeight: 1.5 }}>
+              O recurso de <strong>{showProModal}</strong> é exclusivo para assinantes do Meu Plantão Pro.<br/>
+              Desbloqueie todo o poder da sua carreira médica agora!
+            </p>
+            <div style={{ display: 'flex', gap: 12 }}>
+              <button className="btn btn-secondary" style={{ flex: 1, justifyContent: 'center' }} onClick={() => setShowProModal('')}>Voltar</button>
+              <button className="btn btn-primary" style={{ flex: 1, justifyContent: 'center', background: 'linear-gradient(to right, #f59e0b, #d97706)', border: 'none' }} onClick={() => setShowProModal('')}>Assinar Pro</button>
+            </div>
+          </div>
+        </div>
       )}
     </>
   );

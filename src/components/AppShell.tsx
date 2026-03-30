@@ -226,6 +226,17 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               </Link>
             );
           })}
+          
+          {/* Logout Mobile */}
+          <button
+            onClick={handleLogout}
+            className="mobile-nav-item logout-btn-mobile"
+            title="Sair"
+            style={{ background: 'none', border: 'none', color: '#EF4444', outline: 'none' }}
+          >
+            <LogOut className="nav-icon" size={24} strokeWidth={2} color="#EF4444" />
+            <span style={{ color: '#EF4444' }}>Sair</span>
+          </button>
         </nav>
       )}
     </div>

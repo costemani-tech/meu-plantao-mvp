@@ -18,6 +18,8 @@ export default function PlantaoExtraPage() {
   const [conflitoPendente, setConflitoPendente] = useState<{ inicio: string; fim: string } | null>(null);
   const [payloadPendente, setPayloadPendente] = useState<{ inicioIso: string; fimIso: string } | null>(null);
 
+  const isPro = false; // Trava Freemium
+
   const fetchLocais = useCallback(async () => {
     const { data } = await supabase.from('locais_trabalho').select('*').order('nome');
     setLocais((data as LocalTrabalho[]) ?? []);
@@ -43,6 +45,26 @@ export default function PlantaoExtraPage() {
       let dataFimObj = new Date(`${dataPlantao}T${horaFim}:00`);
       if (horaFim < horaInicio) dataFimObj.setDate(dataFimObj.getDate() + 1);
       const fimIso = dataFimObj.toISOString();
+
+      // ── Verifica Limite Free (Máx 4 Extras/Mês) ──
+      if (!isPro) {
+        const dataStart = new Date(`${dataPlantao}T00:00:00`);
+        const pInicioMes = new Date(dataStart.getFullYear(), dataStart.getMonth(), 1).toISOString();
+        const pFimMes = new Date(dataStart.getFullYear(), dataStart.getMonth() + 1, 0, 23, 59, 59).toISOString();
+        const { count } = await supabase
+          .from('plantoes')
+          .select('id', { count: 'exact', head: true })
+          .eq('is_extra', true)
+          .gte('data_hora_inicio', pInicioMes)
+          .lte('data_hora_inicio', pFimMes)
+          .neq('status', 'Cancelado');
+
+        if (count && count >= 4) {
+          showToast('🔒 O Plano Free permite no máximo 4 Plantões Extras (Avulsos) por mês. Faça o Upgrade!', 'error');
+          setSaving(false);
+          return;
+        }
+      }
 
       // ── Verifica conflito de horário antes de inserir ──
       if (!forcarConflito) {

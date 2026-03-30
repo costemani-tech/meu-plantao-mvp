@@ -67,7 +67,7 @@ export async function POST(req: NextRequest) {
     const { data: { user } } = await supabaseClient.auth.getUser();
     
     if (!user) {
-      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+      return NextResponse.json({ error: 'Não autorizado', code: 'UNAUTHORIZED' }, { status: 401 });
     }
     const usuario_id = user.id;
 
@@ -82,7 +82,7 @@ export async function POST(req: NextRequest) {
     // Validação básica
     if (!data_inicio || !regra || !local_id) {
       return NextResponse.json(
-        { error: 'Campos obrigatórios: data_inicio, regra, local_id' },
+        { error: 'Campos obrigatórios: data_inicio, regra, local_id', code: 'BAD_REQUEST' },
         { status: 400 }
       );
     }
@@ -107,7 +107,7 @@ export async function POST(req: NextRequest) {
 
     if (slots.length === 0) {
       return NextResponse.json(
-        { error: 'Nenhum plantão gerado. Verifique se a data de início está antes de 31/12/' + anoAtual },
+        { error: 'Nenhum plantão gerado. Verifique se a data de início está antes de 31/12/' + anoAtual, code: 'BAD_REQUEST' },
         { status: 400 }
       );
     }
@@ -149,7 +149,8 @@ export async function POST(req: NextRequest) {
               conflito: true,
               total_conflitos: conflitos.length,
               exemplos: conflitos,
-              message: `Você já tem plantões neste período. Encontramos ${conflitos.length} sobreposição(ões).`,
+              error: `Você já tem plantões neste período. Encontramos ${conflitos.length} sobreposição(ões).`,
+              code: 'CONFLICT'
             },
             { status: 409 }
           );
@@ -170,8 +171,9 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (erroEscala || !escala) {
+      console.error('Falha interna ao criar registro de escala:', erroEscala);
       return NextResponse.json(
-        { error: 'Erro ao criar escala: ' + erroEscala?.message },
+        { error: 'Não foi possível agendar a escala. Tente novamente ou contate o suporte.', code: 'INTERNAL_SERVER_ERROR' },
         { status: 500 }
       );
     }
@@ -193,9 +195,10 @@ export async function POST(req: NextRequest) {
       .insert(plantoes);
 
     if (erroInsert) {
+      console.error('Falha no bulk insert dos plantões. Fazendo rollback da escala:', erroInsert);
       await supabaseAdmin.from('escalas').delete().eq('id', escala.id);
       return NextResponse.json(
-        { error: 'Erro ao inserir plantões: ' + erroInsert.message },
+        { error: 'Ocorreu um erro ao gerar os dias de plantão correspondentes. A escala foi cancelada.', code: 'INTERNAL_SERVER_ERROR' },
         { status: 500 }
       );
     }
@@ -211,9 +214,9 @@ export async function POST(req: NextRequest) {
       com_conflito: forcar_conflito === true,
     });
   } catch (err) {
-    console.error('Erro interno em /api/escalas:', err);
+    console.error('Erro não tratado em /api/escalas:', err);
     return NextResponse.json(
-      { error: 'Erro interno do servidor' },
+      { error: 'Erro interno do servidor. Tente novamente.', code: 'INTERNAL_SERVER_ERROR' },
       { status: 500 }
     );
   }

@@ -22,7 +22,7 @@ export async function DELETE(
     );
     const { data: { user } } = await supabaseClient.auth.getUser();
     if (!user) {
-      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+      return NextResponse.json({ error: 'Não autorizado', code: 'UNAUTHORIZED' }, { status: 401 });
     }
 
     const { id: escala_id } = await params;
@@ -30,10 +30,10 @@ export async function DELETE(
     const { modo, data_encerramento } = body;
 
     if (!modo || !['completo', 'encerrar_em'].includes(modo)) {
-      return NextResponse.json({ error: 'modo deve ser "completo" ou "encerrar_em"' }, { status: 400 });
+      return NextResponse.json({ error: 'modo deve ser "completo" ou "encerrar_em"', code: 'BAD_REQUEST' }, { status: 400 });
     }
     if (modo === 'encerrar_em' && !data_encerramento) {
-      return NextResponse.json({ error: 'data_encerramento é obrigatória no modo encerrar_em' }, { status: 400 });
+      return NextResponse.json({ error: 'data_encerramento é obrigatória no modo encerrar_em', code: 'BAD_REQUEST' }, { status: 400 });
     }
 
     const supabaseAdmin = createClient(
@@ -50,7 +50,8 @@ export async function DELETE(
       .single();
 
     if (erroEscala || !escala) {
-      return NextResponse.json({ error: 'Escala não encontrada ou acesso negado' }, { status: 404 });
+      if (erroEscala) console.error('Acesso negado ou escala [DELETE] não encontrada:', erroEscala);
+      return NextResponse.json({ error: 'Escala não encontrada ou acesso negado', code: 'NOT_FOUND' }, { status: 404 });
     }
 
     if (modo === 'completo') {
@@ -81,7 +82,8 @@ export async function DELETE(
       .gte('data_hora_inicio', dataCorte);
 
     if (erroDelete) {
-      return NextResponse.json({ error: 'Erro ao encerrar escala: ' + erroDelete.message }, { status: 500 });
+      console.error('Erro crítico do Supabase ao deletar plantões [encerrar_em]:', erroDelete);
+      return NextResponse.json({ error: 'Não foi possível processar a exclusão. Tente novamente.', code: 'INTERNAL_SERVER_ERROR' }, { status: 500 });
     }
 
     return NextResponse.json({
@@ -93,6 +95,6 @@ export async function DELETE(
 
   } catch (err) {
     console.error('Erro em DELETE /api/escalas/[id]:', err);
-    return NextResponse.json({ error: 'Erro interno do servidor' }, { status: 500 });
+    return NextResponse.json({ error: 'Erro interno do servidor', code: 'INTERNAL_SERVER_ERROR' }, { status: 500 });
   }
 }

@@ -19,6 +19,8 @@ export default function LocaisPage() {
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<Toast | null>(null);
 
+  const isPro = false; // Trava Freemium (Temporário local state)
+
   const showToast = (msg: string, type: 'success' | 'error') => {
     setToast({ msg, type });
     setTimeout(() => setToast(null), 3500);
@@ -33,6 +35,12 @@ export default function LocaisPage() {
 
   const adicionarLocal = async () => {
     if (!nome.trim()) { showToast('Informe o nome do local.', 'error'); return; }
+
+    if (!isPro && locais.length >= 2) {
+      showToast('🔒 Upgrade para o Pro para cadastrar mais de 2 locais!', 'error');
+      return;
+    }
+
     setSaving(true);
     const { error } = await supabase.from('locais_trabalho').insert({ 
       nome: nome.trim(), 

@@ -6,6 +6,7 @@ import { Calendar, Clock } from 'lucide-react';
 
 interface PlantaoComLocal extends Plantao {
   local?: LocalTrabalho;
+  status_conflito?: boolean;
 }
 
 const DIAS_SEMANA = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
@@ -44,7 +45,7 @@ export default function CalendarioPage() {
       setPlantoes(freshData);
       localStorage.setItem(`calendario_cache_${ano}_${mes}`, JSON.stringify(freshData));
     } catch (e) {
-      console.warn("Offline mode - mantendo dados antigos do cache.");
+      console.warn("Offline mode - mantendo dados antigos do cache.", e);
     } finally {
       setLoading(false);
     }
@@ -114,9 +115,41 @@ export default function CalendarioPage() {
 
   const plantoesNoDia = (dia: number): PlantaoComLocal[] =>
     plantoes.filter(p => {
-      const d = new Date(p.data_hora_inicio);
-      return d.getDate() === dia && d.getMonth() === mes && d.getFullYear() === ano;
+      const dInicio = new Date(p.data_hora_inicio);
+      const dFim = new Date(p.data_hora_fim);
+      
+      const isStartDay = dInicio.getDate() === dia && dInicio.getMonth() === mes && dInicio.getFullYear() === ano;
+      const isEndDay = dFim.getDate() === dia && dFim.getMonth() === mes && dFim.getFullYear() === ano && 
+                       (dInicio.getDate() !== dFim.getDate() || dInicio.getMonth() !== dFim.getMonth() || dInicio.getFullYear() !== dFim.getFullYear());
+      
+      return isStartDay || isEndDay;
     });
+
+  const getCellBackground = (ps: PlantaoComLocal[], dia: number) => {
+    if (ps.length === 0) return 'transparent';
+    const getCor = (p: PlantaoComLocal) => p.is_extra ? '#8b5cf6' : (p.local?.cor_calendario ?? '#4f8ef7');
+
+    if (ps.length === 1) {
+      const p = ps[0];
+      const dInicio = new Date(p.data_hora_inicio);
+      const dFim = new Date(p.data_hora_fim);
+      const crossesMidnight = dInicio.getDate() !== dFim.getDate() || dInicio.getMonth() !== dFim.getMonth() || dInicio.getFullYear() !== dFim.getFullYear();
+      const cor = getCor(p);
+
+      if (crossesMidnight) {
+        if (dInicio.getDate() === dia) return `linear-gradient(to right, transparent 50%, ${cor} 50%)`;
+        return `linear-gradient(to right, ${cor} 50%, transparent 50%)`;
+      }
+      return cor;
+    }
+
+    if (ps.length >= 2) {
+      const cor1 = getCor(ps[0]);
+      const cor2 = getCor(ps[1]);
+      return `linear-gradient(to right, ${cor1} 50%, ${cor2} 50%)`;
+    }
+    return 'transparent';
+  };
 
   const primeiroDiaMes = new Date(ano, mes, 1).getDay();
   const diasNoMes = new Date(ano, mes + 1, 0).getDate();
@@ -168,34 +201,33 @@ export default function CalendarioPage() {
               <div
                 key={idx}
                 onClick={() => cell.mesAtual && setDiaSelecionado(cell.dia)}
-                style={{ cursor: cell.mesAtual ? 'pointer' : 'default' }}
+                style={{ 
+                  cursor: cell.mesAtual ? 'pointer' : 'default',
+                  background: cell.mesAtual ? getCellBackground(ps, cell.dia) : 'transparent',
+                  border: ps.some(p => p.status_conflito) ? '2px solid #f59e0b' : '1px solid var(--border-subtle)',
+                  position: 'relative',
+                  overflow: 'hidden'
+                }}
                 className={`cal-day ${cell.mesAtual ? '' : 'other-month'} ${cell.mesAtual && isHoje(cell.dia) ? 'today' : ''}`}
               >
-                <div className="cal-day-num">{cell.dia}</div>
-                {ps.length > 0 && (
-                  <div className="cal-indicators">
-                    {ps.slice(0, 3).map(p => (
-                      <div
-                        key={p.id}
-                        className="cal-dot"
-                        style={{
-                          backgroundColor:
-                            (p as unknown as { is_extra?: boolean; status_conflito?: boolean }).is_extra
-                              ? '#8b5cf6'
-                              : (p as unknown as { status_conflito?: boolean }).status_conflito
-                                ? '#f59e0b'
-                                : (p.local?.cor_calendario ?? '#4f8ef7')
-                        }}
-                        title={`${p.local?.nome}${
-                          (p as unknown as { is_extra?: boolean }).is_extra ? ' 💰 Extra' :
-                          (p as unknown as { status_conflito?: boolean }).status_conflito ? ' ⚠️ Conflito' : ''
-                        }`}
-                      />
-                    ))}
-                    {ps.length > 3 && (
-                      <span style={{ fontSize: '8px', color: 'var(--text-muted)' }}>+{ps.length - 3}</span>
-                    )}
-                  </div>
+                {ps.some(p => p.status_conflito) && (
+                  <div style={{ position: 'absolute', top: 4, right: 4, fontSize: 10 }}>🟡</div>
+                )}
+                <div 
+                  className="cal-day-num" 
+                  style={{ 
+                    position: 'relative', zIndex: 2,
+                    color: ps.length > 0 ? '#ffffff' : 'inherit', 
+                    textShadow: ps.length > 0 ? '0 1px 3px rgba(0,0,0,0.8)' : 'none',
+                    fontWeight: ps.length > 0 ? 800 : 500
+                  }}
+                >
+                  {cell.dia}
+                </div>
+                {ps.length > 2 && (
+                  <span style={{ position: 'absolute', bottom: 4, right: 4, fontSize: '9px', fontWeight: 800, color: '#ffffff', textShadow: '0 1px 2px rgba(0,0,0,0.8)', zIndex: 2 }}>
+                    +{ps.length - 2}
+                  </span>
                 )}
               </div>
             );
