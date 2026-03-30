@@ -181,7 +181,19 @@ export default function CalendarioPage() {
     try {
       await new Promise(r => setTimeout(r, 100)); // Render tick
       
-      const canvas = await html2canvas(reportRef.current, { scale: 2, useCORS: true });
+      const canvas = await html2canvas(reportRef.current, { 
+        scale: 2, 
+        useCORS: true,
+        onclone: (documentClone) => {
+          const el = documentClone.getElementById('report-template-container');
+          if (el) {
+            // Força as dimensões pro layout não quebrar durante a "foto"
+            el.style.width = '800px';
+            el.style.maxWidth = '800px';
+            el.style.padding = '40px'; // Restaura o padding do desktop para o PDF
+          }
+        }
+      });
       const imgData = canvas.toDataURL('image/png');
       
       const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
@@ -450,9 +462,8 @@ export default function CalendarioPage() {
           </div>
 
           {/* Área Rolável contendo o ReportTemplate Visível para Leitura na Tela */}
-          <div style={{ flex: 1, overflowY: 'auto', overflowX: 'auto', WebkitOverflowScrolling: 'touch', padding: '32px 16px', display: 'flex', justifyContent: 'center' }}>
-            {/* O Template mantem 800px pra garantir que fica igual ao do papel A4 */}
-            <div style={{ borderRadius: '12px', overflow: 'hidden', boxShadow: '0 20px 40px rgba(0,0,0,0.3)', marginBottom: '40px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', padding: '16px', display: 'flex', justifyContent: 'center' }}>
+            <div style={{ width: '100%', maxWidth: '800px', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 10px 30px rgba(0,0,0,0.5)', marginBottom: '40px' }}>
                 <ReportTemplate ref={reportRef} plantoes={plantoes} mesNome={MESES[mes]} ano={ano} />
             </div>
           </div>
