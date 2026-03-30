@@ -72,6 +72,9 @@ export default function EscalasPage() {
   const [modalEncerrar, setModalEncerrar] = useState<{ id: string; nome: string } | null>(null);
   const [dataEncerramento, setDataEncerramento] = useState('');
   const [deletando, setDeletando] = useState(false);
+  
+  const [showProModal, setShowProModal] = useState(false);
+  const isPro = false; // Trava Freemium
 
   const regraFinal = regra === 'Outro' ? `${horasTrabalhoOutro}x${horasDescansoOutro}` : regra;
 
@@ -117,7 +120,19 @@ export default function EscalasPage() {
 
   const salvarNovoLocal = async () => {
     if (!novoLocalNome.trim()) { showToast('Informe o nome do local.', 'error'); return; }
-    setSavingLocal(true);
+    
+    if (!isPro) {
+      setSavingLocal(true);
+      const { count } = await supabase.from('locais_trabalho').select('*', { count: 'exact', head: true });
+      if (count !== null && count >= 2) {
+        setShowProModal(true);
+        setSavingLocal(false);
+        return;
+      }
+    } else {
+      setSavingLocal(true);
+    }
+    
     const { data, error } = await supabase.from('locais_trabalho').insert({
       nome: novoLocalNome.trim(),
       cor_calendario: novoLocalCor,
@@ -615,6 +630,23 @@ export default function EscalasPage() {
                 disabled={!dataEncerramento || deletando}
                 onClick={() => excluirEscala(modalEncerrar.id, 'encerrar_em', dataEncerramento)}
               >{deletando ? '⏳ Encerrando...' : 'Confirmar Encerramento'}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL PRO PAYWALL */}
+      {showProModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+          <div className="card" style={{ maxWidth: 400, width: '100%', textAlign: 'center' }}>
+            <span style={{ fontSize: 48, display: 'block', marginBottom: 16 }}>⭐</span>
+            <h2 style={{ fontSize: 20, fontWeight: 800, marginBottom: 8, color: 'var(--text-primary)' }}>Upgrade para o Pro</h2>
+            <p style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 24, lineHeight: 1.5 }}>
+              Você atingiu o limite de 2 locais do plano gratuito. Assine o Pro para gerenciar hospitais ilimitados!
+            </p>
+            <div style={{ display: 'flex', gap: 12 }}>
+              <button className="btn btn-secondary" style={{ flex: 1, justifyContent: 'center' }} onClick={() => setShowProModal(false)}>Voltar</button>
+              <button className="btn btn-primary" style={{ flex: 1, justifyContent: 'center', background: 'linear-gradient(to right, #f59e0b, #d97706)', border: 'none' }} onClick={() => setShowProModal(false)}>Assinar Pro</button>
             </div>
           </div>
         </div>
