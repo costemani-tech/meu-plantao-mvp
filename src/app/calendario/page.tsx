@@ -25,9 +25,11 @@ export default function CalendarioPage() {
   const [excluindo, setExcluindo] = useState(false);
   const [gerandoPdf, setGerandoPdf] = useState(false);
   const [showProModal, setShowProModal] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
   const reportRef = useRef<HTMLDivElement>(null);
   
-  const isPro = false; // Trava Freemium
+  // 🔥 DESBLOQUEIO DE TESTE: Alterei para TRUE temporariamente para o MVP ser testado.
+  const isPro = true;
 
   const fetchPlantoes = useCallback(async () => {
     const cachedData = localStorage.getItem(`calendario_cache_${ano}_${mes}`);
@@ -174,13 +176,7 @@ export default function CalendarioPage() {
   };
 
   const exportPDF = async () => {
-    if (!isPro) {
-      setShowProModal(true);
-      return;
-    }
-    
     if (!reportRef.current) return;
-    
     setGerandoPdf(true);
     try {
       await new Promise(r => setTimeout(r, 100)); // Render tick
@@ -200,6 +196,14 @@ export default function CalendarioPage() {
     } finally {
       setGerandoPdf(false);
     }
+  };
+
+  const abrirDashboard = () => {
+    if (!isPro) {
+      setShowProModal(true);
+      return;
+    }
+    setShowReportModal(true);
   };
 
   const cells: Array<{ dia: number; mesAtual: boolean }> = [];
@@ -225,11 +229,10 @@ export default function CalendarioPage() {
         </div>
         <button 
           className="btn btn-primary mobile-only-margin" 
-          onClick={exportPDF} 
-          disabled={gerandoPdf}
+          onClick={abrirDashboard} 
           style={{ background: 'linear-gradient(135deg, #10b981, #059669)', border: 'none', gap: '8px' }}
         >
-          {gerandoPdf ? '⏳ Gerando...' : '📥 Relatório Mensal'}
+          📊 Ver Dashboard e Relatório
         </button>
       </div>
 
@@ -412,8 +415,49 @@ export default function CalendarioPage() {
         </div>
       )}
 
-      {/* Componente PDF Invisível */}
-      <ReportTemplate ref={reportRef} plantoes={plantoes} mesNome={MESES[mes]} ano={ano} />
+      {/* COMPONENTE OMITIDO DA TELA PRINCIPAL MAS DISPONÍVEL APENAS QUANDO A MODAL ESTIVER FECHADA 
+          Isso é útil para se em algum momento tentarmos renderizar via background */}
+      {!showReportModal && (
+         <div style={{ position: 'absolute', left: '-9999px', top: 0 }}>
+             <ReportTemplate ref={reportRef} plantoes={plantoes} mesNome={MESES[mes]} ano={ano} />
+         </div>
+      )}
+
+      {/* MODAL VISUAL DO DASHBOARD (Acesso às métricas em tela Cheia) */}
+      {showReportModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 99999, display: 'flex', flexDirection: 'column' }}>
+          {/* Header da Modal de Dashboard com os Botões de Ação */}
+          <div style={{ padding: '16px 24px', background: 'var(--bg-primary)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', zIndex: 10 }}>
+             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <button 
+                  className="btn btn-secondary" 
+                  onClick={() => setShowReportModal(false)}
+                  style={{ borderRadius: '50%', width: 44, height: 44, padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                >
+                  ✕
+                </button>
+                <h2 style={{ fontSize: 18, fontWeight: 800, margin: 0 }}>Métricas de {MESES[mes]}</h2>
+             </div>
+             
+             <button 
+               className="btn btn-primary" 
+               onClick={exportPDF} 
+               disabled={gerandoPdf}
+               style={{ background: 'linear-gradient(135deg, #10b981, #059669)', border: 'none', boxShadow: '0 4px 12px rgba(16, 185, 129, 0.4)' }}
+             >
+               {gerandoPdf ? '⏳ PDF...' : '📥 Baixar PDF A4'}
+             </button>
+          </div>
+
+          {/* Área Rolável contendo o ReportTemplate Visível para Leitura na Tela */}
+          <div style={{ flex: 1, overflowY: 'auto', overflowX: 'auto', WebkitOverflowScrolling: 'touch', padding: '32px 16px', display: 'flex', justifyContent: 'center' }}>
+            {/* O Template mantem 800px pra garantir que fica igual ao do papel A4 */}
+            <div style={{ borderRadius: '12px', overflow: 'hidden', boxShadow: '0 20px 40px rgba(0,0,0,0.3)', marginBottom: '40px' }}>
+                <ReportTemplate ref={reportRef} plantoes={plantoes} mesNome={MESES[mes]} ano={ano} />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* MODAL PRO PAYWALL - PDF */}
       {showProModal && (

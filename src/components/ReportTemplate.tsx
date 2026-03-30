@@ -69,15 +69,13 @@ export const ReportTemplate = React.forwardRef<HTMLDivElement, ReportTemplatePro
       <div
         ref={ref}
         style={{
-          width: '800px', // Largura fixa estilo A4 em px
+          width: '800px', // Largura fixa estilo A4 p/ segurar o Layout do PDF
+          minHeight: '1131px', // Aprox A4 ratio
           background: '#ffffff',
           padding: '40px',
           fontFamily: 'Inter, sans-serif',
           color: '#1e293b',
-          // Tirar da tela principal
-          position: 'absolute',
-          left: '-9999px',
-          top: 0,
+          margin: '0 auto'
         }}
       >
         {/* HEADER */}
@@ -112,8 +110,7 @@ export const ReportTemplate = React.forwardRef<HTMLDivElement, ReportTemplatePro
           </div>
         </div>
 
-        {/* DONUT CHART (CSS PURO) & LEGENDA E CONTEUDO */}
-        <div style={{ display: 'flex', gap: '40px', alignItems: 'center', marginBottom: '40px', background: '#f8fafc', padding: '30px', borderRadius: '16px' }}>
+        <div style={{ display: 'flex', gap: '30px', alignItems: 'center', marginBottom: '40px', background: '#f8fafc', padding: '30px', borderRadius: '16px' }}>
           {totalHoras > 0 ? (
              <div style={{
               width: '180px',
