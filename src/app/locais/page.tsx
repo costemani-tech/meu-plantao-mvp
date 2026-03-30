@@ -69,10 +69,22 @@ export default function LocaisPage() {
   };
 
   const excluirLocal = async (id: string) => {
-    if (!confirm('Tem certeza? Isso removerá o local e todos os plantões associados.')) return;
+    if (!confirm('Tem certeza? Isso removerá o local e todos os plantões associados de uma vez da sua agenda.')) return;
+    
+    // Deleta os plantões vinculados forçadamente para garantir que saiam da agenda
+    await supabase.from('plantoes').delete().eq('local_id', id);
+    // Deleta as escalas template também
+    await supabase.from('escalas').delete().eq('local_id', id);
+    
+    // E finalmente exclui o local
     const { error } = await supabase.from('locais_trabalho').delete().eq('id', id);
-    if (error) showToast('Erro ao excluir: ' + error.message, 'error');
-    else { showToast('Local removido.', 'success'); await fetchLocais(); }
+    
+    if (error) { 
+      showToast('Erro ao excluir: ' + error.message, 'error');
+    } else { 
+      showToast('Local e todos os plantões removidos', 'success'); 
+      await fetchLocais(); 
+    }
   };
 
   return (

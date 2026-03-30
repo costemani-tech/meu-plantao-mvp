@@ -19,6 +19,10 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [unreadCount, setUnreadCount] = useState(0);
   const [toast, setToast] = useState<{titulo: string, mensagem: string} | null>(null);
+  const [overCapacity, setOverCapacity] = useState(false);
+  const [checkingCapacity, setCheckingCapacity] = useState(true);
+
+  const isPro = false; // Trava Central do Freemium
 
   useEffect(() => {
     let currentUser: any = null;
@@ -69,6 +73,24 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           }
         })
         .subscribe();
+      
+      const checkCapacity = async () => {
+        if (!isPro && pathname !== '/login' && pathname !== '/locais') {
+          setCheckingCapacity(true);
+          const { count } = await supabase.from('locais_trabalho').select('*', { count: 'exact', head: true });
+          if (count !== null && count > 2) {
+            setOverCapacity(true);
+          } else {
+            setOverCapacity(false);
+          }
+        } else {
+          setOverCapacity(false);
+        }
+        setCheckingCapacity(false);
+      };
+
+      checkCapacity();
+
       return () => { supabase.removeChannel(channel); };
     }
   }, [pathname]);
@@ -201,7 +223,37 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         )}
 
-        {children}
+        {/* Global Block Screen: Over Capacity na versão Free */}
+        {overCapacity ? (
+          <div style={{ height: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div className="card" style={{ maxWidth: 440, width: '100%', textAlign: 'center', borderColor: '#EF4444' }}>
+              <span style={{ fontSize: 48, display: 'block', marginBottom: 16 }}>⚠️</span>
+              <h2 style={{ fontSize: 20, fontWeight: 800, marginBottom: 8, color: 'var(--text-primary)' }}>Conta Bloqueada</h2>
+              <p style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 24, lineHeight: 1.5 }}>
+                Seu plano Pro expirou e você possui <strong>mais de 2 hospitais</strong> configurados na sua conta. <br/><br/>
+                Para voltar a visualizar seu Calendário e gerenciar escalas, você precisa ir até a aba de <strong>Locais</strong> e deletar os excedentes, ou assinar a versão Premium novamente.
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <button 
+                  className="btn btn-primary" 
+                  style={{ width: '100%', justifyContent: 'center', background: 'linear-gradient(135deg, #f59e0b, #d97706)' }}
+                  onClick={() => {}}
+                >
+                  ⭐ Assinar Versão Pro
+                </button>
+                <Link 
+                  href="/locais" 
+                  style={{ textDecoration: 'none' }}
+                  className="btn btn-secondary"
+                >
+                  <div style={{ width: '100%', textAlign: 'center' }}>Gerenciar e Excluir Locais</div>
+                </Link>
+              </div>
+            </div>
+          </div>
+        ) : (
+          children
+        )}
       </main>
 
       {/* Navegação Mobile Inferior - Exclusiva para Celulares */}
