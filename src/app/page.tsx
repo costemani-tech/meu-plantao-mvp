@@ -15,10 +15,21 @@ export default function DashboardPage() {
   const [locaisAtivos, setLocaisAtivos] = useState(0);
   const [loading, setLoading] = useState(true);
   const [showProModal, setShowProModal] = useState('');
-  const router = useRouter();
-  
-  // TRAVA PRO MOCK
-  const isPro = true;
+  const [isPro, setIsPro] = useState(true);
+
+  useEffect(() => {
+    const checkPro = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data } = await supabase
+        .from('profiles')
+        .select('is_pro')
+        .eq('id', user.id)
+        .single();
+      if (data != null) setIsPro(data.is_pro);
+    };
+    checkPro();
+  }, []);
 
   const fetchPlantoes = useCallback(async () => {
     // 1. OFFLINE FIRST: Carrega o cache armazenado no disco local

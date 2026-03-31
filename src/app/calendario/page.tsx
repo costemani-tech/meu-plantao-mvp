@@ -23,13 +23,27 @@ export default function CalendarioPage() {
   const [excluindo, setExcluindo] = useState(false);
   const [showProModal, setShowProModal] = useState(false);
   const [menuAberto, setMenuAberto] = useState(false);
-  const [edicaoCiclo, setEdicaoCiclo] = useState<{p: PlantaoComLocal, regra: string} | null>(null);
+  const [edicaoCiclo, setEdicaoCiclo] = useState<{p: PlantaoComLocal, regra: string, dataInicio: string} | null>(null);
   const [salvandoCiclo, setSalvandoCiclo] = useState(false);
   const [linkCopiado, setLinkCopiado] = useState(false);
   const router = useRouter();
   
-  // TRAVA PRO ATIVADA (Segurança da versão 3.1)
-  const isPro = true;
+  const [isPro, setIsPro] = useState(true); // default true durante carregamento
+
+  // Busca status Pro real do banco
+  useEffect(() => {
+    const checkPro = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data } = await supabase
+        .from('profiles')
+        .select('is_pro')
+        .eq('id', user.id)
+        .single();
+      if (data) setIsPro(data.is_pro);
+    };
+    checkPro();
+  }, []);
 
   const fetchPlantoes = useCallback(async () => {
     const cachedData = localStorage.getItem(`calendario_cache_${ano}_${mes}`);
@@ -185,9 +199,9 @@ export default function CalendarioPage() {
       setShowProModal(true);
       return;
     }
-    navigator.clipboard.writeText('https://meu-plantao-mvp.vercel.app/agenda/publica/mock-id');
+    navigator.clipboard.writeText('https://meu-plantao-mvp.vercel.app/agenda/demo');
     setLinkCopiado(true);
-    alert('✅ Link público da sua agenda copiado para a área de transferência!\n\nVocê já pode colar e enviar no WhatsApp da família ou amigos.');
+    alert('✅ Link público da sua agenda copiado!\n\nCole e envie no WhatsApp ou e-mail para que sua família veja seus próximos plantões.');
     setTimeout(() => setLinkCopiado(false), 2000);
   };
 
@@ -345,7 +359,7 @@ export default function CalendarioPage() {
                       <div style={{ display: 'flex', gap: 8 }}>
                         {p.escala_id && (
                           <button 
-                            onClick={() => isPro ? setEdicaoCiclo({p, regra: '12x36'}) : setShowProModal(true)}
+                            onClick={() => isPro ? setEdicaoCiclo({p, regra: '12x36', dataInicio: p.data_hora_inicio.substring(0, 10)}) : setShowProModal(true)}
                             title="Editar Ciclo da Escala"
                             style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, opacity: 0.7, fontSize: 16 }}
                           >
@@ -428,15 +442,25 @@ export default function CalendarioPage() {
           <div className="card" style={{ maxWidth: 400, width: '100%' }}>
              <h2 style={{ fontSize: 18, fontWeight: 800, marginBottom: 8 }}>Editar Ciclo da Escala</h2>
              <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 20 }}>
-               A regra antiga será <strong>preservada no histórico</strong> até a data deste plantão. 
-               O novo ciclo entrará em vigor e recalculará os plantões do dia <strong>{new Date(edicaoCiclo.p.data_hora_inicio).toLocaleDateString('pt-BR')}</strong> em diante.
+               A regra antiga será <strong>preservada no histórico</strong>. 
+               O novo ciclo entrará em vigor e recalculará os plantões da nova data em diante.
              </p>
+
+             <label style={{ fontSize: 13, fontWeight: 700, marginBottom: 6, display: 'block' }}>Data de Início da Nova Regra:</label>
+             <input 
+               type="date"
+               value={edicaoCiclo.dataInicio}
+               onChange={e => setEdicaoCiclo({...edicaoCiclo, dataInicio: e.target.value})}
+               className="input-field"
+               style={{ width: '100%', marginBottom: 16, padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-subtle)', background: 'var(--bg-primary)', color: 'var(--text-primary)' }}
+             />
+
              <label style={{ fontSize: 13, fontWeight: 700, marginBottom: 6, display: 'block' }}>Nova Regra de Escala:</label>
              <select 
                 value={edicaoCiclo.regra} 
                 onChange={e => setEdicaoCiclo({...edicaoCiclo, regra: e.target.value})} 
                 className="input-field" 
-                style={{ width: '100%', marginBottom: 24 }}
+                style={{ width: '100%', marginBottom: 24, padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-subtle)', background: 'var(--bg-primary)', color: 'var(--text-primary)' }}
              >
                   <option value="12x36">12h Trabalhadas / 36h Descanso</option>
                   <option value="24x48">24h Trabalhadas / 48h Descanso</option>
@@ -450,18 +474,20 @@ export default function CalendarioPage() {
                    onClick={async () => {
                      setSalvandoCiclo(true);
                      try {
+                        const dataNovaFormatada = edicaoCiclo.dataInicio + edicaoCiclo.p.data_hora_inicio.substring(10);
+                        
                         // 1. Apaga plantoes futuros da escala antiga
                         await fetch('/api/escalas/' + edicaoCiclo.p.escala_id, { 
                           method: 'DELETE', 
                           headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ modo: 'encerrar_em', data_encerramento: edicaoCiclo.p.data_hora_inicio }) 
+                          body: JSON.stringify({ modo: 'encerrar_em', data_encerramento: dataNovaFormatada }) 
                         });
                         
-                        // 2. Cria a nova escala a partir dessa data
+                        // 2. Cria a nova escala a partir dessa data escolhida
                         await fetch('/api/escalas', { 
                           method: 'POST', 
                           headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ local_id: edicaoCiclo.p.local_id, regra: edicaoCiclo.regra, data_inicio: edicaoCiclo.p.data_hora_inicio, forcar_conflito: false })
+                          body: JSON.stringify({ local_id: edicaoCiclo.p.local_id, regra: edicaoCiclo.regra, data_inicio: dataNovaFormatada, forcar_conflito: false })
                         });
                         
                         localStorage.removeItem(`calendario_cache_${ano}_${mes}`);
@@ -477,7 +503,7 @@ export default function CalendarioPage() {
                    style={{ flex: 1, justifyContent: 'center', background: 'var(--accent-blue)', color: '#fff', border: 'none' }}
                    disabled={salvandoCiclo}
                  >
-                    {salvandoCiclo ? '⏳ Calculando...' : 'Aplicar Nova Escala'}
+                    {salvandoCiclo ? '⏳ Calculando...' : 'Aplicar Regra'}
                  </button>
              </div>
           </div>

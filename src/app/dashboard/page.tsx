@@ -25,8 +25,22 @@ export default function DashboardPage() {
   const [ano, setAno] = useState(new Date().getFullYear());
   const reportRef = useRef<HTMLDivElement>(null);
 
-  // MOCK PAYWALL (mudar para query ao DB quando tiver auth pro full)
-  const isPro = true;
+  const [isPro, setIsPro] = useState(true); // true por default durante carregamento
+
+  // Busca status Pro real do banco
+  useEffect(() => {
+    const checkPro = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data } = await supabase
+        .from('profiles')
+        .select('is_pro')
+        .eq('id', user.id)
+        .single();
+      if (data != null) setIsPro(data.is_pro);
+    };
+    checkPro();
+  }, []);
 
   const fetchPlantoes = useCallback(async () => {
     // OFFLINE FIRST

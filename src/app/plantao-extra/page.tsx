@@ -21,7 +21,17 @@ export default function PlantaoExtraPage() {
   const [conflitoPendente, setConflitoPendente] = useState<{ inicio: string; fim: string } | null>(null);
   const [payloadPendente, setPayloadPendente] = useState<{ inicioIso: string; fimIso: string } | null>(null);
 
-  const isPro = true; // Trava Freemium
+  const [isPro, setIsPro] = useState(false);
+
+  useEffect(() => {
+    const checkPro = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data } = await supabase.from('profiles').select('is_pro').eq('id', user.id).single();
+      if (data) setIsPro(data.is_pro);
+    };
+    checkPro();
+  }, []);
 
   const fetchLocais = useCallback(async () => {
     const { data } = await supabase.from('locais_trabalho').select('*').order('nome');
@@ -90,6 +100,7 @@ export default function PlantaoExtraPage() {
         ? { inicioIso: payloadPendente.inicioIso, fimIso: payloadPendente.fimIso }
         : { inicioIso: new Date(`${dataPlantao}T${horaInicio}:00`).toISOString(), fimIso: (() => { let d = new Date(`${dataPlantao}T${horaFim}:00`); if (horaFim < horaInicio) d.setDate(d.getDate()+1); return d.toISOString(); })() };
 
+      const valorNumerico = tipoExtra === 'Remunerado' ? (parseFloat(valorGanho.replace(',', '.')) || 0) : 0;
       const { error } = await supabase.from('plantoes').insert({
         local_id: localId,
         escala_id: null,
@@ -97,7 +108,7 @@ export default function PlantaoExtraPage() {
         data_hora_fim: payload.fimIso,
         is_extra: true,
         status: tipoExtra === 'Folga' ? 'Trocado' : 'Agendado',
-        valor_ganho: tipoExtra === 'Remunerado' ? (parseFloat(valorGanho.replace(',', '.')) || 0) : 0
+        notas: valorNumerico > 0 ? `R$ ${valorNumerico.toFixed(2)} [${tipoExtra}]` : tipoExtra,
       });
 
       if (error) throw error;
@@ -182,31 +193,45 @@ export default function PlantaoExtraPage() {
             </div>
           </div>
 
-          {/* Novos Campos de Valor e Tipo */}
-          <div className="form-group" style={{ marginTop: 20 }}>
-            <label className="form-label">Tipo de Plantão Extra *</label>
-            <div style={{ display: 'flex', gap: 12, marginTop: 8 }}>
-              <label style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8, padding: 12, border: '1px solid var(--border-subtle)', borderRadius: 8, cursor: 'pointer', background: tipoExtra === 'Remunerado' ? 'var(--bg-secondary)' : 'transparent' }}>
-                <input type="radio" name="tipoExtra" value="Remunerado" checked={tipoExtra === 'Remunerado'} onChange={() => setTipoExtra('Remunerado')} />
-                <span>💰 Remunerado</span>
-              </label>
-              <label style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8, padding: 12, border: '1px solid var(--border-subtle)', borderRadius: 8, cursor: 'pointer', background: tipoExtra === 'Folga' ? 'var(--bg-secondary)' : 'transparent' }}>
-                <input type="radio" name="tipoExtra" value="Folga" checked={tipoExtra === 'Folga'} onChange={() => setTipoExtra('Folga')} />
-                <span>🔄 Troca/Folga</span>
-              </label>
-            </div>
-          </div>
+          {/* Novos Campos de Valor e Tipo (Apenas Pro) */}
+          {isPro ? (
+            <>
+              <div className="form-group" style={{ marginTop: 20 }}>
+                <label className="form-label">Tipo de Plantão Extra *</label>
+                <div style={{ display: 'flex', gap: 12, marginTop: 8 }}>
+                  <label style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8, padding: 12, border: '1px solid var(--border-subtle)', borderRadius: 8, cursor: 'pointer', background: tipoExtra === 'Remunerado' ? 'var(--bg-secondary)' : 'transparent' }}>
+                    <input type="radio" name="tipoExtra" value="Remunerado" checked={tipoExtra === 'Remunerado'} onChange={() => setTipoExtra('Remunerado')} />
+                    <span>💰 Remunerado</span>
+                  </label>
+                  <label style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8, padding: 12, border: '1px solid var(--border-subtle)', borderRadius: 8, cursor: 'pointer', background: tipoExtra === 'Folga' ? 'var(--bg-secondary)' : 'transparent' }}>
+                    <input type="radio" name="tipoExtra" value="Folga" checked={tipoExtra === 'Folga'} onChange={() => setTipoExtra('Folga')} />
+                    <span>🔄 Troca/Folga</span>
+                  </label>
+                </div>
+              </div>
 
-          {tipoExtra === 'Remunerado' && (
+              {tipoExtra === 'Remunerado' && (
+                <div className="form-group" style={{ marginTop: 20 }}>
+                  <label className="form-label">Valor do Plantão (R$)</label>
+                  <input
+                    type="number"
+                    className="form-input"
+                    placeholder="Ex: 1200.00"
+                    value={valorGanho}
+                    onChange={e => setValorGanho(e.target.value)}
+                  />
+                </div>
+              )}
+            </>
+          ) : (
             <div className="form-group" style={{ marginTop: 20 }}>
-              <label className="form-label">Valor do Plantão (R$)</label>
-              <input
-                type="number"
-                className="form-input"
-                placeholder="Ex: 1200.00"
-                value={valorGanho}
-                onChange={e => setValorGanho(e.target.value)}
-              />
+              <div style={{ background: 'rgba(245,158,11,0.1)', border: '1px dashed #f59e0b', padding: 14, borderRadius: 8, display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span style={{ fontSize: 24 }}>⭐</span>
+                <div>
+                  <h4 style={{ margin: 0, fontSize: 14, color: '#92400e', fontWeight: 800 }}>Recurso Pro</h4>
+                  <p style={{ margin: 0, fontSize: 12, color: '#b45309' }}>Cadastrar valores financeiros e trocas/folgas é exclusivo para assinantes.</p>
+                </div>
+              </div>
             </div>
           )}
 
