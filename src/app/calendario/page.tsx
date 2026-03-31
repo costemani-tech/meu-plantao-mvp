@@ -187,6 +187,7 @@ export default function CalendarioPage() {
     }
     navigator.clipboard.writeText('https://meu-plantao-mvp.vercel.app/agenda/publica/mock-id');
     setLinkCopiado(true);
+    alert('✅ Link público da sua agenda copiado para a área de transferência!\n\nVocê já pode colar e enviar no WhatsApp da família ou amigos.');
     setTimeout(() => setLinkCopiado(false), 2000);
   };
 
