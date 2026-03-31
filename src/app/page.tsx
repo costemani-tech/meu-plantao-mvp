@@ -16,6 +16,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [showProModal, setShowProModal] = useState('');
   const [isPro, setIsPro] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     const checkPro = async () => {
