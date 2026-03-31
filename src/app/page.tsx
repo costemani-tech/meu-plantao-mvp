@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { CalendarDays, Building2, Activity, Bell, ArrowRightLeft, Calendar, Clock } from 'lucide-react';
+import { CalendarDays, Building2, Activity, Calendar, Clock } from 'lucide-react';
 import { supabase, Plantao, LocalTrabalho } from '../lib/supabase';
+import { useRouter } from 'next/navigation';
 
 interface PlantaoComLocal extends Plantao {
   local?: LocalTrabalho;
@@ -14,6 +15,10 @@ export default function DashboardPage() {
   const [locaisAtivos, setLocaisAtivos] = useState(0);
   const [loading, setLoading] = useState(true);
   const [showProModal, setShowProModal] = useState('');
+  const router = useRouter();
+  
+  // TRAVA PRO MOCK
+  const isPro = false;
 
   const fetchPlantoes = useCallback(async () => {
     // 1. OFFLINE FIRST: Carrega o cache armazenado no disco local
@@ -103,13 +108,6 @@ export default function DashboardPage() {
           </h1>
           <p>Visão estratégica das suas escalas — {loading && <span style={{ color: 'var(--accent-blue)', fontSize: 13 }}>⟳ Atualizando...</span>}</p>
         </div>
-        <button onClick={async () => {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user) await supabase.from('notificacoes').insert({ usuario_id: user.id, titulo: 'Alerta Teste 🚨', mensagem: 'O disparo WebSockets funcionou perfeitamente!' });
-          }} 
-          className="btn btn-secondary" style={{ fontSize: 13, padding: '8px 16px', background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)' }}>
-          🔔 Simular Alerta Realtime
-        </button>
       </div>
 
       {loading ? (
@@ -150,10 +148,10 @@ export default function DashboardPage() {
               </span>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
-              <button className="btn btn-secondary" style={{ justifyContent: 'center', gap: 8, padding: 16 }} onClick={() => setShowProModal('Exportação em PDF')}>
-                🔒 Exportar PDF
+              <button className="btn btn-secondary" style={{ justifyContent: 'center', gap: 8, padding: 16 }} onClick={() => isPro ? router.push('/dashboard') : setShowProModal('Dashboard & PDF')}>
+                🔒 Dashboard de Produtividade
               </button>
-              <button className="btn btn-secondary" style={{ justifyContent: 'center', gap: 8, padding: 16 }} onClick={() => setShowProModal('Controle Financeiro')}>
+              <button className="btn btn-secondary" style={{ justifyContent: 'center', gap: 8, padding: 16 }} onClick={() => isPro ? router.push('/dashboard') : setShowProModal('Controle Financeiro')}>
                 🔒 Controle Financeiro
               </button>
               <button className="btn btn-secondary" style={{ justifyContent: 'center', gap: 8, padding: 16 }} onClick={() => setShowProModal('Compartilhamento de Agenda')}>

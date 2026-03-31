@@ -2,10 +2,8 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { supabase, Plantao, LocalTrabalho } from '../../lib/supabase';
-import { Calendar, Clock } from 'lucide-react';
-import { jsPDF } from 'jspdf';
-import html2canvas from 'html2canvas';
-import { ReportTemplate } from '../../components/ReportTemplate';
+import { Calendar, Clock, MoreVertical, Link, Check, LogOut } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 interface PlantaoComLocal extends Plantao {
   local?: LocalTrabalho;
@@ -23,13 +21,15 @@ export default function CalendarioPage() {
   const [diaSelecionado, setDiaSelecionado] = useState<number | null>(null);
   const [modalExclusao, setModalExclusao] = useState<PlantaoComLocal | null>(null);
   const [excluindo, setExcluindo] = useState(false);
-  const [gerandoPdf, setGerandoPdf] = useState(false);
   const [showProModal, setShowProModal] = useState(false);
-  const [showReportModal, setShowReportModal] = useState(false);
-  const reportRef = useRef<HTMLDivElement>(null);
+  const [menuAberto, setMenuAberto] = useState(false);
+  const [edicaoCiclo, setEdicaoCiclo] = useState<{p: PlantaoComLocal, regra: string} | null>(null);
+  const [salvandoCiclo, setSalvandoCiclo] = useState(false);
+  const [linkCopiado, setLinkCopiado] = useState(false);
+  const router = useRouter();
   
-  // 🔥 DESBLOQUEIO DE TESTE: Alterei para TRUE temporariamente para o MVP ser testado.
-  const isPro = true;
+  // TRAVA PRO ATIVADA (Segurança da versão 3.1)
+  const isPro = false;
 
   const fetchPlantoes = useCallback(async () => {
     const cachedData = localStorage.getItem(`calendario_cache_${ano}_${mes}`);
@@ -175,48 +175,19 @@ export default function CalendarioPage() {
     if (mes === 11) { setMes(0); setAno(a => a + 1); } else setMes(m => m + 1);
   };
 
-  const exportPDF = async () => {
-    if (!reportRef.current) return;
-    setGerandoPdf(true);
-    try {
-      await new Promise(r => setTimeout(r, 100)); // Render tick
-      
-      const canvas = await html2canvas(reportRef.current, { 
-        scale: 2, 
-        useCORS: true,
-        onclone: (documentClone) => {
-          const el = documentClone.getElementById('report-template-container');
-          if (el) {
-            // Força as dimensões pro layout não quebrar durante a "foto"
-            el.style.width = '800px';
-            el.style.maxWidth = '800px';
-            el.style.minHeight = '1131px';
-            el.style.padding = '40px'; // Restaura o padding do desktop para o PDF
-          }
-        }
-      });
-      const imgData = canvas.toDataURL('image/png');
-      
-      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-      
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-      pdf.save(`meu-plantao-${MESES[mes]}-${ano}.pdf`);
-    } catch (error) {
-      console.error('Erro ao gerar PDF', error);
-      alert('Ocorreu um erro ao gerar o relatório.');
-    } finally {
-      setGerandoPdf(false);
-    }
+  const handleIrMetricas = () => {
+    if (isPro) router.push('/dashboard');
+    else setShowProModal(true);
   };
 
-  const abrirDashboard = () => {
+  const handleLinkFamiliar = () => {
     if (!isPro) {
       setShowProModal(true);
       return;
     }
-    setShowReportModal(true);
+    navigator.clipboard.writeText('https://meu-plantao-mvp.vercel.app/agenda/publica/mock-id');
+    setLinkCopiado(true);
+    setTimeout(() => setLinkCopiado(false), 2000);
   };
 
   const cells: Array<{ dia: number; mesAtual: boolean }> = [];
@@ -239,14 +210,25 @@ export default function CalendarioPage() {
             {MESES[mes]} {ano}
           </span>
           <button className="btn btn-secondary" onClick={proximoMes}>→</button>
+          
+          <div style={{ position: 'relative' }}>
+             <button onClick={() => setMenuAberto(!menuAberto)} className="btn btn-secondary" style={{ padding: '8px 12px' }}>
+                <MoreVertical size={20} />
+             </button>
+             {menuAberto && (
+                 <div style={{ position: 'absolute', top: 45, right: 0, background: 'var(--bg-primary)', border: '1px solid var(--border-subtle)', boxShadow: '0 10px 30px rgba(0,0,0,0.15)', borderRadius: 12, overflow: 'hidden', minWidth: 220, zIndex: 50 }}>
+                     <button onClick={() => { setMenuAberto(false); handleIrMetricas(); }} style={{ width: '100%', padding: '14px 16px', background: 'transparent', border: 'none', borderBottom: '1px solid var(--border-subtle)', textAlign: 'left', fontWeight: 700, display:'flex', alignItems:'center', gap:10, color:'var(--text-primary)' }}>
+                        📊 Ver Métricas do Mês
+                     </button>
+                     <button onClick={() => { setMenuAberto(false); handleLinkFamiliar(); }} style={{ width: '100%', padding: '14px 16px', background: 'transparent', border: 'none', textAlign: 'left', fontWeight: 700, display:'flex', alignItems:'center', gap:10, color:'var(--text-primary)' }}>
+                        {linkCopiado ? <Check size={16} color="#10b981"/> : <Link size={16}/>} 
+                        {linkCopiado ? 'Link Copiado!' : 'Link Familiar'}
+                        {!isPro && <span style={{ fontSize: 10, background: 'rgba(245,158,11,0.1)', color: '#f59e0b', padding: '2px 6px', borderRadius: 8, marginLeft: 'auto' }}>PRO</span>}
+                     </button>
+                 </div>
+             )}
+          </div>
         </div>
-        <button 
-          className="btn btn-primary mobile-only-margin" 
-          onClick={abrirDashboard} 
-          style={{ background: 'linear-gradient(135deg, #10b981, #059669)', border: 'none', gap: '8px' }}
-        >
-          📊 Ver Dashboard e Relatório
-        </button>
       </div>
 
       <div className="card">
@@ -359,13 +341,24 @@ export default function CalendarioPage() {
                           <span style={{ marginLeft: 8, fontSize: 11, fontWeight: 600, color: '#f59e0b', background: 'rgba(245,158,11,0.12)', padding: '2px 6px', borderRadius: 4 }}>⚠️ Conflito</span>
                         )}
                       </div>
-                      <button 
-                        onClick={() => abrirModalExclusao(p)}
-                        title="Remover Plantão"
-                        style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, opacity: 0.7, fontSize: 14 }}
-                      >
-                        🗑️
-                      </button>
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        {p.escala_id && (
+                          <button 
+                            onClick={() => isPro ? setEdicaoCiclo({p, regra: '12x36'}) : setShowProModal(true)}
+                            title="Editar Ciclo da Escala"
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, opacity: 0.7, fontSize: 16 }}
+                          >
+                            ♻️
+                          </button>
+                        )}
+                        <button 
+                          onClick={() => abrirModalExclusao(p)}
+                          title="Remover Plantão"
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, opacity: 0.7, fontSize: 14 }}
+                        >
+                          🗑️
+                        </button>
+                      </div>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: 'var(--text-secondary)' }}>
                       <Clock size={14} /> {new Date(p.data_hora_inicio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} às {new Date(p.data_hora_fim).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
@@ -428,45 +421,64 @@ export default function CalendarioPage() {
         </div>
       )}
 
-      {/* COMPONENTE OMITIDO DA TELA PRINCIPAL MAS DISPONÍVEL APENAS QUANDO A MODAL ESTIVER FECHADA 
-          Isso é útil para se em algum momento tentarmos renderizar via background */}
-      {!showReportModal && (
-         <div style={{ position: 'absolute', left: '-9999px', top: 0 }}>
-             <ReportTemplate ref={reportRef} plantoes={plantoes} mesNome={MESES[mes]} ano={ano} />
-         </div>
-      )}
-
-      {/* MODAL VISUAL DO DASHBOARD (Acesso às métricas em tela Cheia) */}
-      {showReportModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 99999, display: 'flex', flexDirection: 'column' }}>
-          {/* Header da Modal de Dashboard com os Botões de Ação */}
-          <div style={{ padding: '16px 24px', background: 'var(--bg-primary)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', zIndex: 10 }}>
-             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <button 
-                  className="btn btn-secondary" 
-                  onClick={() => setShowReportModal(false)}
-                  style={{ borderRadius: '50%', width: 44, height: 44, padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                >
-                  ✕
-                </button>
-                <h2 style={{ fontSize: 18, fontWeight: 800, margin: 0 }}>Métricas de {MESES[mes]}</h2>
-             </div>
-             
-             <button 
-               className="btn btn-primary" 
-               onClick={exportPDF} 
-               disabled={gerandoPdf}
-               style={{ background: 'linear-gradient(135deg, #10b981, #059669)', border: 'none', boxShadow: '0 4px 12px rgba(16, 185, 129, 0.4)' }}
+      {/* Modal Editar Ciclo */}
+      {edicaoCiclo !== null && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 100000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+          <div className="card" style={{ maxWidth: 400, width: '100%' }}>
+             <h2 style={{ fontSize: 18, fontWeight: 800, marginBottom: 8 }}>Editar Ciclo da Escala</h2>
+             <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 20 }}>
+               A regra antiga será <strong>preservada no histórico</strong> até a data deste plantão. 
+               O novo ciclo entrará em vigor e recalculará os plantões do dia <strong>{new Date(edicaoCiclo.p.data_hora_inicio).toLocaleDateString('pt-BR')}</strong> em diante.
+             </p>
+             <label style={{ fontSize: 13, fontWeight: 700, marginBottom: 6, display: 'block' }}>Nova Regra de Escala:</label>
+             <select 
+                value={edicaoCiclo.regra} 
+                onChange={e => setEdicaoCiclo({...edicaoCiclo, regra: e.target.value})} 
+                className="input-field" 
+                style={{ width: '100%', marginBottom: 24 }}
              >
-               {gerandoPdf ? '⏳ PDF...' : '📥 Baixar PDF A4'}
-             </button>
-          </div>
-
-          {/* Área Rolável contendo o ReportTemplate Visível para Leitura na Tela */}
-          <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', padding: '16px' }}>
-            <div style={{ width: '100%', maxWidth: '800px', margin: '0 auto', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 10px 30px rgba(0,0,0,0.5)', marginBottom: '80px', background: '#fff' }}>
-                <ReportTemplate ref={reportRef} plantoes={plantoes} mesNome={MESES[mes]} ano={ano} />
-            </div>
+                  <option value="12x36">12h Trabalhadas / 36h Descanso</option>
+                  <option value="24x48">24h Trabalhadas / 48h Descanso</option>
+                  <option value="24x72">24h Trabalhadas / 72h Descanso</option>
+                  <option value="24x24">24h Trabalhadas / 24h Descanso</option>
+                  <option value="12x60">12h Trabalhadas / 60h Descanso</option>
+             </select>
+             <div style={{ display: 'flex', gap: 12 }}>
+                 <button onClick={() => setEdicaoCiclo(null)} className="btn btn-secondary" style={{ flex: 1, justifyContent: 'center' }} disabled={salvandoCiclo}>Cancelar</button>
+                 <button 
+                   onClick={async () => {
+                     setSalvandoCiclo(true);
+                     try {
+                        // 1. Apaga plantoes futuros da escala antiga
+                        await fetch('/api/escalas/' + edicaoCiclo.p.escala_id, { 
+                          method: 'DELETE', 
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ modo: 'encerrar_em', data_encerramento: edicaoCiclo.p.data_hora_inicio }) 
+                        });
+                        
+                        // 2. Cria a nova escala a partir dessa data
+                        await fetch('/api/escalas', { 
+                          method: 'POST', 
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ local_id: edicaoCiclo.p.local_id, regra: edicaoCiclo.regra, data_inicio: edicaoCiclo.p.data_hora_inicio, forcar_conflito: false })
+                        });
+                        
+                        localStorage.removeItem(`calendario_cache_${ano}_${mes}`);
+                        fetchPlantoes();
+                        setEdicaoCiclo(null);
+                        setDiaSelecionado(null);
+                     } catch (e) {
+                        alert('Erro ao recalcular ciclo.');
+                     }
+                     setSalvandoCiclo(false);
+                   }} 
+                   className="btn btn-primary" 
+                   style={{ flex: 1, justifyContent: 'center', background: 'var(--accent-blue)', color: '#fff', border: 'none' }}
+                   disabled={salvandoCiclo}
+                 >
+                    {salvandoCiclo ? '⏳ Calculando...' : 'Aplicar Nova Escala'}
+                 </button>
+             </div>
           </div>
         </div>
       )}
