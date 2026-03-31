@@ -74,7 +74,7 @@ export default function EscalasPage() {
   const [deletando, setDeletando] = useState(false);
   
   const [showProModal, setShowProModal] = useState(false);
-  const isPro = false; // Trava Freemium
+  const isPro = true; // Trava Freemium
 
   const regraFinal = regra === 'Outro' ? `${horasTrabalhoOutro}x${horasDescansoOutro}` : regra;
 

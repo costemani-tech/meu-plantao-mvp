@@ -26,7 +26,7 @@ export default function DashboardPage() {
   const reportRef = useRef<HTMLDivElement>(null);
 
   // MOCK PAYWALL (mudar para query ao DB quando tiver auth pro full)
-  const isPro = false;
+  const isPro = true;
 
   const fetchPlantoes = useCallback(async () => {
     // OFFLINE FIRST

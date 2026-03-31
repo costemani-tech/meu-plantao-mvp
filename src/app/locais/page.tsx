@@ -20,7 +20,7 @@ export default function LocaisPage() {
   const [toast, setToast] = useState<Toast | null>(null);
   const [showProModal, setShowProModal] = useState(false);
 
-  const isPro = false; // Trava Freemium (Temporário local state)
+  const isPro = true; // Trava Freemium (Temporário local state)
 
   const showToast = (msg: string, type: 'success' | 'error') => {
     setToast({ msg, type });

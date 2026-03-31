@@ -18,7 +18,7 @@ export default function DashboardPage() {
   const router = useRouter();
   
   // TRAVA PRO MOCK
-  const isPro = false;
+  const isPro = true;
 
   const fetchPlantoes = useCallback(async () => {
     // 1. OFFLINE FIRST: Carrega o cache armazenado no disco local
@@ -150,9 +150,6 @@ export default function DashboardPage() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
               <button className="btn btn-secondary" style={{ justifyContent: 'center', gap: 8, padding: 16 }} onClick={() => isPro ? router.push('/dashboard') : setShowProModal('Dashboard & PDF')}>
                 🔒 Dashboard de Produtividade
-              </button>
-              <button className="btn btn-secondary" style={{ justifyContent: 'center', gap: 8, padding: 16 }} onClick={() => isPro ? router.push('/dashboard') : setShowProModal('Controle Financeiro')}>
-                🔒 Controle Financeiro
               </button>
               <button className="btn btn-secondary" style={{ justifyContent: 'center', gap: 8, padding: 16 }} onClick={() => setShowProModal('Compartilhamento de Agenda')}>
                 🔒 Compartilhar Agenda

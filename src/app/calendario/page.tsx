@@ -29,7 +29,7 @@ export default function CalendarioPage() {
   const router = useRouter();
   
   // TRAVA PRO ATIVADA (Segurança da versão 3.1)
-  const isPro = false;
+  const isPro = true;
 
   const fetchPlantoes = useCallback(async () => {
     const cachedData = localStorage.getItem(`calendario_cache_${ano}_${mes}`);

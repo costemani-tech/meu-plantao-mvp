@@ -21,7 +21,7 @@ export default function PlantaoExtraPage() {
   const [conflitoPendente, setConflitoPendente] = useState<{ inicio: string; fim: string } | null>(null);
   const [payloadPendente, setPayloadPendente] = useState<{ inicioIso: string; fimIso: string } | null>(null);
 
-  const isPro = false; // Trava Freemium
+  const isPro = true; // Trava Freemium
 
   const fetchLocais = useCallback(async () => {
     const { data } = await supabase.from('locais_trabalho').select('*').order('nome');
