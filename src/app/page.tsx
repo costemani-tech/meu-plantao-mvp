@@ -62,7 +62,7 @@ export default function DashboardPage() {
 
       if (plantoesData) {
         // Agrupar por local (apenas o mais próximo de cada)
-        const porLocal = new Map<string, any>();
+        const porLocal = new Map<string, PlantaoComLocal>();
         plantoesData.forEach(p => {
           if (p.local?.id && !porLocal.has(p.local.id)) {
             porLocal.set(p.local.id, p);
@@ -105,10 +105,6 @@ export default function DashboardPage() {
     fetchPlantoes();
   }, [fetchPlantoes]);
 
-  const formatDate = (iso: string) =>
-    new Date(iso).toLocaleString('pt-BR', {
-      weekday: 'short', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
-    });
 
   return (
     <>

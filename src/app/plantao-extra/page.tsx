@@ -55,7 +55,7 @@ export default function PlantaoExtraPage() {
     
     try {
       const inicioIso = new Date(`${dataPlantao}T${horaInicio}:00`).toISOString();
-      let dataFimObj = new Date(`${dataPlantao}T${horaFim}:00`);
+      const dataFimObj = new Date(`${dataPlantao}T${horaFim}:00`);
       if (horaFim < horaInicio) dataFimObj.setDate(dataFimObj.getDate() + 1);
       const fimIso = dataFimObj.toISOString();
 
@@ -98,7 +98,7 @@ export default function PlantaoExtraPage() {
 
       const payload = payloadPendente && forcarConflito
         ? { inicioIso: payloadPendente.inicioIso, fimIso: payloadPendente.fimIso }
-        : { inicioIso: new Date(`${dataPlantao}T${horaInicio}:00`).toISOString(), fimIso: (() => { let d = new Date(`${dataPlantao}T${horaFim}:00`); if (horaFim < horaInicio) d.setDate(d.getDate()+1); return d.toISOString(); })() };
+        : { inicioIso: new Date(`${dataPlantao}T${horaInicio}:00`).toISOString(), fimIso: (() => { const d = new Date(`${dataPlantao}T${horaFim}:00`); if (horaFim < horaInicio) d.setDate(d.getDate()+1); return d.toISOString(); })() };
 
       const valorNumerico = tipoExtra === 'Remunerado' ? (parseFloat(valorGanho.replace(',', '.')) || 0) : 0;
       const { error } = await supabase.from('plantoes').insert({

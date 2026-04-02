@@ -1,0 +1,65 @@
+﻿
+> mvp-app@0.1.0 lint
+> eslint
+
+
+C:\Users\vinicius.costemani_i\Documents\Plant├úo\src\app\auth\callback\route.ts
+  25:22  warning  '_e' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\vinicius.costemani_i\Documents\Plant├úo\src\app\calendario\page.tsx
+  101:3  warning  Unused eslint-disable directive (no problems were reported from 'react-hooks/set-state-in-effect')
+
+C:\Users\vinicius.costemani_i\Documents\Plant├úo\src\app\demo\page.tsx
+  99:9  warning  'PREVIEW_CICLOS' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\vinicius.costemani_i\Documents\Plant├úo\src\app\escalas\page.tsx
+  107:3  warning  Unused eslint-disable directive (no problems were reported from 'react-hooks/set-state-in-effect')
+  113:9  error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\vinicius.costemani_i\Documents\Plant├úo\src\app\escalas\page.tsx:113:9
+  111 |       const hd = parseInt(horasDescansoOutro, 10);
+  112 |       if (regra === 'Outro' && (isNaN(hr) || isNaN(hd) || hr <= 0 || hd < 0)) {
+> 113 |         setPreview([]);
+      |         ^^^^^^^^^^ Avoid calling setState() directly within an effect
+  114 |         return;
+  115 |       }
+  116 |       setPreview(gerarProximosPlantoes(new Date(dataCompletaISO), regraFinal, 5));  react-hooks/set-state-in-effect
+
+C:\Users\vinicius.costemani_i\Documents\Plant├úo\src\app\page.tsx
+  104:3  warning  Unused eslint-disable directive (no problems were reported from 'react-hooks/set-state-in-effect')
+
+C:\Users\vinicius.costemani_i\Documents\Plant├úo\src\app\plantao-extra\page.tsx
+  41:3  warning  Unused eslint-disable directive (no problems were reported from 'react-hooks/set-state-in-effect')
+
+C:\Users\vinicius.costemani_i\Documents\Plant├úo\src\components\AppShell.tsx
+  89:6  warning  React Hook useEffect has a missing dependency: 'isPro'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                react-hooks/exhaustive-deps
+  91:3  warning  Unused eslint-disable directive (no problems were reported from 'react-hooks/set-state-in-effect')
+  95:7  error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\vinicius.costemani_i\Documents\Plant├úo\src\components\AppShell.tsx:95:7
+  93 |     const saved = localStorage.getItem('plantao-theme');
+  94 |     if (saved === 'dark') {
+> 95 |       setTheme('dark');
+     |       ^^^^^^^^ Avoid calling setState() directly within an effect
+  96 |       document.documentElement.setAttribute('data-theme', 'dark');
+  97 |     }
+  98 |   }, []);  react-hooks/set-state-in-effect
+
+C:\Users\vinicius.costemani_i\Documents\Plant├úo\src\middleware.ts
+  18:48  warning  'options' is defined but never used  @typescript-eslint/no-unused-vars
+
+Ô£û 11 problems (2 errors, 9 warnings)
+  0 errors and 5 warnings potentially fixable with the `--fix` option.
+

@@ -29,7 +29,7 @@ export function gerarProximosPlantoes(
   const cicloHoras = duracaoTrabalho + duracaoDescanso;
   const slots: SlotPlantao[] = [];
 
-  let cursor = new Date(dataInicio);
+  const cursor = new Date(dataInicio);
 
   for (let i = 0; i < quantidade; i++) {
     const inicio = new Date(cursor);
@@ -59,7 +59,7 @@ export function gerarPlantoesParaPeriodo(
   const cicloHoras = duracaoTrabalho + duracaoDescanso;
   const slots: SlotPlantao[] = [];
 
-  let cursor = new Date(dataInicio);
+  const cursor = new Date(dataInicio);
 
   while (cursor < dataFim) {
     const inicio = new Date(cursor);

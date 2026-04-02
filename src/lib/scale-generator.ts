@@ -5,11 +5,8 @@ export interface IntervaloTurno {
   duracaoDescanso: number; // horas
 }
 
-const regras: Record<Regra, IntervaloTurno> = {
-  '12x36': { duracaoTrabalho: 12, duracaoDescanso: 36 },
-  '24x48': { duracaoTrabalho: 24, duracaoDescanso: 48 },
-  '24x72': { duracaoTrabalho: 24, duracaoDescanso: 72 },
-};
+
+
 
 export interface SlotPlantao {
   inicio: Date;
@@ -38,7 +35,7 @@ export function gerarProximosPlantoes(
   const { duracaoTrabalho, cicloHoras } = parseRegra(regra);
   const slots: SlotPlantao[] = [];
 
-  let cursor = new Date(dataInicio);
+  const cursor = new Date(dataInicio);
 
   for (let i = 0; i < quantidade; i++) {
     const inicio = new Date(cursor);
@@ -67,7 +64,7 @@ export function gerarPlantoesParaPeriodo(
   const { duracaoTrabalho, cicloHoras } = parseRegra(regra);
   const slots: SlotPlantao[] = [];
 
-  let cursor = new Date(dataInicio);
+  const cursor = new Date(dataInicio);
 
   while (cursor < dataFim) {
     const inicio = new Date(cursor);

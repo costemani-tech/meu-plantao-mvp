@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { supabase } from '../lib/supabase';
 import { useEffect, useState } from 'react';
-import { LayoutDashboard, CalendarDays, Settings2, PlusCircle, Building2, LogOut, Sun, Moon, Activity, Bell } from 'lucide-react';
+import { LayoutDashboard, CalendarDays, Settings2, PlusCircle, LogOut, Sun, Moon, Activity, Bell } from 'lucide-react';
 
 const navItems = [
   { icon: LayoutDashboard, label: 'Mission Control', href: '/' },
@@ -20,12 +20,11 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const [unreadCount, setUnreadCount] = useState(0);
   const [toast, setToast] = useState<{titulo: string, mensagem: string} | null>(null);
   const [overCapacity, setOverCapacity] = useState(false);
-  const [checkingCapacity, setCheckingCapacity] = useState(true);
 
   const isPro = false; // Trava Central do Freemium
 
   useEffect(() => {
-    let currentUser: any = null;
+    let currentUser: { id: string } | null = null;
 
     const fetchUnread = async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -51,7 +50,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           if (payload.eventType === 'INSERT' && currentUser && payload.new.usuario_id === currentUser.id) {
             // Toca um beep suave nativo do navegador!
             try {
-              const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+              const AudioContext = window.AudioContext || (window as Window & { webkitAudioContext?: typeof window.AudioContext }).webkitAudioContext;
               const ctx = new AudioContext();
               const osc = ctx.createOscillator();
               const gain = ctx.createGain();
@@ -76,28 +75,24 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       
       const checkCapacity = async () => {
         if (!isPro && pathname !== '/login' && pathname !== '/locais') {
-          setCheckingCapacity(true);
           const { count } = await supabase.from('locais_trabalho').select('*', { count: 'exact', head: true });
-          if (count !== null && count > 2) {
-            setOverCapacity(true);
-          } else {
-            setOverCapacity(false);
-          }
+          setOverCapacity(count !== null && count > 2);
         } else {
           setOverCapacity(false);
         }
-        setCheckingCapacity(false);
       };
 
       checkCapacity();
 
       return () => { supabase.removeChannel(channel); };
     }
-  }, [pathname]);
+  }, [pathname, isPro]);
+
 
   useEffect(() => {
     const saved = localStorage.getItem('plantao-theme');
     if (saved === 'dark') {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setTheme('dark');
       document.documentElement.setAttribute('data-theme', 'dark');
     }

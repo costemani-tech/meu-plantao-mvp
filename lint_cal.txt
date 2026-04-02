@@ -1,0 +1,9 @@
+﻿
+C:\Users\vinicius.costemani_i\Documents\Plant├úo\src\app\calendario\page.tsx
+   73:7   warning  Unused eslint-disable directive (no problems were reported from 'react-hooks/set-state-in-effect')
+  102:3   warning  Unused eslint-disable directive (no problems were reported from 'react-hooks/set-state-in-effect')
+  174:11  error    'dataFimObj' is never reassigned. Use 'const' instead                                               prefer-const
+
+Ô£û 3 problems (1 error, 2 warnings)
+  1 error and 2 warnings potentially fixable with the `--fix` option.
+

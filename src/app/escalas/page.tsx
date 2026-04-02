@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { supabase, LocalTrabalho } from '../../lib/supabase';
-import { gerarProximosPlantoes, formatarDataHora, SlotPlantao } from '../../lib/scale-generator';
+import { gerarProximosPlantoes, SlotPlantao } from '../../lib/scale-generator';
 
 const CORES_PRESET = [
   '#4f8ef7', '#7c6af7', '#22d3b5', '#f97316',
@@ -94,6 +94,7 @@ export default function EscalasPage() {
     setEscalasAtivas((data as unknown as EscalaAtiva[]) ?? []);
   }, []);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { fetchLocais(); fetchEscalas(); }, [fetchLocais, fetchEscalas]);
 
 
@@ -105,10 +106,10 @@ export default function EscalasPage() {
   // Preview das 5 primeiras datas em tempo real (permanece no frontend)
   useEffect(() => {
     if (dataCompletaISO && regraFinal) {
-      // Evita NaN no preview se o usuário não digitou horas válidas
       const hr = parseInt(horasTrabalhoOutro, 10);
       const hd = parseInt(horasDescansoOutro, 10);
       if (regra === 'Outro' && (isNaN(hr) || isNaN(hd) || hr <= 0 || hd < 0)) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setPreview([]);
         return;
       }
@@ -348,7 +349,7 @@ export default function EscalasPage() {
                 </select>
                 {locais.length === 0 && (
                   <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6 }}>
-                    Ainda não há locais. Clique em "Criar Novo" acima.
+                    Ainda não há locais. Clique em &quot;Criar Novo&quot; acima.
                   </p>
                 )}
               </>

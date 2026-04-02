@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '../../lib/supabase';
 import { BellRing, CheckCircle2, Trash2 } from 'lucide-react';
 
@@ -16,13 +16,12 @@ export default function NotificacoesPage() {
   const [notis, setNotis] = useState<Notificacao[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchNotificacoes = async () => {
+  const fetchNotificacoes = useCallback(async () => {
     setLoading(true);
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
     
-    // Busca notificações com base na tabela real
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from('notificacoes')
       .select('*')
       .eq('usuario_id', user.id)
@@ -30,11 +29,10 @@ export default function NotificacoesPage() {
       
     if (data) setNotis(data as Notificacao[]);
     setLoading(false);
-  };
-
-  useEffect(() => {
-    fetchNotificacoes();
   }, []);
+
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => { fetchNotificacoes(); }, [fetchNotificacoes]);
 
   const marcarComoLida = async (id: string) => {
     const { error } = await supabase

@@ -1,32 +1,36 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '../../lib/supabase';
 import { ArrowRightLeft, MapPin, Calendar, Clock, Handshake, CheckCircle2 } from 'lucide-react';
 
+interface Repasse {
+  repasse_id: string;
+  ofertante_id: string;
+  ofertante_email: string;
+  local_nome: string;
+  data_hora_inicio: string;
+  data_hora_fim: string;
+}
+
 export default function RepassesPage() {
-  const [repasses, setRepasses] = useState<any[]>([]);
+  const [repasses, setRepasses] = useState<Repasse[]>([]);
   const [loading, setLoading] = useState(true);
   const [meuId, setMeuId] = useState<string | null>(null);
   const [toast, setToast] = useState<{msg: string, type: 'success' | 'error'} | null>(null);
 
-  const fetchRepasses = async () => {
+  const fetchRepasses = useCallback(async () => {
     setLoading(true);
     const { data: { user } } = await supabase.auth.getUser();
     if (user) setMeuId(user.id);
     
-    // Usa uma função nativa de alto privilégio do banco para ler dados de outros médicos
-    const { data, error } = await supabase.rpc('listar_repasses_abertos');
-    
-    if (data) {
-      setRepasses(data);
-    }
+    const { data } = await supabase.rpc('listar_repasses_abertos');
+    if (data) setRepasses(data as Repasse[]);
     setLoading(false);
-  };
-
-  useEffect(() => {
-    fetchRepasses();
   }, []);
+
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => { fetchRepasses(); }, [fetchRepasses]);
 
   const showToast = (msg: string, type: 'success'|'error') => {
     setToast({ msg, type });
@@ -40,7 +44,6 @@ export default function RepassesPage() {
     }
     
     setLoading(true);
-    // Chama a função atômica (Security Definer) que fará a troca de posse!
     const { error } = await supabase.rpc('aceitar_repasse', { p_repasse_id: repasse_id });
     
     if (error) {

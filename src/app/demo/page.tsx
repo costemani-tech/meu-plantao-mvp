@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 
 // ─── DADOS SIMULADOS ───────────────────────────────────────────────
 const LOCAIS_MOCK = [
@@ -10,7 +11,6 @@ const LOCAIS_MOCK = [
 ];
 
 const hoje = new Date();
-const iso = (d: Date) => d.toISOString();
 
 function addHoras(d: Date, h: number): Date {
   const n = new Date(d);
@@ -96,18 +96,12 @@ export default function DemoPage() {
   const plantoesNoDia = (dia: number) => plantoesDoMes.filter(p => p.inicio.getDate() === dia);
   const isHoje = (dia: number) => dia === hoje.getDate() && mesAtual === hoje.getMonth();
 
-  const PREVIEW_CICLOS: Record<string, number> = { '12x36': 48, '24x48': 72, '24x72': 96 };
-  const PREVIEW_DUR: Record<string, number> = { '12x36': 12, '24x48': 24, '24x72': 24 };
-  const previewDates = Array.from({ length: 5 }, (_, i) => {
-    const d = new Date(); d.setHours(7, 0, 0, 0); d.setHours(d.getHours() + i * PREVIEW_CICLOS[regraDemo]);
-    return d;
-  });
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg-primary)', display: 'flex', flexDirection: 'column' }}>
       <div style={{ background: 'linear-gradient(90deg, #7c6af7, #4f8ef7)', padding: '10px 24px', fontSize: 13, fontWeight: 600, color: 'white', display: 'flex', alignItems: 'center', gap: 10, justifyContent: 'center' }}>
         🎯 MODO DEMO — Dados simulados para visualização. O app real conecta ao Supabase.
-        <a href="/" style={{ marginLeft: 12, background: 'rgba(255,255,255,0.2)', borderRadius: 6, padding: '3px 10px', color: 'white', fontSize: 12 }}>← Voltar ao App Real</a>
+        <Link href="/" style={{ marginLeft: 12, background: 'rgba(255,255,255,0.2)', borderRadius: 6, padding: '3px 10px', color: 'white', fontSize: 12 }}>← Voltar ao App Real</Link>
       </div>
 
       <div className="app-shell">

@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Pasta legada (projeto anterior) — não faz parte do deploy
+    "mvp-app/**",
   ]),
 ]);
 

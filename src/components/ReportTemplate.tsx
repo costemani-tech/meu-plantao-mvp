@@ -57,13 +57,16 @@ export const ReportTemplate = React.forwardRef<HTMLDivElement, ReportTemplatePro
     const locaisArray = Object.values(horasPorLocal).sort((a,b) => b.horas - a.horas);
 
     // Constrói a string do gradiente cônico (Pie Chart) CSS
-    let lastPercent = 0;
-    const gradientStops = locaisArray.map(l => {
-      const percentage = (l.horas / totalHoras) * 100;
-      const stop = `${l.cor} ${lastPercent}% ${lastPercent + percentage}%`;
-      lastPercent += percentage;
-      return stop;
-    }).join(', ');
+    const gradientStops = locaisArray.reduce<{ stops: string[]; acc: number }>(
+      ({ stops, acc }, l) => {
+        const percentage = (l.horas / totalHoras) * 100;
+        return {
+          stops: [...stops, `${l.cor} ${acc}% ${acc + percentage}%`],
+          acc: acc + percentage,
+        };
+      },
+      { stops: [], acc: 0 }
+    ).stops.join(', ');
 
     return (
       <div
