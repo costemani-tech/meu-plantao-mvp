@@ -23,6 +23,7 @@ export interface LocalTrabalho {
   cor_calendario: string;
   endereco?: string;
   is_home_care?: boolean;
+  ativo?: boolean;
   created_at: string;
 }
 

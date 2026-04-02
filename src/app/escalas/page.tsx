@@ -82,7 +82,7 @@ export default function EscalasPage() {
   const dataCompletaISO = (dataInicioSo && horaInicio) ? `${dataInicioSo}T${horaInicio}:00` : '';
 
   const fetchLocais = useCallback(async () => {
-    const { data } = await supabase.from('locais_trabalho').select('*').order('nome');
+    const { data } = await supabase.from('locais_trabalho').select('*').eq('ativo', true).order('nome');
     setLocais((data as LocalTrabalho[]) ?? []);
   }, []);
 

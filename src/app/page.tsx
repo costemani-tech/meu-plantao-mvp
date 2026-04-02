@@ -94,7 +94,8 @@ export default function DashboardPage() {
       // 3. Locais Ativos
       const { count: countLocais } = await supabase
         .from('locais_trabalho')
-        .select('*', { count: 'exact', head: true });
+        .select('*', { count: 'exact', head: true })
+        .eq('ativo', true);
         
       setLocaisAtivos(countLocais || 0);
     } catch (err) {
@@ -134,16 +135,20 @@ export default function DashboardPage() {
   };
 
   const excluirLocal = async (id: string, nomeLocal: string) => {
-    const { count } = await supabase.from('plantoes').select('*', { count: 'exact', head: true }).eq('local_id', id);
-    const numPlantoes = count || 0;
+    const { count } = await supabase.from('plantoes').select('*', { count: 'exact', head: true })
+      .eq('local_id', id).gt('data_hora_inicio', new Date().toISOString());
+    const numPlantoesFuturos = count || 0;
 
-    if (!confirm(`Atenção: Ao excluir o '${nomeLocal}', todos os ${numPlantoes} plantões agendados nele também serão apagados. Deseja continuar?`)) return;
+    if (!confirm(`Atenção: Ao arquivar '${nomeLocal}', todos os ${numPlantoesFuturos} plantões FUTUROS agendados nele serão cancelados. Os antigos continuarão no relatório. Deseja arquivá-lo?`)) return;
     
     setSavingLocal(true);
-    await supabase.from('plantoes').delete().eq('local_id', id);
-    await supabase.from('escalas').delete().eq('local_id', id);
+    const hojeISO = new Date().toISOString();
     
-    const { error } = await supabase.from('locais_trabalho').delete().eq('id', id);
+    // Plantões futuros apagados
+    await supabase.from('plantoes').delete().eq('local_id', id).gt('data_hora_inicio', hojeISO);
+    
+    // Soft Delete
+    const { error } = await supabase.from('locais_trabalho').update({ ativo: false }).eq('id', id);
     
     if (error) { 
       showToast('Erro ao excluir: ' + error.message, 'error');
@@ -330,7 +335,7 @@ export default function DashboardPage() {
               onClick={() => excluirLocal(localEmEdicao.id, localEmEdicao.nome)}
               disabled={savingLocal}
             >
-              Excluir Local e Plantões Associados
+              Excluir (Arquivar) Local e Cancelar Futuros
             </button>
           </div>
         </div>

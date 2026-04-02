@@ -29,7 +29,7 @@ export default function LocaisPage() {
   };
 
   const fetchLocais = useCallback(async () => {
-    const { data } = await supabase.from('locais_trabalho').select('*').order('nome');
+    const { data } = await supabase.from('locais_trabalho').select('*').eq('ativo', true).order('nome');
     setLocais((data as LocalTrabalho[]) ?? []);
   }, []);
 
@@ -41,7 +41,7 @@ export default function LocaisPage() {
 
     if (!isPro) {
       setSaving(true);
-      const { count } = await supabase.from('locais_trabalho').select('*', { count: 'exact', head: true });
+      const { count } = await supabase.from('locais_trabalho').select('*', { count: 'exact', head: true }).eq('ativo', true);
       if (count !== null && count >= 2) {
         setShowProModal(true);
         setSaving(false);
@@ -71,18 +71,20 @@ export default function LocaisPage() {
   };
 
   const excluirLocal = async (id: string, nomeLocal: string) => {
-    const { count } = await supabase.from('plantoes').select('*', { count: 'exact', head: true }).eq('local_id', id);
-    const numPlantoes = count || 0;
+    // Não conta os que ficarão intocados no passado, conta apenas os avisos que serão apagados (futuros)
+    const { count } = await supabase.from('plantoes').select('*', { count: 'exact', head: true })
+      .eq('local_id', id).gt('data_hora_inicio', new Date().toISOString());
+    const numPlantoesFuturos = count || 0;
 
-    if (!confirm(`Atenção: Ao excluir o '${nomeLocal}', todos os ${numPlantoes} plantões agendados nele também serão apagados. Deseja continuar?`)) return;
+    if (!confirm(`Atenção: Ao arquivar '${nomeLocal}', todos os ${numPlantoesFuturos} plantões FUTUROS agendados nele serão cancelados. Os plantões antigos do relatório continuarão existindo. Deseja arquivá-lo?`)) return;
     
-    // Deleta os plantões vinculados forçadamente para garantir que saiam da agenda
-    await supabase.from('plantoes').delete().eq('local_id', id);
-    // Deleta as escalas template também
-    await supabase.from('escalas').delete().eq('local_id', id);
+    const hojeISO = new Date().toISOString();
     
-    // E finalmente exclui o local
-    const { error } = await supabase.from('locais_trabalho').delete().eq('id', id);
+    // Deleta os plantões vinculados apenas do FUTURO (preserva histórico)
+    await supabase.from('plantoes').delete().eq('local_id', id).gt('data_hora_inicio', hojeISO);
+    
+    // Realiza o Soft Delete (Arquivamento) do Local
+    const { error } = await supabase.from('locais_trabalho').update({ ativo: false }).eq('id', id);
     
     if (error) { 
       showToast('Erro ao excluir: ' + error.message, 'error');
