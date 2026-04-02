@@ -19,6 +19,7 @@ export default function LocaisPage() {
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<Toast | null>(null);
   const [showProModal, setShowProModal] = useState(false);
+  const [localEmEdicao, setLocalEmEdicao] = useState<LocalTrabalho | null>(null);
 
   const isPro = true; // Trava Freemium (Temporário local state)
 
@@ -68,8 +69,11 @@ export default function LocaisPage() {
     setSaving(false);
   };
 
-  const excluirLocal = async (id: string) => {
-    if (!confirm('Tem certeza? Isso removerá o local e todos os plantões associados de uma vez da sua agenda.')) return;
+  const excluirLocal = async (id: string, nomeLocal: string) => {
+    const { count } = await supabase.from('plantoes').select('*', { count: 'exact', head: true }).eq('local_id', id);
+    const numPlantoes = count || 0;
+
+    if (!confirm(`Atenção: Ao excluir o '${nomeLocal}', todos os ${numPlantoes} plantões agendados nele também serão apagados. Deseja continuar?`)) return;
     
     // Deleta os plantões vinculados forçadamente para garantir que saiam da agenda
     await supabase.from('plantoes').delete().eq('local_id', id);
@@ -84,7 +88,28 @@ export default function LocaisPage() {
     } else { 
       showToast('Local e todos os plantões removidos', 'success'); 
       await fetchLocais(); 
+      setLocalEmEdicao(null);
     }
+  };
+
+  const salvarEdicao = async () => {
+    if (!localEmEdicao) return;
+    if (!localEmEdicao.nome.trim()) { showToast('Informe o nome do local.', 'error'); return; }
+
+    setSaving(true);
+    const { error } = await supabase.from('locais_trabalho').update({
+      nome: localEmEdicao.nome.trim(),
+      endereco: localEmEdicao.is_home_care ? null : (localEmEdicao.endereco?.trim() || null)
+    }).eq('id', localEmEdicao.id);
+
+    if (error) {
+      showToast('Erro ao atualizar: ' + error.message, 'error');
+    } else {
+      showToast('✅ Local atualizado com sucesso!', 'success');
+      setLocalEmEdicao(null);
+      await fetchLocais();
+    }
+    setSaving(false);
   };
 
   return (
@@ -187,7 +212,7 @@ export default function LocaisPage() {
           ) : (
             <div className="shift-list">
               {locais.map(l => (
-                <div key={l.id} className="shift-item" style={{ alignItems: 'center' }}>
+                <div key={l.id} className="shift-item" style={{ alignItems: 'center', cursor: 'pointer' }} onClick={() => setLocalEmEdicao(l)}>
                   <div className="shift-color-bar" style={{ backgroundColor: l.cor_calendario }} />
                   <div className="shift-info" style={{ flex: 1 }}>
                     <div className="shift-local" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -202,6 +227,7 @@ export default function LocaisPage() {
                           target="_blank" 
                           rel="noreferrer"
                           style={{ color: 'var(--accent-blue)', textDecoration: 'none', marginLeft: 4, fontWeight: 500 }}
+                          onClick={e => e.stopPropagation()}
                         >
                           Ver no Mapa ↗
                         </a>
@@ -217,7 +243,7 @@ export default function LocaisPage() {
                   <button
                     className="btn btn-danger"
                     style={{ padding: '6px 12px', fontSize: 12 }}
-                    onClick={() => excluirLocal(l.id)}
+                    onClick={(e) => { e.stopPropagation(); excluirLocal(l.id, l.nome); }}
                     title="Excluir"
                   >
                     🗑️
@@ -230,6 +256,51 @@ export default function LocaisPage() {
       </div>
 
       {toast && <div className={`toast ${toast.type}`}>{toast.msg}</div>}
+
+      {/* MODAL EDICAO DE LOCAL */}
+      {localEmEdicao && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }} onClick={() => setLocalEmEdicao(null)}>
+          <div className="card" style={{ maxWidth: 400, width: '100%' }} onClick={e => e.stopPropagation()}>
+            <h2 style={{ fontSize: 20, fontWeight: 800, marginBottom: 16, color: 'var(--text-primary)' }}>Editar Local</h2>
+            
+            <div className="form-group">
+              <label className="form-label">Nome do Local</label>
+              <input
+                type="text"
+                className="form-input"
+                value={localEmEdicao.nome}
+                onChange={e => setLocalEmEdicao({ ...localEmEdicao, nome: e.target.value })}
+              />
+            </div>
+
+            {!localEmEdicao.is_home_care && (
+              <div className="form-group" style={{ marginTop: 16 }}>
+                <label className="form-label">Endereço</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={localEmEdicao.endereco || ''}
+                  onChange={e => setLocalEmEdicao({ ...localEmEdicao, endereco: e.target.value })}
+                />
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: 12, marginTop: 24 }}>
+              <button className="btn btn-secondary" style={{ flex: 1, justifyContent: 'center' }} onClick={() => setLocalEmEdicao(null)} disabled={saving}>Cancelar</button>
+              <button className="btn btn-primary" style={{ flex: 1, justifyContent: 'center', background: 'var(--accent-teal)' }} onClick={salvarEdicao} disabled={saving}>{saving ? '⏳ Salvando...' : 'Salvar'}</button>
+            </div>
+            
+            <button 
+              className="btn btn-secondary" 
+              style={{ width: '100%', justifyContent: 'center', marginTop: 12, color: '#ef4444', borderColor: 'rgba(239,68,68,0.3)' }} 
+              onClick={() => excluirLocal(localEmEdicao.id, localEmEdicao.nome)}
+              disabled={saving}
+            >
+              Excluir Local e Plantões Associados
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* MODAL PRO PAYWALL */}
       {showProModal && (

@@ -201,11 +201,11 @@ export default function PlantaoExtraPage() {
                 <div style={{ display: 'flex', gap: 12, marginTop: 8 }}>
                   <label style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8, padding: 12, border: '1px solid var(--border-subtle)', borderRadius: 8, cursor: 'pointer', background: tipoExtra === 'Remunerado' ? 'var(--bg-secondary)' : 'transparent' }}>
                     <input type="radio" name="tipoExtra" value="Remunerado" checked={tipoExtra === 'Remunerado'} onChange={() => setTipoExtra('Remunerado')} />
-                    <span>💰 Remunerado</span>
+                    <span>Remunerado</span>
                   </label>
                   <label style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8, padding: 12, border: '1px solid var(--border-subtle)', borderRadius: 8, cursor: 'pointer', background: tipoExtra === 'Folga' ? 'var(--bg-secondary)' : 'transparent' }}>
                     <input type="radio" name="tipoExtra" value="Folga" checked={tipoExtra === 'Folga'} onChange={() => setTipoExtra('Folga')} />
-                    <span>🔄 Troca/Folga</span>
+                    <span>Troca</span>
                   </label>
                 </div>
               </div>

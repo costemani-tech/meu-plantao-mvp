@@ -356,22 +356,22 @@ export default function CalendarioPage() {
                           <span style={{ marginLeft: 8, fontSize: 11, fontWeight: 600, color: '#f59e0b', background: 'rgba(245,158,11,0.12)', padding: '2px 6px', borderRadius: 4 }}>⚠️ Conflito</span>
                         )}
                       </div>
-                      <div style={{ display: 'flex', gap: 8 }}>
+                      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                         {p.escala_id && (
                           <button 
                             onClick={() => isPro ? setEdicaoCiclo({p, regra: '12x36', dataInicio: p.data_hora_inicio.substring(0, 10)}) : setShowProModal(true)}
                             title="Editar Ciclo da Escala"
-                            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, opacity: 0.7, fontSize: 16 }}
+                            style={{ padding: '6px 12px', fontSize: 12, background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)', borderRadius: 6, color: 'var(--text-primary)', fontWeight: 600, cursor: 'pointer' }}
                           >
-                            ♻️
+                            Editar
                           </button>
                         )}
                         <button 
                           onClick={() => abrirModalExclusao(p)}
                           title="Remover Plantão"
-                          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, opacity: 0.7, fontSize: 14 }}
+                          style={{ padding: '6px 12px', fontSize: 12, background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)', borderRadius: 6, color: '#ef4444', fontWeight: 600, cursor: 'pointer' }}
                         >
-                          🗑️
+                          Excluir
                         </button>
                       </div>
                     </div>
