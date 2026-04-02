@@ -16,6 +16,9 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [showProModal, setShowProModal] = useState('');
   const [isPro, setIsPro] = useState(true);
+  const [localEmEdicao, setLocalEmEdicao] = useState<LocalTrabalho | null>(null);
+  const [savingLocal, setSavingLocal] = useState(false);
+  const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' } | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -105,6 +108,54 @@ export default function DashboardPage() {
     fetchPlantoes();
   }, [fetchPlantoes]);
 
+  const showToast = (msg: string, type: 'success' | 'error') => {
+    setToast({ msg, type });
+    setTimeout(() => setToast(null), 3500);
+  };
+
+  const salvarEdicao = async () => {
+    if (!localEmEdicao) return;
+    if (!localEmEdicao.nome.trim()) { showToast('Informe o nome do local.', 'error'); return; }
+
+    setSavingLocal(true);
+    const { error } = await supabase.from('locais_trabalho').update({
+      nome: localEmEdicao.nome.trim(),
+      endereco: localEmEdicao.is_home_care ? null : (localEmEdicao.endereco?.trim() || null)
+    }).eq('id', localEmEdicao.id);
+
+    if (error) {
+      showToast('Erro ao atualizar: ' + error.message, 'error');
+    } else {
+      showToast('✅ Local atualizado com sucesso!', 'success');
+      setLocalEmEdicao(null);
+      await fetchPlantoes();
+    }
+    setSavingLocal(false);
+  };
+
+  const excluirLocal = async (id: string, nomeLocal: string) => {
+    const { count } = await supabase.from('plantoes').select('*', { count: 'exact', head: true }).eq('local_id', id);
+    const numPlantoes = count || 0;
+
+    if (!confirm(`Atenção: Ao excluir o '${nomeLocal}', todos os ${numPlantoes} plantões agendados nele também serão apagados. Deseja continuar?`)) return;
+    
+    setSavingLocal(true);
+    await supabase.from('plantoes').delete().eq('local_id', id);
+    await supabase.from('escalas').delete().eq('local_id', id);
+    
+    const { error } = await supabase.from('locais_trabalho').delete().eq('id', id);
+    
+    if (error) { 
+      showToast('Erro ao excluir: ' + error.message, 'error');
+    } else { 
+      showToast('Local e todos os plantões removidos', 'success'); 
+      setLocalEmEdicao(null);
+      await fetchPlantoes(); 
+    }
+    setSavingLocal(false);
+  };
+
+
 
   return (
     <>
@@ -180,7 +231,7 @@ export default function DashboardPage() {
             ) : (
               <div className="shift-list">
                 {plantoesMaisProximosPorLocal.map(p => (
-                  <div key={p.id} className="shift-item" style={{ alignItems: 'center' }}>
+                  <div key={p.id} className="shift-item" style={{ alignItems: 'center', cursor: 'pointer' }} onClick={() => p.local && setLocalEmEdicao(p.local)}>
                     <div
                       className="shift-color-bar"
                       style={{ backgroundColor: p.local?.cor_calendario ?? '#4f8ef7' }}
@@ -207,6 +258,7 @@ export default function DashboardPage() {
                       rel="noreferrer"
                       className="btn btn-secondary"
                       style={{ padding: '6px 12px', fontSize: 12, marginRight: 12, backgroundColor: 'rgba(245, 158, 11, 0.1)', color: 'var(--accent-orange, #f59e0b)', border: 'none' }}
+                      onClick={e => e.stopPropagation()}
                     >
                       📆 Salvar na Agenda
                     </a>
@@ -233,6 +285,53 @@ export default function DashboardPage() {
               <button className="btn btn-secondary" style={{ flex: 1, justifyContent: 'center' }} onClick={() => setShowProModal('')}>Voltar</button>
               <button className="btn btn-primary" style={{ flex: 1, justifyContent: 'center', background: 'linear-gradient(to right, #f59e0b, #d97706)', border: 'none' }} onClick={() => setShowProModal('')}>Assinar Pro</button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {toast && <div className={`toast ${toast.type}`}>{toast.msg}</div>}
+
+      {/* MODAL EDICAO DE LOCAL */}
+      {localEmEdicao && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }} onClick={() => setLocalEmEdicao(null)}>
+          <div className="card" style={{ maxWidth: 400, width: '100%' }} onClick={e => e.stopPropagation()}>
+            <h2 style={{ fontSize: 20, fontWeight: 800, marginBottom: 16, color: 'var(--text-primary)' }}>Editar Local</h2>
+            
+            <div className="form-group">
+              <label className="form-label">Nome do Local</label>
+              <input
+                type="text"
+                className="form-input"
+                value={localEmEdicao.nome}
+                onChange={e => setLocalEmEdicao({ ...localEmEdicao, nome: e.target.value })}
+              />
+            </div>
+
+            {!localEmEdicao.is_home_care && (
+              <div className="form-group" style={{ marginTop: 16 }}>
+                <label className="form-label">Endereço</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={localEmEdicao.endereco || ''}
+                  onChange={e => setLocalEmEdicao({ ...localEmEdicao, endereco: e.target.value })}
+                />
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: 12, marginTop: 24 }}>
+              <button className="btn btn-secondary" style={{ flex: 1, justifyContent: 'center' }} onClick={() => setLocalEmEdicao(null)} disabled={savingLocal}>Cancelar</button>
+              <button className="btn btn-primary" style={{ flex: 1, justifyContent: 'center', background: 'var(--accent-teal)' }} onClick={salvarEdicao} disabled={savingLocal}>{savingLocal ? '⏳ Salvando...' : 'Salvar'}</button>
+            </div>
+            
+            <button 
+              className="btn btn-secondary" 
+              style={{ width: '100%', justifyContent: 'center', marginTop: 12, color: '#ef4444', borderColor: 'rgba(239,68,68,0.3)' }} 
+              onClick={() => excluirLocal(localEmEdicao.id, localEmEdicao.nome)}
+              disabled={savingLocal}
+            >
+              Excluir Local e Plantões Associados
+            </button>
           </div>
         </div>
       )}
