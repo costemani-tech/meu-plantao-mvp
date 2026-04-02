@@ -183,7 +183,7 @@ export default function DashboardPage() {
       ) : (
         <>
           <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))' }}>
-            <div className="stat-card">
+            <div className="stat-card" onClick={() => router.push('/calendario')} style={{ cursor: 'pointer' }}>
               <div className="stat-icon blue"><CalendarDays size={28} /></div>
               <div className="stat-content">
                 <div className="stat-label">Plantões no Mês</div>
@@ -191,7 +191,7 @@ export default function DashboardPage() {
                 <div className="stat-sub">Agendados/Realizados</div>
               </div>
             </div>
-            <div className="stat-card">
+            <div className="stat-card" onClick={() => router.push('/locais')} style={{ cursor: 'pointer' }}>
               <div className="stat-icon orange"><Building2 size={28} /></div>
               <div className="stat-content">
                 <div className="stat-label">Locais Ativos</div>
