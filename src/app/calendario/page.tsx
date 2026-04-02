@@ -306,56 +306,142 @@ export default function CalendarioPage() {
                   cursor: cell.mesAtual ? 'pointer' : 'default',
                   border: ps.some(p => p.status_conflito) ? '2px solid #f59e0b' : '1px solid var(--border-subtle)',
                   position: 'relative',
+                  padding: 0,
+                  overflow: 'hidden',
                 }}
                 className={`cal-day ${cell.mesAtual ? '' : 'other-month'} ${cell.mesAtual && isHoje(cell.dia) ? 'today' : ''}`}
               >
-                {ps.some(p => p.status_conflito) && (
-                  <div style={{ position: 'absolute', top: 4, right: 4, fontSize: 10 }}>🟡</div>
-                )}
-                <div style={{ position: 'absolute', top: '6px', left: '8px', fontSize: '12px', color: '#94a3b8', fontWeight: 'bold' }}>
+                {/* Número do dia — sempre visível acima de tudo */}
+                <div style={{ position: 'absolute', top: '6px', left: '8px', fontSize: '12px', color: '#94a3b8', fontWeight: 'bold', zIndex: 10, lineHeight: 1 }}>
                   {cell.dia}
                 </div>
-                {ps.length > 0 && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', width: '100%', padding: '0 6px', boxSizing: 'border-box', marginTop: '24px' }}>
-                    {ps.slice(0, 2).map((p, i) => {
-                      const hex = p.is_extra ? '#8b5cf6' : (p.local?.cor_calendario ?? '#4f8ef7');
-                      return (
-                        <div
-                          key={i}
-                          title={p.local?.nome ?? 'Plantão'}
-                          style={{
-                            backgroundColor: hex,
-                            color: getTextColor(hex),
-                            width: '100%',
-                            padding: '4px 2px',
-                            borderRadius: '4px',
-                            display: 'flex',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            fontSize: '10px',
-                            fontWeight: 'bold',
-                            whiteSpace: 'nowrap',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.15)',
-                          }}
-                        >
-                          {p.local?.nome ?? 'Plantão'}
-                        </div>
-                      );
-                    })}
-                    {ps.length > 2 && (
-                      <div style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-muted)', textAlign: 'center' }}>
-                        +{ps.length - 2}
-                      </div>
-                    )}
-                  </div>
+
+                {/* Indicador de conflito */}
+                {ps.some(p => p.status_conflito) && (
+                  <div style={{ position: 'absolute', top: 4, right: 4, fontSize: 10, zIndex: 11 }}>🟡</div>
                 )}
+
+                {/* 0 plantões: célula vazia */}
+
+                {/* 1 plantão: ocupa 100% da célula */}
+                {ps.length === 1 && (() => {
+                  const hex = ps[0].is_extra ? '#8b5cf6' : (ps[0].local?.cor_calendario ?? '#4f8ef7');
+                  return (
+                    <div
+                      title={ps[0].local?.nome ?? 'Plantão'}
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: '100%',
+                        backgroundColor: hex,
+                        color: getTextColor(hex),
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        textAlign: 'center',
+                        padding: '0 4px',
+                        fontSize: '10px',
+                        fontWeight: 'bold',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        zIndex: 1,
+                      }}
+                    >
+                      {ps[0].local?.nome ?? 'Plantão'}
+                    </div>
+                  );
+                })()}
+
+                {/* 2+ plantões: metade superior e inferior */}
+                {ps.length >= 2 && (() => {
+                  const hex0 = ps[0].is_extra ? '#8b5cf6' : (ps[0].local?.cor_calendario ?? '#4f8ef7');
+                  const hex1 = ps[1].is_extra ? '#8b5cf6' : (ps[1].local?.cor_calendario ?? '#4f8ef7');
+                  return (
+                    <>
+                      {/* Metade superior — plantão 1 */}
+                      <div
+                        title={ps[0].local?.nome ?? 'Plantão'}
+                        style={{
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          width: '100%',
+                          height: '50%',
+                          backgroundColor: hex0,
+                          color: getTextColor(hex0),
+                          display: 'flex',
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                          textAlign: 'center',
+                          padding: '0 4px',
+                          fontSize: '10px',
+                          fontWeight: 'bold',
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          zIndex: 1,
+                        }}
+                      >
+                        {ps[0].local?.nome ?? 'Plantão'}
+                      </div>
+
+                      {/* Metade inferior — plantão 2 */}
+                      <div
+                        title={ps[1].local?.nome ?? 'Plantão'}
+                        style={{
+                          position: 'absolute',
+                          bottom: 0,
+                          left: 0,
+                          width: '100%',
+                          height: '50%',
+                          backgroundColor: hex1,
+                          color: getTextColor(hex1),
+                          display: 'flex',
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                          textAlign: 'center',
+                          padding: '0 4px',
+                          fontSize: '10px',
+                          fontWeight: 'bold',
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          zIndex: 1,
+                        }}
+                      >
+                        {ps[1].local?.nome ?? 'Plantão'}
+                      </div>
+
+                      {/* Indicador +X para 3 ou mais plantões */}
+                      {ps.length > 2 && (
+                        <div style={{
+                          position: 'absolute',
+                          bottom: 3,
+                          right: 4,
+                          fontSize: '9px',
+                          fontWeight: 800,
+                          color: '#fff',
+                          background: 'rgba(0,0,0,0.35)',
+                          borderRadius: '3px',
+                          padding: '1px 3px',
+                          zIndex: 12,
+                          lineHeight: 1.2,
+                        }}>
+                          +{ps.length - 2}
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
               </div>
             );
           })}
         </div>
       </div>
+
 
       {/* Mini-lista de próximos plantões */}
       <div style={{ marginTop: 24, marginBottom: 80 }}>
