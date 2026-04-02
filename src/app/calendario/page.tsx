@@ -305,47 +305,50 @@ export default function CalendarioPage() {
                 style={{
                   cursor: cell.mesAtual ? 'pointer' : 'default',
                   border: ps.some(p => p.status_conflito) ? '2px solid #f59e0b' : '1px solid var(--border-subtle)',
+                  position: 'relative',
                 }}
-                className={`cal-day relative ${cell.mesAtual ? '' : 'other-month'} ${cell.mesAtual && isHoje(cell.dia) ? 'today' : ''}`}
+                className={`cal-day ${cell.mesAtual ? '' : 'other-month'} ${cell.mesAtual && isHoje(cell.dia) ? 'today' : ''}`}
               >
                 {ps.some(p => p.status_conflito) && (
                   <div style={{ position: 'absolute', top: 4, right: 4, fontSize: 10 }}>🟡</div>
                 )}
-                <div className="cal-day-num" style={{ marginBottom: ps.length > 0 ? 4 : 0, fontWeight: 700 }}>
+                <div style={{ position: 'absolute', top: '6px', left: '8px', fontSize: '12px', color: '#94a3b8', fontWeight: 'bold' }}>
                   {cell.dia}
                 </div>
                 {ps.length > 0 && (
-                  <div style={{ display: 'flex', flexDirection: 'column', width: '100%', gap: 3, flex: 1, overflow: 'hidden' }}>
-                    {ps.map((p, i) => {
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', width: '100%', padding: '0 6px', boxSizing: 'border-box', marginTop: '24px' }}>
+                    {ps.slice(0, 2).map((p, i) => {
                       const hex = p.is_extra ? '#8b5cf6' : (p.local?.cor_calendario ?? '#4f8ef7');
-                      const textColor = getTextColor(hex);
                       return (
-                        <div 
-                          key={i} 
+                        <div
+                          key={i}
                           title={p.local?.nome ?? 'Plantão'}
-                          style={{ 
-                            backgroundColor: hex, 
-                            color: textColor,
-                            padding: '2px 4px',
+                          style={{
+                            backgroundColor: hex,
+                            color: getTextColor(hex),
                             width: '100%',
+                            padding: '4px 2px',
+                            borderRadius: '4px',
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
                             fontSize: '10px',
-                            fontWeight: 700,
+                            fontWeight: 'bold',
                             whiteSpace: 'nowrap',
                             overflow: 'hidden',
                             textOverflow: 'ellipsis',
-                            textAlign: 'center',
-                            borderRadius: '4px',
-                            minHeight: '18px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            boxShadow: '0 1px 2px rgba(0,0,0,0.1)'
+                            boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.15)',
                           }}
                         >
                           {p.local?.nome ?? 'Plantão'}
                         </div>
                       );
                     })}
+                    {ps.length > 2 && (
+                      <div style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-muted)', textAlign: 'center' }}>
+                        +{ps.length - 2}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
