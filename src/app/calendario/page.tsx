@@ -209,29 +209,13 @@ export default function CalendarioPage() {
       return isStartDay || isEndDay;
     });
 
-  const getCellBackground = (ps: PlantaoComLocal[], dia: number) => {
-    if (ps.length === 0) return 'transparent';
-    const getCor = (p: PlantaoComLocal) => p.is_extra ? '#8b5cf6' : (p.local?.cor_calendario ?? '#4f8ef7');
-
-    if (ps.length === 1) {
-      const p = ps[0];
-      const dInicio = new Date(p.data_hora_inicio);
-      const dFim = new Date(p.data_hora_fim);
-      const crossesMidnight = dInicio.getDate() !== dFim.getDate() || dInicio.getMonth() !== dFim.getMonth() || dInicio.getFullYear() !== dFim.getFullYear();
-      const cor = getCor(p);
-      if (crossesMidnight) {
-        if (dInicio.getDate() === dia) return `linear-gradient(to bottom, transparent 50%, ${cor} 50%)`;
-        return `linear-gradient(to bottom, ${cor} 50%, transparent 50%)`;
-      }
-      return cor;
-    }
-
-    if (ps.length >= 2) {
-      const cor1 = getCor(ps[0]);
-      const cor2 = getCor(ps[1]);
-      return `linear-gradient(to bottom, ${cor1} 50%, ${cor2} 50%)`;
-    }
-    return 'transparent';
+  const getTextColor = (hex: string) => {
+    const c = hex.startsWith('#') ? hex.substring(1) : hex;
+    const r = parseInt(c.substring(0, 2), 16) || 0;
+    const g = parseInt(c.substring(2, 4), 16) || 0;
+    const b = parseInt(c.substring(4, 6), 16) || 0;
+    const luminance = (r * 0.299 + g * 0.587 + b * 0.114);
+    return luminance > 128 ? '#000000' : '#ffffff';
   };
 
   const primeiroDiaMes = new Date(ano, mes, 1).getDay();
@@ -320,31 +304,32 @@ export default function CalendarioPage() {
                 onClick={() => cell.mesAtual && setDiaSelecionado(cell.dia)}
                 style={{
                   cursor: cell.mesAtual ? 'pointer' : 'default',
-                  background: cell.mesAtual ? getCellBackground(ps, cell.dia) : 'transparent',
                   border: ps.some(p => p.status_conflito) ? '2px solid #f59e0b' : '1px solid var(--border-subtle)',
-                  position: 'relative',
-                  overflow: 'hidden',
                 }}
-                className={`cal-day ${cell.mesAtual ? '' : 'other-month'} ${cell.mesAtual && isHoje(cell.dia) ? 'today' : ''}`}
+                className={`cal-day flex flex-col items-stretch overflow-hidden relative ${cell.mesAtual ? '' : 'other-month'} ${cell.mesAtual && isHoje(cell.dia) ? 'today' : ''}`}
               >
                 {ps.some(p => p.status_conflito) && (
                   <div style={{ position: 'absolute', top: 4, right: 4, fontSize: 10 }}>🟡</div>
                 )}
-                <div
-                  className="cal-day-num"
-                  style={{
-                    position: 'relative', zIndex: 2,
-                    color: ps.length > 0 ? '#ffffff' : 'inherit',
-                    textShadow: ps.length > 0 ? '0 1px 3px rgba(0,0,0,0.8)' : 'none',
-                    fontWeight: ps.length > 0 ? 800 : 500,
-                  }}
-                >
+                <div className="cal-day-num">
                   {cell.dia}
                 </div>
-                {ps.length > 2 && (
-                  <span style={{ position: 'absolute', bottom: 4, right: 4, fontSize: '9px', fontWeight: 800, color: '#ffffff', textShadow: '0 1px 2px rgba(0,0,0,0.8)', zIndex: 2 }}>
-                    +{ps.length - 2}
-                  </span>
+                {ps.length > 0 && (
+                  <div className="flex flex-col w-full gap-[1px] bg-slate-900 overflow-hidden rounded-md mt-1 shadow-inner">
+                    {ps.map((p, i) => {
+                      const hex = p.is_extra ? '#8b5cf6' : (p.local?.cor_calendario ?? '#4f8ef7');
+                      const textColor = getTextColor(hex);
+                      return (
+                        <div 
+                          key={i} 
+                          className="p-1 w-full text-[10px] sm:text-xs font-semibold whitespace-nowrap overflow-hidden text-ellipsis text-center" 
+                          style={{ backgroundColor: hex, color: textColor }}
+                        >
+                          {p.local?.nome ?? 'Plantão'}
+                        </div>
+                      );
+                    })}
+                  </div>
                 )}
               </div>
             );
