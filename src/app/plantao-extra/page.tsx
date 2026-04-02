@@ -13,7 +13,7 @@ export default function PlantaoExtraPage() {
   const [horaInicio, setHoraInicio] = useState('07:00');
   const [horaFim, setHoraFim] = useState('19:00');
   
-  const [tipoExtra, setTipoExtra] = useState<'Remunerado' | 'Folga'>('Remunerado');
+  const [tipoExtra, setTipoExtra] = useState<'Remunerado' | 'Troca'>('Remunerado');
   const [valorGanho, setValorGanho] = useState('');
 
   const [saving, setSaving] = useState(false);
@@ -107,7 +107,7 @@ export default function PlantaoExtraPage() {
         data_hora_inicio: payload.inicioIso,
         data_hora_fim: payload.fimIso,
         is_extra: true,
-        status: tipoExtra === 'Folga' ? 'Trocado' : 'Agendado',
+        status: tipoExtra === 'Troca' ? 'Trocado' : 'Agendado',
         notas: valorNumerico > 0 ? `R$ ${valorNumerico.toFixed(2)} [${tipoExtra}]` : tipoExtra,
       });
 
@@ -131,7 +131,7 @@ export default function PlantaoExtraPage() {
   return (
     <>
       <div className="page-header">
-        <h1>Plantão Extra 💰</h1>
+        <h1>Plantão Extra</h1>
         <p>Cadastre aqui os plantões avulsos, substituições e ganhos extras fora da escala fixa.</p>
       </div>
 
@@ -203,8 +203,8 @@ export default function PlantaoExtraPage() {
                     <input type="radio" name="tipoExtra" value="Remunerado" checked={tipoExtra === 'Remunerado'} onChange={() => setTipoExtra('Remunerado')} />
                     <span>Remunerado</span>
                   </label>
-                  <label style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8, padding: 12, border: '1px solid var(--border-subtle)', borderRadius: 8, cursor: 'pointer', background: tipoExtra === 'Folga' ? 'var(--bg-secondary)' : 'transparent' }}>
-                    <input type="radio" name="tipoExtra" value="Folga" checked={tipoExtra === 'Folga'} onChange={() => setTipoExtra('Folga')} />
+                  <label style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8, padding: 12, border: '1px solid var(--border-subtle)', borderRadius: 8, cursor: 'pointer', background: tipoExtra === 'Troca' ? 'var(--bg-secondary)' : 'transparent' }}>
+                    <input type="radio" name="tipoExtra" value="Troca" checked={tipoExtra === 'Troca'} onChange={() => setTipoExtra('Troca')} />
                     <span>Troca</span>
                   </label>
                 </div>
