@@ -9,8 +9,13 @@ const CORES_PRESET = [
   '#ef4444', '#22c55e', '#f59e0b', '#ec4899',
 ];
 
-const REGRAS = ['12x36', '24x48', '24x72', 'Outro'] as const;
-type Regra = typeof REGRAS[number] | string;
+const REGRAS_PADRAO = [
+  { value: '12x36', label: '12h Trabalhadas / 36h Descanso' },
+  { value: '24x48', label: '24h Trabalhadas / 48h Descanso' },
+  { value: '24x72', label: '24h Trabalhadas / 72h Descanso' },
+  { value: 'Outro', label: 'Outro (Personalizado)' },
+] as const;
+type Regra = string;
 
 interface Toast { msg: string; type: 'success' | 'error' }
 interface ResultadoAPI {
@@ -47,8 +52,9 @@ export default function EscalasPage() {
   const [dataInicioSo, setDataInicioSo] = useState('');
   const [horaInicio, setHoraInicio] = useState('07:00'); // valor padrão comum para plantões
   const [regra, setRegra] = useState<Regra>('12x36');
-  const [horasTrabalhoOutro, setHorasTrabalhoOutro] = useState('12');
-  const [horasDescansoOutro, setHorasDescansoOutro] = useState('60');
+  const [isCustomRule, setIsCustomRule] = useState(false);
+  const [horasTrabalhoOutro, setHorasTrabalhoOutro] = useState('');
+  const [horasDescansoOutro, setHorasDescansoOutro] = useState('');
 
   const [isCreatingLocal, setIsCreatingLocal] = useState(false);
   const [novoLocalNome, setNovoLocalNome] = useState('');
@@ -388,38 +394,62 @@ export default function EscalasPage() {
             <select
               className="form-select"
               value={regra}
-              onChange={e => setRegra(e.target.value)}
+              onChange={e => {
+                const v = e.target.value;
+                setRegra(v);
+                setIsCustomRule(v === 'Outro');
+                if (v !== 'Outro') { setHorasTrabalhoOutro(''); setHorasDescansoOutro(''); }
+              }}
             >
-              {REGRAS.map(r => (
-                <option key={r} value={r}>{r}</option>
+              {REGRAS_PADRAO.map(r => (
+                <option key={r.value} value={r.value}>{r.label}</option>
               ))}
             </select>
             <p style={{ fontSize: 12, color: 'var(--accent-teal)', marginTop: 6, fontWeight: 500 }}>
-              {DESCRICAO_REGRA[regra]}
+              {DESCRICAO_REGRA[regra] ?? 'Personalize suas horas de trabalho e folga'}
             </p>
 
-            {regra === 'Outro' && (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 12, padding: 12, background: 'var(--bg-secondary)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
+            {isCustomRule && (
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 1fr',
+                  gap: 12,
+                  marginTop: 12,
+                  padding: 16,
+                  background: 'var(--bg-secondary)',
+                  borderRadius: 12,
+                  border: '1px solid var(--border-subtle)',
+                  animation: 'fadeInDown 0.2s ease',
+                }}
+              >
                 <div>
-                  <label className="form-label" style={{ fontSize: 11 }}>Trabalho (horas)</label>
+                  <label className="form-label" style={{ fontSize: 11, letterSpacing: '0.05em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Horas Trabalhadas</label>
                   <input
                     type="number"
+                    min="1"
                     className="form-input"
                     value={horasTrabalhoOutro}
                     onChange={e => setHorasTrabalhoOutro(e.target.value)}
                     placeholder="Ex: 12"
+                    style={{ marginTop: 4, background: 'var(--bg-primary)', border: '1px solid var(--border-subtle)', borderRadius: 8, padding: '10px 12px', fontSize: 14, color: 'var(--text-primary)', width: '100%', boxSizing: 'border-box' }}
                   />
                 </div>
                 <div>
-                  <label className="form-label" style={{ fontSize: 11 }}>Descanso (horas)</label>
+                  <label className="form-label" style={{ fontSize: 11, letterSpacing: '0.05em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Horas de Descanso</label>
                   <input
                     type="number"
+                    min="1"
                     className="form-input"
                     value={horasDescansoOutro}
                     onChange={e => setHorasDescansoOutro(e.target.value)}
                     placeholder="Ex: 60"
+                    style={{ marginTop: 4, background: 'var(--bg-primary)', border: '1px solid var(--border-subtle)', borderRadius: 8, padding: '10px 12px', fontSize: 14, color: 'var(--text-primary)', width: '100%', boxSizing: 'border-box' }}
                   />
                 </div>
+                <p style={{ gridColumn: '1 / -1', fontSize: 11, color: 'var(--text-muted)', margin: 0 }}>
+                  Ciclo total: {(parseInt(horasTrabalhoOutro,10)||0) + (parseInt(horasDescansoOutro,10)||0)}h &nbsp;·&nbsp; Formato gerado: <strong style={{ color: 'var(--text-secondary)' }}>{horasTrabalhoOutro||'?'}x{horasDescansoOutro||'?'}</strong>
+                </p>
               </div>
             )}
           </div>
@@ -428,7 +458,7 @@ export default function EscalasPage() {
             className="btn btn-primary"
             style={{ width: '100%', justifyContent: 'center', marginTop: 8 }}
             onClick={() => salvarEscala()}
-            disabled={saving}
+            disabled={saving || (isCustomRule && (!(parseInt(horasTrabalhoOutro,10) > 0) || !(parseInt(horasDescansoOutro,10) > 0)))}
           >
             {saving ? '⏳ Processando no servidor...' : '🚀 Criar Escala e Gerar Plantões'}
           </button>
