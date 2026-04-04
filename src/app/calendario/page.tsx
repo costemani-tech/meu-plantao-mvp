@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { supabase, Plantao, LocalTrabalho } from '../../lib/supabase';
@@ -11,8 +11,8 @@ interface PlantaoComLocal extends Plantao {
   status_conflito?: boolean;
 }
 
-const DIAS_SEMANA = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+const DIAS_SEMANA = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'SÃ¡b'];
+const MESES = ['Janeiro','Fevereiro','MarÃ§o','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 
 export default function CalendarioPage() {
   const [plantoes, setPlantoes] = useState<PlantaoComLocal[]>([]);
@@ -26,9 +26,12 @@ export default function CalendarioPage() {
   const [menuAberto, setMenuAberto] = useState(false);
   const [edicaoCiclo, setEdicaoCiclo] = useState<{p: PlantaoComLocal, regra: string, dataInicio: string} | null>(null);
   const [salvandoCiclo, setSalvandoCiclo] = useState(false);
+  const [isCustomCicloRule, setIsCustomCicloRule] = useState(false);
+  const [cicloHorasTrabalho, setCicloHorasTrabalho] = useState('');
+  const [cicloHorasDescanso, setCicloHorasDescanso] = useState('');
   const [linkCopiado, setLinkCopiado] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
-  // ── Estados do Modal de Exportação PRO
+  // â”€â”€ Estados do Modal de ExportaÃ§Ã£o PRO
   const [showExportModal, setShowExportModal] = useState(false);
   const [exportMes, setExportMes] = useState<number | null>(null);
   const [exportAno, setExportAno] = useState(new Date().getFullYear());
@@ -83,10 +86,10 @@ export default function CalendarioPage() {
     }
   }, [ano, mes]);
 
-  // Fetch ao montar e quando o mês/ano muda
+  // Fetch ao montar e quando o mÃªs/ano muda
   useEffect(() => { fetchPlantoes(); }, [fetchPlantoes]);
 
-  // Escuta o evento customizado disparado pela página de Escalas após criação bem-sucedida
+  // Escuta o evento customizado disparado pela pÃ¡gina de Escalas apÃ³s criaÃ§Ã£o bem-sucedida
   useEffect(() => {
     const handlePlantaoAtualizado = () => {
       fetchPlantoes();
@@ -121,7 +124,7 @@ export default function CalendarioPage() {
     if (!modalExclusao) return;
     const p = modalExclusao;
     if (!p.escala_id) {
-      // Plantão extra sem escala — só remove este
+      // PlantÃ£o extra sem escala â€” sÃ³ remove este
       await removerSomenteEste();
       return;
     }
@@ -209,7 +212,7 @@ export default function CalendarioPage() {
     }
     navigator.clipboard.writeText('https://meu-plantao-mvp.vercel.app/agenda/demo');
     setLinkCopiado(true);
-    alert('✅ Link público da sua agenda copiado!\n\nCole e envie no WhatsApp ou e-mail para que sua família veja seus próximos plantões.');
+    alert('âœ… Link pÃºblico da sua agenda copiado!\n\nCole e envie no WhatsApp ou e-mail para que sua famÃ­lia veja seus prÃ³ximos plantÃµes.');
     setTimeout(() => setLinkCopiado(false), 2000);
   };
 
@@ -245,22 +248,22 @@ export default function CalendarioPage() {
       const contentW = pageW - margin * 2;
       const mesNome = MESES[exportMes - 1];
 
-      // ── Cabeçalho ───────────────────────────────────────────────────────────
+      // â”€â”€ CabeÃ§alho â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       doc.setFillColor(15, 23, 42);
       doc.rect(0, 0, pageW, 28, 'F');
       doc.setFontSize(16);
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(255, 255, 255);
-      doc.text('Relatório de Escala Médica', margin, 12);
+      doc.text('RelatÃ³rio de Escala MÃ©dica', margin, 12);
       doc.setFontSize(10);
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(148, 163, 184);
-      doc.text(`${mesNome} ${exportAno}  •  Gerado em ${new Date().toLocaleDateString('pt-BR')}`, margin, 21);
+      doc.text(`${mesNome} ${exportAno}  â€¢  Gerado em ${new Date().toLocaleDateString('pt-BR')}`, margin, 21);
 
-      // ── Cabeçalho da tabela ───────────────────────────────────────────────
+      // â”€â”€ CabeÃ§alho da tabela â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       let y = 36;
       const colW = [8, contentW * 0.22, contentW * 0.30, contentW * 0.18, contentW * 0.18];
-      const cols = ['', 'Local', 'Data', 'Início', 'Término'];
+      const cols = ['', 'Local', 'Data', 'InÃ­cio', 'TÃ©rmino'];
 
       doc.setFillColor(241, 245, 249);
       doc.rect(margin, y, contentW, 8, 'F');
@@ -274,7 +277,7 @@ export default function CalendarioPage() {
       });
       y += 8;
 
-      // ── Linhas da tabela ─────────────────────────────────────────────────
+      // â”€â”€ Linhas da tabela â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       doc.setFont('helvetica', 'normal');
       exportPreview.forEach((p, idx) => {
         if (y > pageH - 30) {
@@ -316,14 +319,14 @@ export default function CalendarioPage() {
         y += 8;
       });
 
-      // ── Rodapé ──────────────────────────────────────────────────────────
+      // â”€â”€ RodapÃ© â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       const footerY = pageH - 12;
       doc.setDrawColor(203, 213, 225);
       doc.line(margin, footerY, pageW - margin, footerY);
       doc.setFontSize(8);
       doc.setTextColor(148, 163, 184);
-      doc.text('Gerado via Meu Plantão App  •  meu-plantao-mvp.vercel.app', margin, footerY + 5);
-      doc.text(`Total: ${exportPreview.length} plantão(oes)`, pageW - margin, footerY + 5, { align: 'right' });
+      doc.text('Gerado via Meu PlantÃ£o App  â€¢  meu-plantao-mvp.vercel.app', margin, footerY + 5);
+      doc.text(`Total: ${exportPreview.length} plantÃ£o(oes)`, pageW - margin, footerY + 5, { align: 'right' });
 
       doc.save(`Escala_${mesNome}_${exportAno}.pdf`);
       setShowExportModal(false);
@@ -344,17 +347,17 @@ export default function CalendarioPage() {
     <>
       <div className="page-header mobile-col" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
-          <h1>Calendário 📅</h1>
+          <h1>CalendÃ¡rio ðŸ“…</h1>
           <p>
-            Visualize seus plantões — {loading && <span style={{ color: 'var(--accent-blue)', fontSize: 13 }}>⟳ Atualizando...</span>}
+            Visualize seus plantÃµes â€” {loading && <span style={{ color: 'var(--accent-blue)', fontSize: 13 }}>âŸ³ Atualizando...</span>}
           </p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <button className="btn btn-secondary" onClick={mesAnterior}>←</button>
+          <button className="btn btn-secondary" onClick={mesAnterior}>â†</button>
           <span style={{ fontWeight: 700, fontSize: 16, minWidth: 160, textAlign: 'center' }}>
             {MESES[mes]} {ano}
           </span>
-          <button className="btn btn-secondary" onClick={proximoMes}>→</button>
+          <button className="btn btn-secondary" onClick={proximoMes}>â†’</button>
           
           <div style={{ position: 'relative' }}>
              <button onClick={() => setMenuAberto(!menuAberto)} className="btn btn-secondary" style={{ padding: '8px 12px' }}>
@@ -362,8 +365,8 @@ export default function CalendarioPage() {
              </button>
              {menuAberto && (
                  <div style={{ position: 'absolute', top: 45, right: 0, background: 'var(--bg-primary)', border: '1px solid var(--border-subtle)', boxShadow: '0 10px 30px rgba(0,0,0,0.15)', borderRadius: 12, overflow: 'hidden', minWidth: 220, zIndex: 50 }}>
-                     <button onClick={() => { setMenuAberto(false); alert('Abrirá o modal financeiro'); }} style={{ width: '100%', padding: '14px 16px', background: 'transparent', border: 'none', borderBottom: '1px solid var(--border-subtle)', textAlign: 'left', fontWeight: 700, display:'flex', alignItems:'center', gap:10, color:'var(--text-primary)' }}>
-                        💰 Relatórios de Plantões Pro
+                     <button onClick={() => { setMenuAberto(false); alert('AbrirÃ¡ o modal financeiro'); }} style={{ width: '100%', padding: '14px 16px', background: 'transparent', border: 'none', borderBottom: '1px solid var(--border-subtle)', textAlign: 'left', fontWeight: 700, display:'flex', alignItems:'center', gap:10, color:'var(--text-primary)' }}>
+                        ðŸ’° RelatÃ³rios de PlantÃµes Pro
                      </button>
                      <button
                        onClick={() => { setMenuAberto(false); setShowExportModal(true); }}
@@ -389,7 +392,10 @@ export default function CalendarioPage() {
             return (
               <div
                 key={idx}
-                onClick={() => cell.mesAtual && setDiaSelecionado(cell.dia)}
+                onClick={() => {
+                  if (!cell.mesAtual) return;
+                  setDiaSelecionado(cell.dia);
+                }}
                 style={{ 
                   cursor: cell.mesAtual ? 'pointer' : 'default',
                   background: cell.mesAtual ? getCellBackground(ps, cell.dia) : 'transparent',
@@ -421,14 +427,14 @@ export default function CalendarioPage() {
         </div>
       </div>
 
-      {/* Mini-lista da semana/mês inteligente */}
+      {/* Mini-lista da semana/mÃªs inteligente */}
       <div style={{ marginTop: 24, marginBottom: 80 }}>
         <h2 style={{ fontWeight: 700, marginBottom: 16, fontSize: 16 }}>
-          Próximos Plantões ({MESES[mes]})
+          PrÃ³ximos PlantÃµes ({MESES[mes]})
         </h2>
         {plantoes.filter(p => new Date(p.data_hora_inicio).getTime() >= new Date().setHours(0,0,0,0)).slice(0, 5).length === 0 ? (
           <div className="card">
-             <p style={{ color: 'var(--text-muted)', fontSize: 13, textAlign: 'center' }}>Nenhum plantão futuro para este mês.</p>
+             <p style={{ color: 'var(--text-muted)', fontSize: 13, textAlign: 'center' }}>Nenhum plantÃ£o futuro para este mÃªs.</p>
           </div>
         ) : (
           <div className="shift-list">
@@ -437,9 +443,9 @@ export default function CalendarioPage() {
                 <div className="shift-color-bar" style={{ backgroundColor: (p as unknown as { is_extra?: boolean; status_conflito?: boolean }).is_extra ? '#8b5cf6' : (p as unknown as { status_conflito?: boolean }).status_conflito ? '#f59e0b' : (p.local?.cor_calendario ?? '#4f8ef7') }} />
                 <div className="shift-info" style={{ flex: 1, padding: '4px 0' }}>
                   <div className="shift-local" style={{ fontWeight: 700, fontSize: 13, color: 'var(--text-primary)', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
-                    {p.local?.nome ?? 'Local não informado'}
+                    {p.local?.nome ?? 'Local nÃ£o informado'}
                     {(p as unknown as { is_extra?: boolean }).is_extra && (
-                      <span style={{ fontSize: 10, fontWeight: 700, color: '#8b5cf6', background: 'rgba(139,92,246,0.12)', padding: '2px 6px', borderRadius: 4 }}>💰 Extra</span>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: '#8b5cf6', background: 'rgba(139,92,246,0.12)', padding: '2px 6px', borderRadius: 4 }}>ðŸ’° Extra</span>
                     )}
                   </div>
                   <div className="shift-time" style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--text-secondary)' }}>
@@ -448,7 +454,7 @@ export default function CalendarioPage() {
                       {new Date(p.data_hora_inicio).toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' }).replace('.', '')}
                     </span>
                     <Clock size={13} style={{ marginLeft: 6 }} /> 
-                    {new Date(p.data_hora_inicio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} às {new Date(p.data_hora_fim).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                    {new Date(p.data_hora_inicio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} Ã s {new Date(p.data_hora_fim).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                   </div>
                 </div>
               </div>
@@ -469,7 +475,7 @@ export default function CalendarioPage() {
             </div>
             
             {plantoesNoDia(diaSelecionado).length === 0 ? (
-              <p style={{ color: 'var(--text-muted)', fontSize: 13, background: 'var(--bg-secondary)', padding: 12, borderRadius: 8 }}>🎉 Dia de folga livre! Nenhum plantão agendado para esta data.</p>
+              <p style={{ color: 'var(--text-muted)', fontSize: 13, background: 'var(--bg-secondary)', padding: 12, borderRadius: 8 }}>ðŸŽ‰ Dia de folga livre! Nenhum plantÃ£o agendado para esta data.</p>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {plantoesNoDia(diaSelecionado).map(p => (
@@ -478,10 +484,10 @@ export default function CalendarioPage() {
                       <div style={{ fontWeight: 800, fontSize: 14, color: 'var(--text-primary)', marginBottom: 6 }}>
                         {p.local?.nome ?? 'Local Indefinido'}
                         {(p as unknown as { is_extra?: boolean }).is_extra && (
-                          <span style={{ marginLeft: 8, fontSize: 11, fontWeight: 700, color: '#8b5cf6', background: 'rgba(139,92,246,0.12)', padding: '2px 6px', borderRadius: 4 }}>💰 Extra</span>
+                          <span style={{ marginLeft: 8, fontSize: 11, fontWeight: 700, color: '#8b5cf6', background: 'rgba(139,92,246,0.12)', padding: '2px 6px', borderRadius: 4 }}>ðŸ’° Extra</span>
                         )}
                         { (p as unknown as { status_conflito?: boolean }).status_conflito && (
-                          <span style={{ marginLeft: 8, fontSize: 11, fontWeight: 600, color: '#f59e0b', background: 'rgba(245,158,11,0.12)', padding: '2px 6px', borderRadius: 4 }}>⚠️ Conflito</span>
+                          <span style={{ marginLeft: 8, fontSize: 11, fontWeight: 600, color: '#f59e0b', background: 'rgba(245,158,11,0.12)', padding: '2px 6px', borderRadius: 4 }}>âš ï¸ Conflito</span>
                         )}
                       </div>
                       <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
@@ -496,7 +502,7 @@ export default function CalendarioPage() {
                         )}
                         <button 
                           onClick={() => abrirModalExclusao(p)}
-                          title="Remover Plantão"
+                          title="Remover PlantÃ£o"
                           style={{ padding: '6px 12px', fontSize: 12, background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)', borderRadius: 6, color: '#ef4444', fontWeight: 600, cursor: 'pointer' }}
                         >
                           Excluir
@@ -504,7 +510,7 @@ export default function CalendarioPage() {
                       </div>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: 'var(--text-secondary)' }}>
-                      <Clock size={14} /> {new Date(p.data_hora_inicio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} às {new Date(p.data_hora_fim).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                      <Clock size={14} /> {new Date(p.data_hora_inicio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} Ã s {new Date(p.data_hora_fim).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                     </div>
                     {p.local?.endereco && !p.local?.is_home_care && (
                       <a 
@@ -513,7 +519,7 @@ export default function CalendarioPage() {
                         rel="noreferrer"
                         style={{ display: 'inline-block', marginTop: 12, fontSize: 12, color: 'var(--accent-blue)', textDecoration: 'none', fontWeight: 600 }}
                       >
-                        Abrir Rota no Mapa ↗
+                        Abrir Rota no Mapa â†—
                       </a>
                     )}
                   </div>
@@ -524,14 +530,14 @@ export default function CalendarioPage() {
         </div>
       )}
 
-      {/* Modal de Exclusão com 3 opções */}
+      {/* Modal de ExclusÃ£o com 3 opÃ§Ãµes */}
       {modalExclusao && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(2px)', zIndex: 999999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }} onClick={() => setModalExclusao(null)}>
           <div className="card" style={{ maxWidth: 380, width: '100%', boxShadow: '0 20px 40px rgba(0,0,0,0.2)' }} onClick={e => e.stopPropagation()}>
-            <h2 style={{ fontSize: 15, fontWeight: 800, marginBottom: 6 }}>Remover Plantão 🗑️</h2>
+            <h2 style={{ fontSize: 15, fontWeight: 800, marginBottom: 6 }}>Remover PlantÃ£o ðŸ—‘ï¸</h2>
             <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 20, lineHeight: 1.5 }}>
               <strong>{modalExclusao.local?.nome}</strong><br />
-              {new Date(modalExclusao.data_hora_inicio).toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })} · {new Date(modalExclusao.data_hora_inicio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+              {new Date(modalExclusao.data_hora_inicio).toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })} Â· {new Date(modalExclusao.data_hora_inicio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               <button
@@ -540,7 +546,7 @@ export default function CalendarioPage() {
                 onClick={removerSomenteEste}
                 disabled={excluindo}
               >
-                🗑️ {modalExclusao.is_extra ? 'Remover Plantão' : 'Remover só este plantão'}
+                ðŸ—‘ï¸ {modalExclusao.is_extra ? 'Remover PlantÃ£o' : 'Remover sÃ³ este plantÃ£o'}
               </button>
               {!modalExclusao.is_extra && modalExclusao.escala_id && (
                 <button
@@ -549,7 +555,7 @@ export default function CalendarioPage() {
                   onClick={removerEstEFuturos}
                   disabled={excluindo}
                 >
-                  ✂️ Remover este e todos os futuros desta escala
+                  âœ‚ï¸ Remover este e todos os futuros desta escala
                 </button>
               )}
               <button
@@ -570,11 +576,11 @@ export default function CalendarioPage() {
           <div className="card" style={{ maxWidth: 400, width: '100%' }}>
              <h2 style={{ fontSize: 18, fontWeight: 800, marginBottom: 8 }}>Editar Ciclo da Escala</h2>
              <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 20 }}>
-               A regra antiga será <strong>preservada no histórico</strong>. 
-               O novo ciclo entrará em vigor e recalculará os plantões da nova data em diante.
+               A regra antiga serÃ¡ <strong>preservada no histÃ³rico</strong>. 
+               O novo ciclo entrarÃ¡ em vigor e recalcularÃ¡ os plantÃµes da nova data em diante.
              </p>
 
-             <label style={{ fontSize: 13, fontWeight: 700, marginBottom: 6, display: 'block' }}>Data de Início da Nova Regra:</label>
+             <label style={{ fontSize: 13, fontWeight: 700, marginBottom: 6, display: 'block' }}>Data de InÃ­cio da Nova Regra:</label>
              <input 
                type="date"
                value={edicaoCiclo.dataInicio}
@@ -584,18 +590,35 @@ export default function CalendarioPage() {
              />
 
              <label style={{ fontSize: 13, fontWeight: 700, marginBottom: 6, display: 'block' }}>Nova Regra de Escala:</label>
-             <select 
-                value={edicaoCiclo.regra} 
-                onChange={e => setEdicaoCiclo({...edicaoCiclo, regra: e.target.value})} 
-                className="input-field" 
-                style={{ width: '100%', marginBottom: 24, padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-subtle)', background: 'var(--bg-primary)', color: 'var(--text-primary)' }}
-             >
-                  <option value="12x36">12h Trabalhadas / 36h Descanso</option>
-                  <option value="24x48">24h Trabalhadas / 48h Descanso</option>
-                  <option value="24x72">24h Trabalhadas / 72h Descanso</option>
-                  <option value="24x24">24h Trabalhadas / 24h Descanso</option>
-                  <option value="12x60">12h Trabalhadas / 60h Descanso</option>
-             </select>
+             <select
+                 value={edicaoCiclo.regra}
+                 onChange={e => {
+                   const v = e.target.value;
+                   setEdicaoCiclo({...edicaoCiclo, regra: v});
+                   setIsCustomCicloRule(v === 'Outro');
+                   if (v !== 'Outro') { setCicloHorasTrabalho(''); setCicloHorasDescanso(''); }
+                 }}
+                 className="input-field"
+                 style={{ width: '100%', marginBottom: isCustomCicloRule ? 12 : 24, padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-subtle)', background: 'var(--bg-primary)', color: 'var(--text-primary)' }}
+              >
+                   <option value="12x36">12h Trabalhadas / 36h Descanso</option>
+                   <option value="24x48">24h Trabalhadas / 48h Descanso</option>
+                   <option value="24x72">24h Trabalhadas / 72h Descanso</option>
+                   <option value="Outro">Outro (Personalizado)</option>
+              </select>
+              {isCustomCicloRule && (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 24, padding: 14, background: 'var(--bg-secondary)', borderRadius: 10, border: '1px solid var(--border-subtle)', animation: 'fadeInDown 0.2s ease' }}>
+                  <div>
+                    <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 4 }}>Horas Trabalhadas</label>
+                    <input type="number" min="1" value={cicloHorasTrabalho} onChange={e => { setCicloHorasTrabalho(e.target.value); setEdicaoCiclo({...edicaoCiclo, regra: `${e.target.value}x${cicloHorasDescanso}`}); }} placeholder="Ex: 12" style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1px solid var(--border-subtle)', background: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: 14, boxSizing: 'border-box' }} />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 4 }}>Horas de Descanso</label>
+                    <input type="number" min="1" value={cicloHorasDescanso} onChange={e => { setCicloHorasDescanso(e.target.value); setEdicaoCiclo({...edicaoCiclo, regra: `${cicloHorasTrabalho}x${e.target.value}`}); }} placeholder="Ex: 60" style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1px solid var(--border-subtle)', background: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: 14, boxSizing: 'border-box' }} />
+                  </div>
+                  <p style={{ gridColumn: '1 / -1', margin: 0, fontSize: 11, color: 'var(--text-muted)' }}>Ciclo: {(parseInt(cicloHorasTrabalho,10)||0)+(parseInt(cicloHorasDescanso,10)||0)}h</p>
+                </div>
+              )}
              <div style={{ display: 'flex', gap: 12 }}>
                  <button onClick={() => setEdicaoCiclo(null)} className="btn btn-secondary" style={{ flex: 1, justifyContent: 'center' }} disabled={salvandoCiclo}>Cancelar</button>
                  <button 
@@ -629,9 +652,9 @@ export default function CalendarioPage() {
                    }} 
                    className="btn btn-primary" 
                    style={{ flex: 1, justifyContent: 'center', background: 'var(--accent-blue)', color: '#fff', border: 'none' }}
-                   disabled={salvandoCiclo}
+                   disabled={salvandoCiclo || (isCustomCicloRule && (!(parseInt(cicloHorasTrabalho,10) > 0) || !(parseInt(cicloHorasDescanso,10) > 0)))}
                  >
-                    {salvandoCiclo ? '⏳ Calculando...' : 'Aplicar Regra'}
+                    {salvandoCiclo ? 'â³ Calculando...' : 'Aplicar Regra'}
                  </button>
              </div>
           </div>
@@ -642,7 +665,7 @@ export default function CalendarioPage() {
       {showProModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
           <div className="card" style={{ maxWidth: 400, width: '100%', textAlign: 'center' }}>
-            <span style={{ fontSize: 48, display: 'block', marginBottom: 16 }}>⭐</span>
+            <span style={{ fontSize: 48, display: 'block', marginBottom: 16 }}>â­</span>
             <h2 style={{ fontSize: 20, fontWeight: 800, marginBottom: 8, color: 'var(--text-primary)' }}>Upgrade para o Pro</h2>
             <p style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 24, lineHeight: 1.5 }}>
               Tenha um Dashboard completo em PDF com soma de horas, saldo financeiro de extras e controle de folgas! Assine o Pro.
@@ -655,7 +678,7 @@ export default function CalendarioPage() {
         </div>
       )}
 
-      {/* MODAL EXPORTAÇÃO PRO */}
+      {/* MODAL EXPORTAÃ‡ÃƒO PRO */}
       {showExportModal && (
         <div
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(6px)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, transition: 'all 0.25s ease' }}
@@ -669,20 +692,20 @@ export default function CalendarioPage() {
             {/* Header */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 24px', borderBottom: '1px solid var(--border-subtle)', flexShrink: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{ width: 42, height: 42, borderRadius: 12, background: 'linear-gradient(135deg, #0f172a, #1e3a5f)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(15,23,42,0.3)', fontSize: 20 }}>📄</div>
+                <div style={{ width: 42, height: 42, borderRadius: 12, background: 'linear-gradient(135deg, #0f172a, #1e3a5f)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(15,23,42,0.3)', fontSize: 20 }}>ðŸ“„</div>
                 <div>
                   <h2 style={{ fontSize: 16, fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>Exportar Escala em PDF</h2>
-                  <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Relatório formal com tabela e cabeçalho</span>
+                  <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>RelatÃ³rio formal com tabela e cabeÃ§alho</span>
                 </div>
               </div>
-              <button onClick={() => setShowExportModal(false)} disabled={isExporting} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: 20, lineHeight: 1, padding: 4, borderRadius: 6 }}>✕</button>
+              <button onClick={() => setShowExportModal(false)} disabled={isExporting} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: 20, lineHeight: 1, padding: 4, borderRadius: 6 }}>âœ•</button>
             </div>
 
             {/* Seletores */}
             <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-subtle)', flexShrink: 0 }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                 <div className="form-group" style={{ margin: 0 }}>
-                  <label className="form-label">Mês</label>
+                  <label className="form-label">MÃªs</label>
                   <select
                     className="form-select"
                     value={exportMes ?? ''}
@@ -693,7 +716,7 @@ export default function CalendarioPage() {
                     }}
                     disabled={isExporting}
                   >
-                    <option value="">Selecione o mês...</option>
+                    <option value="">Selecione o mÃªs...</option>
                     {MESES.map((m, i) => (
                       <option key={i} value={i + 1}>{m}</option>
                     ))}
@@ -723,7 +746,7 @@ export default function CalendarioPage() {
             <div style={{ flex: 1, overflowY: 'auto', padding: '16px 24px' }}>
               {!exportMes ? (
                 <div style={{ textAlign: 'center', padding: '32px 0', color: 'var(--text-muted)', fontSize: 14 }}>
-                  Selecione o mês para visualizar a prévia
+                  Selecione o mÃªs para visualizar a prÃ©via
                 </div>
               ) : exportLoading ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -733,17 +756,17 @@ export default function CalendarioPage() {
                 </div>
               ) : exportPreview.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '32px 0', color: 'var(--text-muted)', fontSize: 14 }}>
-                  Nenhum plantão encontrado neste mês.
+                  Nenhum plantÃ£o encontrado neste mÃªs.
                 </div>
               ) : (
                 <div>
                   <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 12, fontWeight: 600 }}>
-                    PRÉVIA — {exportPreview.length} plantão(ões) encontrado(s)
+                    PRÃ‰VIA â€” {exportPreview.length} plantÃ£o(Ãµes) encontrado(s)
                   </div>
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
                     <thead>
                       <tr style={{ background: 'rgba(241,245,249,0.5)' }}>
-                        {['Local', 'Data', 'Início', 'Término'].map(h => (
+                        {['Local', 'Data', 'InÃ­cio', 'TÃ©rmino'].map(h => (
                           <th key={h} style={{ padding: '8px 10px', textAlign: 'left', fontWeight: 700, color: 'var(--text-secondary)', fontSize: 11, letterSpacing: '0.04em', textTransform: 'uppercase' }}>{h}</th>
                         ))}
                       </tr>
@@ -755,7 +778,7 @@ export default function CalendarioPage() {
                           <tr key={p.id} style={{ borderBottom: '1px solid var(--border-subtle)', background: i % 2 === 0 ? 'transparent' : 'rgba(248,250,252,0.4)' }}>
                             <td style={{ padding: '9px 10px', display: 'flex', alignItems: 'center', gap: 8 }}>
                               <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: cor, flexShrink: 0 }} />
-                              <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{p.local?.nome ?? 'N/A'}{p.is_extra ? ' ★' : ''}</span>
+                              <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{p.local?.nome ?? 'N/A'}{p.is_extra ? ' â˜…' : ''}</span>
                             </td>
                             <td style={{ padding: '9px 10px', color: 'var(--text-secondary)' }}>
                               {new Date(p.data_hora_inicio).toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' })}
@@ -775,7 +798,7 @@ export default function CalendarioPage() {
               )}
             </div>
 
-            {/* Rodapé com botões */}
+            {/* RodapÃ© com botÃµes */}
             <div style={{ padding: '16px 24px', borderTop: '1px solid var(--border-subtle)', display: 'flex', gap: 12, flexShrink: 0 }}>
               <button className="btn btn-secondary" style={{ flex: 1, justifyContent: 'center' }} onClick={() => setShowExportModal(false)} disabled={isExporting}>
                 Cancelar
