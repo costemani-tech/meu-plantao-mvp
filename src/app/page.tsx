@@ -243,8 +243,8 @@ export default function DashboardPage() {
               >
                 📊 Relatórios de Plantões Pro
               </button>
-              <button className="btn btn-secondary" style={{ justifyContent: 'center', gap: 8, padding: 16 }} onClick={() => setShowProModal('Compartilhamento de Agenda')}>
-                🔒 Compartilhar Agenda
+              <button className="btn btn-secondary" style={{ justifyContent: 'center', gap: 8, padding: 16 }} onClick={() => alert('Módulo de Escala em construção')}>
+                Compartilhar Escala Pro
               </button>
             </div>
           </div>

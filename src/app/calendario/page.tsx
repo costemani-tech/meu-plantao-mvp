@@ -232,13 +232,11 @@ export default function CalendarioPage() {
              </button>
              {menuAberto && (
                  <div style={{ position: 'absolute', top: 45, right: 0, background: 'var(--bg-primary)', border: '1px solid var(--border-subtle)', boxShadow: '0 10px 30px rgba(0,0,0,0.15)', borderRadius: 12, overflow: 'hidden', minWidth: 220, zIndex: 50 }}>
-                     <button onClick={() => { setMenuAberto(false); handleIrMetricas(); }} style={{ width: '100%', padding: '14px 16px', background: 'transparent', border: 'none', borderBottom: '1px solid var(--border-subtle)', textAlign: 'left', fontWeight: 700, display:'flex', alignItems:'center', gap:10, color:'var(--text-primary)' }}>
-                        📊 Ver Métricas do Mês
+                     <button onClick={() => { setMenuAberto(false); alert('Abrirá o modal financeiro'); }} style={{ width: '100%', padding: '14px 16px', background: 'transparent', border: 'none', borderBottom: '1px solid var(--border-subtle)', textAlign: 'left', fontWeight: 700, display:'flex', alignItems:'center', gap:10, color:'var(--text-primary)' }}>
+                        💰 Relatórios de Plantões Pro
                      </button>
-                     <button onClick={() => { setMenuAberto(false); handleLinkFamiliar(); }} style={{ width: '100%', padding: '14px 16px', background: 'transparent', border: 'none', textAlign: 'left', fontWeight: 700, display:'flex', alignItems:'center', gap:10, color:'var(--text-primary)' }}>
-                        {linkCopiado ? <Check size={16} color="#10b981"/> : <Link size={16}/>} 
-                        {linkCopiado ? 'Link Copiado!' : 'Compartilhar Escala Pro'}
-                        {!isPro && <span style={{ fontSize: 10, background: 'rgba(245,158,11,0.1)', color: '#f59e0b', padding: '2px 6px', borderRadius: 8, marginLeft: 'auto' }}>PRO</span>}
+                     <button onClick={() => { setMenuAberto(false); alert('Módulo de Escala em construção'); }} style={{ width: '100%', padding: '14px 16px', background: 'transparent', border: 'none', textAlign: 'left', fontWeight: 700, display:'flex', alignItems:'center', gap:10, color:'var(--text-primary)' }}>
+                        📅 Compartilhar Escala Pro
                      </button>
                  </div>
              )}
