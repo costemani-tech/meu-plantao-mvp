@@ -26,7 +26,6 @@ export default function CalendarioPage() {
   const [edicaoCiclo, setEdicaoCiclo] = useState<{p: PlantaoComLocal, regra: string, dataInicio: string} | null>(null);
   const [salvandoCiclo, setSalvandoCiclo] = useState(false);
   const [linkCopiado, setLinkCopiado] = useState(false);
-  const [isCalculating, setIsCalculating] = useState(false);
   const router = useRouter();
   
   const [isPro, setIsPro] = useState(true); // default true durante carregamento
@@ -206,26 +205,6 @@ export default function CalendarioPage() {
     setTimeout(() => setLinkCopiado(false), 2000);
   };
 
-  const gerarRelatorio = async () => {
-    setIsCalculating(true);
-    try {
-      // mes é 0-based no state; API espera 1-based
-      const res = await fetch(`/api/relatorios/financeiro?mes=${mes + 1}&ano=${ano}`);
-      const json = await res.json();
-      if (!res.ok || json.error) {
-        alert(`⚠️ Erro: ${json.message ?? 'Não foi possível gerar o relatório.'}`);
-        return;
-      }
-      console.log('[Relatório Financeiro] Dados completos:', json);
-      const totalFormatado = json.total_geral.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-      alert(`✅ Total de Extras Calculado: ${totalFormatado}\n\nDetalhes no console.`);
-    } catch {
-      alert('⚠️ Erro de conexão. Verifique sua internet e tente novamente.');
-    } finally {
-      setIsCalculating(false);
-    }
-  };
-
   const cells: Array<{ dia: number; mesAtual: boolean }> = [];
   for (let i = primeiroDiaMes - 1; i >= 0; i--) cells.push({ dia: diasAnterior - i, mesAtual: false });
   for (let d = 1; d <= diasNoMes; d++) cells.push({ dia: d, mesAtual: true });
@@ -246,47 +225,6 @@ export default function CalendarioPage() {
             {MESES[mes]} {ano}
           </span>
           <button className="btn btn-secondary" onClick={proximoMes}>→</button>
-
-          {/* Botão de teste do motor financeiro */}
-          <button
-            id="btn-gerar-relatorio-teste"
-            onClick={gerarRelatorio}
-            disabled={isCalculating}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 8,
-              padding: '8px 16px',
-              fontSize: 13,
-              fontWeight: 700,
-              background: isCalculating
-                ? 'rgba(139,92,246,0.15)'
-                : 'linear-gradient(135deg, #7c3aed, #8b5cf6)',
-              color: isCalculating ? 'var(--accent-violet)' : '#fff',
-              border: '1px solid rgba(139,92,246,0.4)',
-              borderRadius: 10,
-              cursor: isCalculating ? 'not-allowed' : 'pointer',
-              opacity: isCalculating ? 0.75 : 1,
-              transition: 'all 0.2s ease',
-              boxShadow: isCalculating ? 'none' : '0 4px 12px rgba(124,58,237,0.25)',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            {isCalculating ? (
-              <>
-                <span style={{
-                  display: 'inline-block',
-                  width: 13,
-                  height: 13,
-                  border: '2px solid rgba(139,92,246,0.4)',
-                  borderTopColor: 'var(--accent-violet)',
-                  borderRadius: '50%',
-                  animation: 'spin 0.7s linear infinite',
-                }} />
-                Calculando...
-              </>
-            ) : '💰 Gerar Relatório (Teste)'}
-          </button>
           
           <div style={{ position: 'relative' }}>
              <button onClick={() => setMenuAberto(!menuAberto)} className="btn btn-secondary" style={{ padding: '8px 12px' }}>

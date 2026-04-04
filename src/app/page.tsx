@@ -19,6 +19,10 @@ export default function DashboardPage() {
   const [localEmEdicao, setLocalEmEdicao] = useState<LocalTrabalho | null>(null);
   const [savingLocal, setSavingLocal] = useState(false);
   const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' } | null>(null);
+  const [showRelatorioModal, setShowRelatorioModal] = useState(false);
+  const [relatorioMes, setRelatorioMes] = useState(new Date().getMonth() + 1);
+  const [relatorioAno, setRelatorioAno] = useState(new Date().getFullYear());
+  const [isCalculating, setIsCalculating] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -112,6 +116,26 @@ export default function DashboardPage() {
   const showToast = (msg: string, type: 'success' | 'error') => {
     setToast({ msg, type });
     setTimeout(() => setToast(null), 3500);
+  };
+
+  const gerarRelatorioFinanceiro = async () => {
+    setIsCalculating(true);
+    try {
+      const res = await fetch(`/api/relatorios/financeiro?mes=${relatorioMes}&ano=${relatorioAno}`);
+      const json = await res.json();
+      if (!res.ok || json.error) {
+        showToast(json.message ?? 'Não foi possível gerar o relatório.', 'error');
+        return;
+      }
+      console.log('[Relatório Financeiro] Dados completos:', json);
+      const totalFormatado = json.total_geral.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+      alert(`✅ Total de Extras em ${relatorioMes}/${relatorioAno}: ${totalFormatado}\n\nDetalhes no console (F12).`);
+      setShowRelatorioModal(false);
+    } catch {
+      showToast('Erro de conexão. Verifique sua internet e tente novamente.', 'error');
+    } finally {
+      setIsCalculating(false);
+    }
   };
 
   const salvarEdicao = async () => {
@@ -212,8 +236,12 @@ export default function DashboardPage() {
               </span>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
-              <button className="btn btn-secondary" style={{ justifyContent: 'center', gap: 8, padding: 16 }} onClick={() => isPro ? router.push('/dashboard') : setShowProModal('Dashboard & PDF')}>
-                🔒 Dashboard de Produtividade
+              <button
+                className="btn btn-secondary"
+                style={{ justifyContent: 'center', gap: 8, padding: 16, fontWeight: 700 }}
+                onClick={() => setShowRelatorioModal(true)}
+              >
+                📊 Relatórios de Plantões Pro
               </button>
               <button className="btn btn-secondary" style={{ justifyContent: 'center', gap: 8, padding: 16 }} onClick={() => setShowProModal('Compartilhamento de Agenda')}>
                 🔒 Compartilhar Agenda
@@ -274,6 +302,98 @@ export default function DashboardPage() {
             )}
           </div>
         </>
+      )}
+
+      {/* MODAL RELATÓRIO FINANCEIRO */}
+      {showRelatorioModal && (
+        <div
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
+          onClick={() => !isCalculating && setShowRelatorioModal(false)}
+        >
+          <div className="card" style={{ maxWidth: 420, width: '100%', boxShadow: '0 24px 48px rgba(0,0,0,0.25)' }} onClick={e => e.stopPropagation()}>
+            {/* Header */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{ width: 40, height: 40, borderRadius: 10, background: 'linear-gradient(135deg, #7c3aed, #8b5cf6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, boxShadow: '0 4px 12px rgba(124,58,237,0.3)' }}>📊</div>
+                <div>
+                  <h2 style={{ fontSize: 16, fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>Gerar Relatório de Plantões</h2>
+                  <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Somatório financeiro de extras por local</span>
+                </div>
+              </div>
+              <button onClick={() => setShowRelatorioModal(false)} disabled={isCalculating} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: 18, lineHeight: 1, padding: 4 }}>✕</button>
+            </div>
+
+            {/* Seletores */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 24 }}>
+              <div className="form-group" style={{ margin: 0 }}>
+                <label className="form-label">Mês</label>
+                <select
+                  className="form-select"
+                  value={relatorioMes}
+                  onChange={e => setRelatorioMes(Number(e.target.value))}
+                  disabled={isCalculating}
+                >
+                  {['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'].map((m, i) => (
+                    <option key={i} value={i + 1}>{m}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="form-group" style={{ margin: 0 }}>
+                <label className="form-label">Ano</label>
+                <select
+                  className="form-select"
+                  value={relatorioAno}
+                  onChange={e => setRelatorioAno(Number(e.target.value))}
+                  disabled={isCalculating}
+                >
+                  {[2024, 2025, 2026, 2027].map(a => (
+                    <option key={a} value={a}>{a}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Ações */}
+            <div style={{ display: 'flex', gap: 12 }}>
+              <button
+                className="btn btn-secondary"
+                style={{ flex: 1, justifyContent: 'center' }}
+                onClick={() => setShowRelatorioModal(false)}
+                disabled={isCalculating}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={gerarRelatorioFinanceiro}
+                disabled={isCalculating}
+                style={{
+                  flex: 1,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8,
+                  padding: '11px 20px',
+                  fontSize: 14,
+                  fontWeight: 700,
+                  background: isCalculating ? 'rgba(124,58,237,0.15)' : 'linear-gradient(135deg, #7c3aed, #8b5cf6)',
+                  color: isCalculating ? 'var(--accent-violet)' : '#fff',
+                  border: '1px solid rgba(124,58,237,0.4)',
+                  borderRadius: 10,
+                  cursor: isCalculating ? 'not-allowed' : 'pointer',
+                  boxShadow: isCalculating ? 'none' : '0 4px 14px rgba(124,58,237,0.3)',
+                  transition: 'all 0.2s',
+                }}
+              >
+                {isCalculating ? (
+                  <>
+                    <span style={{ display: 'inline-block', width: 14, height: 14, border: '2px solid rgba(124,58,237,0.4)', borderTopColor: 'var(--accent-violet)', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
+                    Calculando...
+                  </>
+                ) : '📄 Gerar PDF'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* MODAL PRO PAYWALL */}
