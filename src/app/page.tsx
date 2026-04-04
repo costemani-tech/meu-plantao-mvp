@@ -243,7 +243,7 @@ export default function DashboardPage() {
               >
                 📊 Relatórios de Plantões Pro
               </button>
-              <button className="btn btn-secondary" style={{ justifyContent: 'center', gap: 8, padding: 16 }} onClick={() => alert('Módulo de Escala em construção')}>
+              <button className="btn btn-secondary" style={{ justifyContent: 'center', gap: 8, padding: 16 }} onClick={() => router.push('/calendario')}>
                 Compartilhar Escala Pro
               </button>
             </div>

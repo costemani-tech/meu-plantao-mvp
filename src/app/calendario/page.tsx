@@ -4,6 +4,8 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { supabase, Plantao, LocalTrabalho } from '../../lib/supabase';
 import { Calendar, Clock, MoreVertical, Link, Check, LogOut } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
 interface PlantaoComLocal extends Plantao {
   local?: LocalTrabalho;
@@ -26,6 +28,7 @@ export default function CalendarioPage() {
   const [edicaoCiclo, setEdicaoCiclo] = useState<{p: PlantaoComLocal, regra: string, dataInicio: string} | null>(null);
   const [salvandoCiclo, setSalvandoCiclo] = useState(false);
   const [linkCopiado, setLinkCopiado] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const router = useRouter();
   
   const [isPro, setIsPro] = useState(true); // default true durante carregamento
@@ -205,6 +208,26 @@ export default function CalendarioPage() {
     setTimeout(() => setLinkCopiado(false), 2000);
   };
 
+  const exportVisualScale = async () => {
+    setIsExporting(true);
+    try {
+      const element = document.getElementById('calendar-grid-export');
+      if (!element) return;
+      const canvas = await html2canvas(element, { scale: 2 });
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('landscape', 'mm', 'a4');
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      pdf.addImage(imgData, 'PNG', 0, 10, pdfWidth, pdfHeight);
+      pdf.save('Escala_Visual.pdf');
+    } catch (err) {
+      console.error(err);
+      alert('Erro ao exportar a escala.');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   const cells: Array<{ dia: number; mesAtual: boolean }> = [];
   for (let i = primeiroDiaMes - 1; i >= 0; i--) cells.push({ dia: diasAnterior - i, mesAtual: false });
   for (let d = 1; d <= diasNoMes; d++) cells.push({ dia: d, mesAtual: true });
@@ -235,8 +258,8 @@ export default function CalendarioPage() {
                      <button onClick={() => { setMenuAberto(false); alert('Abrirá o modal financeiro'); }} style={{ width: '100%', padding: '14px 16px', background: 'transparent', border: 'none', borderBottom: '1px solid var(--border-subtle)', textAlign: 'left', fontWeight: 700, display:'flex', alignItems:'center', gap:10, color:'var(--text-primary)' }}>
                         💰 Relatórios de Plantões Pro
                      </button>
-                     <button onClick={() => { setMenuAberto(false); alert('Módulo de Escala em construção'); }} style={{ width: '100%', padding: '14px 16px', background: 'transparent', border: 'none', textAlign: 'left', fontWeight: 700, display:'flex', alignItems:'center', gap:10, color:'var(--text-primary)' }}>
-                        📅 Compartilhar Escala Pro
+                     <button onClick={() => { setMenuAberto(false); exportVisualScale(); }} disabled={isExporting} style={{ width: '100%', padding: '14px 16px', background: 'transparent', border: 'none', textAlign: 'left', fontWeight: 700, display:'flex', alignItems:'center', gap:10, color:'var(--text-primary)' }}>
+                        {isExporting ? '⏳ Gerando PDF...' : 'Compartilhar Escala Pro'}
                      </button>
                  </div>
              )}
@@ -250,7 +273,7 @@ export default function CalendarioPage() {
             <div key={d} className="cal-day-header">{d}</div>
           ))}
         </div>
-        <div className="calendar-grid" style={{ opacity: loading ? 0.6 : 1, transition: 'opacity 0.2s' }}>
+        <div id="calendar-grid-export" className="calendar-grid" style={{ opacity: loading ? 0.6 : 1, transition: 'opacity 0.2s', padding: '10px', background: 'var(--bg-primary)' }}>
           {cells.map((cell, idx) => {
             const ps = cell.mesAtual ? plantoesNoDia(cell.dia) : [];
             return (
