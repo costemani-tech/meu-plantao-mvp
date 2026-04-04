@@ -93,26 +93,27 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // ── 3. Cliente admin — instanciado SOMENTE após autenticação confirmada ──
-    const supabaseAdmin = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
-
-    // ── 4. Verificar que o local_id pertence ao usuário autenticado ──────────
-    const { data: localDoUsuario, error: erroLocal } = await supabaseAdmin
+    // ── 3. Prevenção de IDOR: verificar posse do local_id com cliente autenticado do usuário ──
+    // Usa o cliente SSR (token do usuário), NÃO a service key — impossível forjar
+    const { data: localDoUsuario, error: erroLocal } = await supabaseSSR
       .from('locais_trabalho')
       .select('id')
       .eq('id', local_id)
       .eq('usuario_id', usuario_id)
-      .single();
+      .maybeSingle();
 
     if (erroLocal || !localDoUsuario) {
       return NextResponse.json(
-        { error: true, message: 'Local de trabalho não encontrado.', code: 'NOT_FOUND' },
-        { status: 404 }
+        { error: true, message: 'Não foi possível gerar a escala no momento. Tente novamente.', code: 'FORBIDDEN' },
+        { status: 403 }
       );
     }
+
+    // ── 4. Cliente admin — instanciado SOMENTE após autenticação e posse confirmadas ──
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
 
     // ── 5. Geração dos slots ─────────────────────────────────────────────────
     const anoAtual = new Date().getFullYear();
@@ -159,10 +160,9 @@ export async function POST(req: NextRequest) {
           return NextResponse.json(
             {
               conflito: true,
-              total_conflitos: conflitos.length,
               exemplos: conflitos,
               error: true,
-              message: `Você já possui plantões neste período. Encontramos ${conflitos.length} sobreposição(ões). Deseja continuar mesmo assim?`,
+              message: 'Não foi possível gerar a escala. Conflito de horários detectado com plantões existentes.',
               code: 'CONFLICT',
             },
             { status: 409 }
@@ -184,7 +184,7 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (erroEscala || !escala) {
-      console.error('[api/escalas POST] Falha ao criar escala:', erroEscala?.code);
+      console.error('[API Escala POST] Erro interno:', erroEscala?.message || 'Falha ao criar escala');
       return NextResponse.json(
         { error: true, message: 'Não foi possível gerar a escala no momento. Tente novamente.' },
         { status: 500 }
@@ -207,7 +207,7 @@ export async function POST(req: NextRequest) {
       .insert(plantoes);
 
     if (erroInsert) {
-      console.error('[api/escalas POST] Falha no bulk insert, rollback da escala:', erroInsert?.code);
+      console.error('[API Escala POST] Erro interno:', erroInsert?.message || 'Falha no bulk insert');
       await supabaseAdmin.from('escalas').delete().eq('id', escala.id);
       return NextResponse.json(
         { error: true, message: 'Não foi possível gerar a escala no momento. Tente novamente.' },
@@ -227,7 +227,7 @@ export async function POST(req: NextRequest) {
     });
 
   } catch (err) {
-    console.error('[api/escalas POST] Erro não tratado:', (err as Error)?.message);
+    console.error('[API Escala POST] Erro interno:', (err as Error)?.message || 'Falha na operação');
     return NextResponse.json(
       { error: true, message: 'Não foi possível gerar a escala no momento. Tente novamente.' },
       { status: 500 }

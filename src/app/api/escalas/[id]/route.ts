@@ -107,7 +107,7 @@ export async function DELETE(
       .gte('data_hora_inicio', dataCorte);
 
     if (erroDelete) {
-      console.error('[api/escalas/[id] DELETE] Falha ao encerrar escala:', erroDelete?.code);
+      console.error('[API Escala DELETE] Erro interno:', erroDelete?.message || 'Falha ao encerrar escala');
       return NextResponse.json(
         { error: true, message: 'Não foi possível processar a exclusão. Tente novamente.' },
         { status: 500 }
@@ -122,7 +122,7 @@ export async function DELETE(
     });
 
   } catch (err) {
-    console.error('[api/escalas/[id] DELETE] Erro não tratado:', (err as Error)?.message);
+    console.error('[API Escala DELETE] Erro interno:', (err as Error)?.message || 'Falha na operação');
     return NextResponse.json(
       { error: true, message: 'Não foi possível processar a exclusão. Tente novamente.' },
       { status: 500 }
