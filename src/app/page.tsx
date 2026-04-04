@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { CalendarDays, Building2, Activity, Calendar, Clock } from 'lucide-react';
 import { supabase, Plantao, LocalTrabalho } from '../lib/supabase';
 import { useRouter } from 'next/navigation';
+import jsPDF from 'jspdf';
 
 interface PlantaoComLocal extends Plantao {
   local?: LocalTrabalho;
@@ -23,6 +24,13 @@ export default function DashboardPage() {
   const [relatorioMes, setRelatorioMes] = useState(new Date().getMonth() + 1);
   const [relatorioAno, setRelatorioAno] = useState(new Date().getFullYear());
   const [isCalculating, setIsCalculating] = useState(false);
+  // ── Estados do Modal de Exportação de Escala
+  const [showEscalaExportModal, setShowEscalaExportModal] = useState(false);
+  const [escalaExportMes, setEscalaExportMes] = useState<number | null>(null);
+  const [escalaExportAno, setEscalaExportAno] = useState(new Date().getFullYear());
+  const [escalaExportLoading, setEscalaExportLoading] = useState(false);
+  const [escalaExportPreview, setEscalaExportPreview] = useState<PlantaoComLocal[]>([]);
+  const [isExportingEscala, setIsExportingEscala] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -138,6 +146,96 @@ export default function DashboardPage() {
     }
   };
 
+  const MESES_EXPORT = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+
+  const fetchEscalaPreview = async (mesNum: number, anoNum: number) => {
+    setEscalaExportLoading(true);
+    setEscalaExportPreview([]);
+    try {
+      const inicioMes = new Date(anoNum, mesNum - 1, 1).toISOString();
+      const fimMes = new Date(anoNum, mesNum, 0, 23, 59, 59).toISOString();
+      const { data } = await supabase
+        .from('plantoes')
+        .select('*, local:locais_trabalho(*)')
+        .gte('data_hora_inicio', inicioMes)
+        .lte('data_hora_inicio', fimMes)
+        .neq('status', 'Cancelado')
+        .order('data_hora_inicio', { ascending: true });
+      setEscalaExportPreview((data as PlantaoComLocal[]) || []);
+    } catch (err) {
+      console.error('[EscalaPreview] Erro:', (err as Error)?.message);
+    } finally {
+      setEscalaExportLoading(false);
+    }
+  };
+
+  const generateEscalaPDF = () => {
+    if (!escalaExportMes || escalaExportPreview.length === 0) return;
+    setIsExportingEscala(true);
+    try {
+      const doc = new jsPDF('portrait', 'mm', 'a4');
+      const pageW = doc.internal.pageSize.getWidth();
+      const pageH = doc.internal.pageSize.getHeight();
+      const margin = 15;
+      const contentW = pageW - margin * 2;
+      const mesNome = MESES_EXPORT[escalaExportMes - 1];
+
+      // Cabeçalho
+      doc.setFillColor(15, 23, 42);
+      doc.rect(0, 0, pageW, 28, 'F');
+      doc.setFontSize(16); doc.setFont('helvetica', 'bold'); doc.setTextColor(255, 255, 255);
+      doc.text('Relatório de Escala Médica', margin, 12);
+      doc.setFontSize(10); doc.setFont('helvetica', 'normal'); doc.setTextColor(148, 163, 184);
+      doc.text(`${mesNome} ${escalaExportAno}  •  Gerado em ${new Date().toLocaleDateString('pt-BR')}`, margin, 21);
+
+      // Cabeçalho tabela
+      let y = 36;
+      const colW = [8, contentW * 0.28, contentW * 0.28, contentW * 0.16, contentW * 0.16];
+      const cols = ['', 'Local', 'Data', 'Início', 'Término'];
+      doc.setFillColor(241, 245, 249);
+      doc.rect(margin, y, contentW, 8, 'F');
+      doc.setFontSize(9); doc.setFont('helvetica', 'bold'); doc.setTextColor(51, 65, 85);
+      let cx = margin + 2;
+      cols.forEach((col, i) => { doc.text(col, cx, y + 5.5); cx += colW[i]; });
+      y += 8;
+
+      // Linhas
+      doc.setFont('helvetica', 'normal');
+      escalaExportPreview.forEach((p, idx) => {
+        if (y > pageH - 30) { doc.addPage(); y = 20; }
+        if (idx % 2 === 0) { doc.setFillColor(248, 250, 252); doc.rect(margin, y, contentW, 8, 'F'); }
+        const cor = p.local?.cor_calendario ?? '#4f8ef7';
+        doc.setFillColor(parseInt(cor.slice(1,3),16), parseInt(cor.slice(3,5),16), parseInt(cor.slice(5,7),16));
+        doc.circle(margin + 3.5, y + 4, 2, 'F');
+        doc.setFontSize(8.5); doc.setTextColor(30, 41, 59);
+        cx = margin + colW[0] + 2;
+        [
+          (p.local?.nome ?? 'N/A') + (p.is_extra ? ' (Extra)' : ''),
+          new Date(p.data_hora_inicio).toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' }),
+          new Date(p.data_hora_inicio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+          new Date(p.data_hora_fim).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+        ].forEach((val, i) => { doc.text(val, cx, y + 5.5, { maxWidth: colW[i+1] - 3 }); cx += colW[i+1]; });
+        doc.setDrawColor(226, 232, 240); doc.line(margin, y + 8, margin + contentW, y + 8);
+        y += 8;
+      });
+
+      // Rodapé
+      const footerY = pageH - 12;
+      doc.setDrawColor(203, 213, 225); doc.line(margin, footerY, pageW - margin, footerY);
+      doc.setFontSize(8); doc.setTextColor(148, 163, 184);
+      doc.text('Gerado via Meu Plantão App  •  meu-plantao-mvp.vercel.app', margin, footerY + 5);
+      doc.text(`Total: ${escalaExportPreview.length} plantão(oes)`, pageW - margin, footerY + 5, { align: 'right' });
+
+      doc.save(`Escala_${mesNome}_${escalaExportAno}.pdf`);
+      setShowEscalaExportModal(false);
+    } catch (err) {
+      console.error('[GenerateEscalaPDF] Erro:', (err as Error)?.message);
+      alert('Erro ao gerar o PDF. Tente novamente.');
+    } finally {
+      setIsExportingEscala(false);
+    }
+  };
+
   const salvarEdicao = async () => {
     if (!localEmEdicao) return;
     if (!localEmEdicao.nome.trim()) { showToast('Informe o nome do local.', 'error'); return; }
@@ -243,7 +341,7 @@ export default function DashboardPage() {
               >
                 📊 Relatórios de Plantões Pro
               </button>
-              <button className="btn btn-secondary" style={{ justifyContent: 'center', gap: 8, padding: 16 }} onClick={() => router.push('/calendario')}>
+              <button className="btn btn-secondary" style={{ justifyContent: 'center', gap: 8, padding: 16 }} onClick={() => setShowEscalaExportModal(true)}>
                 Compartilhar Escala Pro
               </button>
             </div>
@@ -460,6 +558,121 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
+
+      {/* MODAL EXPORTAÇÃO DE ESCALA PRO */}
+      {showEscalaExportModal && (
+        <div
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(6px)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
+          onClick={() => !isExportingEscala && setShowEscalaExportModal(false)}
+        >
+          <div className="card" style={{ maxWidth: 520, width: '100%', maxHeight: '90vh', display: 'flex', flexDirection: 'column', boxShadow: '0 32px 64px rgba(0,0,0,0.3)', overflow: 'hidden' }} onClick={e => e.stopPropagation()}>
+            {/* Header */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 24px', borderBottom: '1px solid var(--border-subtle)', flexShrink: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{ width: 42, height: 42, borderRadius: 12, background: 'linear-gradient(135deg, #0f172a, #1e3a5f)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, boxShadow: '0 4px 12px rgba(15,23,42,0.3)' }}>📄</div>
+                <div>
+                  <h2 style={{ fontSize: 16, fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>Exportar Escala em PDF</h2>
+                  <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Relatório formal com tabela e cabeçalho</span>
+                </div>
+              </div>
+              <button onClick={() => setShowEscalaExportModal(false)} disabled={isExportingEscala} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: 20, lineHeight: 1, padding: 4 }}>✕</button>
+            </div>
+
+            {/* Seletores */}
+            <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-subtle)', flexShrink: 0 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                <div className="form-group" style={{ margin: 0 }}>
+                  <label className="form-label">Mês</label>
+                  <select
+                    className="form-select"
+                    value={escalaExportMes ?? ''}
+                    onChange={e => { const v = Number(e.target.value); setEscalaExportMes(v); fetchEscalaPreview(v, escalaExportAno); }}
+                    disabled={isExportingEscala}
+                  >
+                    <option value="">Selecione o mês...</option>
+                    {MESES_EXPORT.map((m, i) => <option key={i} value={i + 1}>{m}</option>)}
+                  </select>
+                </div>
+                <div className="form-group" style={{ margin: 0 }}>
+                  <label className="form-label">Ano</label>
+                  <select
+                    className="form-select"
+                    value={escalaExportAno}
+                    onChange={e => { const v = Number(e.target.value); setEscalaExportAno(v); if (escalaExportMes) fetchEscalaPreview(escalaExportMes, v); }}
+                    disabled={isExportingEscala}
+                  >
+                    {[2024, 2025, 2026, 2027].map(a => <option key={a} value={a}>{a}</option>)}
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* Prévia */}
+            <div style={{ flex: 1, overflowY: 'auto', padding: '16px 24px' }}>
+              {!escalaExportMes ? (
+                <div style={{ textAlign: 'center', padding: '32px 0', color: 'var(--text-muted)', fontSize: 14 }}>Selecione o mês para visualizar a prévia</div>
+              ) : escalaExportLoading ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {[1,2,3,4].map(i => <div key={i} className="skeleton" style={{ height: 36, borderRadius: 8 }} />)}
+                </div>
+              ) : escalaExportPreview.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '32px 0', color: 'var(--text-muted)', fontSize: 14 }}>Nenhum plantão encontrado neste mês.</div>
+              ) : (
+                <div>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 12, fontWeight: 600 }}>PRÉVIA — {escalaExportPreview.length} plantão(ões)</div>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+                    <thead>
+                      <tr style={{ background: 'rgba(241,245,249,0.5)' }}>
+                        {['Local', 'Data', 'Início', 'Término'].map(h => (
+                          <th key={h} style={{ padding: '8px 10px', textAlign: 'left', fontWeight: 700, color: 'var(--text-secondary)', fontSize: 11, letterSpacing: '0.04em', textTransform: 'uppercase' }}>{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {escalaExportPreview.map((p, i) => (
+                        <tr key={p.id} style={{ borderBottom: '1px solid var(--border-subtle)', background: i % 2 === 0 ? 'transparent' : 'rgba(248,250,252,0.4)' }}>
+                          <td style={{ padding: '9px 10px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                              <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: p.local?.cor_calendario ?? '#4f8ef7', flexShrink: 0 }} />
+                              <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{p.local?.nome ?? 'N/A'}{p.is_extra ? ' ★' : ''}</span>
+                            </div>
+                          </td>
+                          <td style={{ padding: '9px 10px', color: 'var(--text-secondary)' }}>{new Date(p.data_hora_inicio).toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' })}</td>
+                          <td style={{ padding: '9px 10px', color: 'var(--text-secondary)' }}>{new Date(p.data_hora_inicio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</td>
+                          <td style={{ padding: '9px 10px', color: 'var(--text-secondary)' }}>{new Date(p.data_hora_fim).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
+            {/* Botões */}
+            <div style={{ padding: '16px 24px', borderTop: '1px solid var(--border-subtle)', display: 'flex', gap: 12, flexShrink: 0 }}>
+              <button className="btn btn-secondary" style={{ flex: 1, justifyContent: 'center' }} onClick={() => setShowEscalaExportModal(false)} disabled={isExportingEscala}>Cancelar</button>
+              <button
+                onClick={generateEscalaPDF}
+                disabled={!escalaExportMes || escalaExportPreview.length === 0 || escalaExportLoading || isExportingEscala}
+                style={{
+                  flex: 1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                  padding: '11px 20px', fontSize: 14, fontWeight: 700,
+                  background: (!escalaExportMes || escalaExportPreview.length === 0 || escalaExportLoading) ? 'var(--bg-secondary)' : 'linear-gradient(135deg, #0f172a, #1e3a5f)',
+                  color: (!escalaExportMes || escalaExportPreview.length === 0 || escalaExportLoading) ? 'var(--text-muted)' : '#fff',
+                  border: '1px solid var(--border-subtle)', borderRadius: 10,
+                  cursor: (!escalaExportMes || escalaExportPreview.length === 0 || escalaExportLoading || isExportingEscala) ? 'not-allowed' : 'pointer',
+                  transition: 'all 0.2s',
+                }}
+              >
+                {isExportingEscala ? (
+                  <><span style={{ display: 'inline-block', width: 14, height: 14, border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} /> Gerando PDF...</>
+                ) : 'Baixar PDF'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </>
   );
 }
