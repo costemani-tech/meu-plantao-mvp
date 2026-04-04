@@ -237,7 +237,7 @@ export default function CalendarioPage() {
                      </button>
                      <button onClick={() => { setMenuAberto(false); handleLinkFamiliar(); }} style={{ width: '100%', padding: '14px 16px', background: 'transparent', border: 'none', textAlign: 'left', fontWeight: 700, display:'flex', alignItems:'center', gap:10, color:'var(--text-primary)' }}>
                         {linkCopiado ? <Check size={16} color="#10b981"/> : <Link size={16}/>} 
-                        {linkCopiado ? 'Link Copiado!' : 'Link Familiar'}
+                        {linkCopiado ? 'Link Copiado!' : 'Compartilhar Escala Pro'}
                         {!isPro && <span style={{ fontSize: 10, background: 'rgba(245,158,11,0.1)', color: '#f59e0b', padding: '2px 6px', borderRadius: 8, marginLeft: 'auto' }}>PRO</span>}
                      </button>
                  </div>
