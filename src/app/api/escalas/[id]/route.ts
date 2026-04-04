@@ -13,49 +13,74 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // 1. Autenticar via Cookie SSR
+    // ── 1. Autenticação rigorosa via JWT/Cookie SSR ──────────────────────────
     const cookieStore = await cookies();
-    const supabaseClient = createServerClient(
+    const supabaseSSR = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       { cookies: { getAll() { return cookieStore.getAll(); } } }
     );
-    const { data: { user } } = await supabaseClient.auth.getUser();
-    if (!user) {
-      return NextResponse.json({ error: 'Não autorizado', code: 'UNAUTHORIZED' }, { status: 401 });
+
+    const { data: { user }, error: authError } = await supabaseSSR.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: true, message: 'Sessão expirada. Faça login novamente.', code: 'UNAUTHORIZED' },
+        { status: 401 }
+      );
     }
 
+    // ── 2. Validação dos parâmetros ──────────────────────────────────────────
     const { id: escala_id } = await params;
-    const body = await req.json() as { modo: 'completo' | 'encerrar_em'; data_encerramento?: string };
+
+    let body: { modo?: string; data_encerramento?: string };
+    try {
+      body = await req.json();
+    } catch {
+      return NextResponse.json(
+        { error: true, message: 'Não foi possível processar a exclusão. Tente novamente.' },
+        { status: 400 }
+      );
+    }
+
     const { modo, data_encerramento } = body;
 
     if (!modo || !['completo', 'encerrar_em'].includes(modo)) {
-      return NextResponse.json({ error: 'modo deve ser "completo" ou "encerrar_em"', code: 'BAD_REQUEST' }, { status: 400 });
+      return NextResponse.json(
+        { error: true, message: 'Modo de exclusão inválido.', code: 'BAD_REQUEST' },
+        { status: 400 }
+      );
     }
     if (modo === 'encerrar_em' && !data_encerramento) {
-      return NextResponse.json({ error: 'data_encerramento é obrigatória no modo encerrar_em', code: 'BAD_REQUEST' }, { status: 400 });
+      return NextResponse.json(
+        { error: true, message: 'Data de encerramento é obrigatória.', code: 'BAD_REQUEST' },
+        { status: 400 }
+      );
     }
 
+    // ── 3. Cliente admin — instanciado SOMENTE após autenticação confirmada ──
     const supabaseAdmin = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
-    // 2. Verificar que a escala pertence ao usuário autenticado
+    // ── 4. Verificar que a escala pertence ao usuário autenticado ────────────
     const { data: escala, error: erroEscala } = await supabaseAdmin
       .from('escalas')
       .select('id, usuario_id')
       .eq('id', escala_id)
-      .eq('usuario_id', user.id)   // RLS manual — segurança dupla
+      .eq('usuario_id', user.id)   // RLS manual dupla
       .single();
 
     if (erroEscala || !escala) {
-      if (erroEscala) console.error('Acesso negado ou escala [DELETE] não encontrada:', erroEscala);
-      return NextResponse.json({ error: 'Escala não encontrada ou acesso negado', code: 'NOT_FOUND' }, { status: 404 });
+      return NextResponse.json(
+        { error: true, message: 'Escala não encontrada.', code: 'NOT_FOUND' },
+        { status: 404 }
+      );
     }
 
+    // ── 5a. MODO COMPLETO ────────────────────────────────────────────────────
     if (modo === 'completo') {
-      // 3a. MODO COMPLETO: deleta plantões vinculados + a escala
       await supabaseAdmin
         .from('plantoes')
         .delete()
@@ -71,7 +96,7 @@ export async function DELETE(
       return NextResponse.json({ success: true, modo: 'completo' });
     }
 
-    // 3b. MODO ENCERRAR_EM: deleta só plantões futuros da escala
+    // ── 5b. MODO ENCERRAR_EM ─────────────────────────────────────────────────
     const dataCorte = new Date(data_encerramento!).toISOString();
 
     const { count, error: erroDelete } = await supabaseAdmin
@@ -82,8 +107,11 @@ export async function DELETE(
       .gte('data_hora_inicio', dataCorte);
 
     if (erroDelete) {
-      console.error('Erro crítico do Supabase ao deletar plantões [encerrar_em]:', erroDelete);
-      return NextResponse.json({ error: 'Não foi possível processar a exclusão. Tente novamente.', code: 'INTERNAL_SERVER_ERROR' }, { status: 500 });
+      console.error('[api/escalas/[id] DELETE] Falha ao encerrar escala:', erroDelete?.code);
+      return NextResponse.json(
+        { error: true, message: 'Não foi possível processar a exclusão. Tente novamente.' },
+        { status: 500 }
+      );
     }
 
     return NextResponse.json({
@@ -94,7 +122,10 @@ export async function DELETE(
     });
 
   } catch (err) {
-    console.error('Erro em DELETE /api/escalas/[id]:', err);
-    return NextResponse.json({ error: 'Erro interno do servidor', code: 'INTERNAL_SERVER_ERROR' }, { status: 500 });
+    console.error('[api/escalas/[id] DELETE] Erro não tratado:', (err as Error)?.message);
+    return NextResponse.json(
+      { error: true, message: 'Não foi possível processar a exclusão. Tente novamente.' },
+      { status: 500 }
+    );
   }
 }
