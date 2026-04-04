@@ -393,22 +393,19 @@ export default function CalendarioPage() {
                 style={{ 
                   cursor: cell.mesAtual ? 'pointer' : 'default',
                   background: cell.mesAtual ? getCellBackground(ps, cell.dia) : 'transparent',
-                  border: ps.some(p => p.status_conflito) ? '2px solid #f59e0b' : '1px solid var(--border-subtle)',
+                  border: ps.some(p => p.status_conflito) ? '2px solid #ef4444' : '1px solid var(--border-subtle)',
                   position: 'relative',
                   overflow: 'hidden'
                 }}
                 className={`cal-day ${cell.mesAtual ? '' : 'other-month'} ${cell.mesAtual && isHoje(cell.dia) ? 'today' : ''}`}
               >
-                {ps.some(p => p.status_conflito) && (
-                  <div style={{ position: 'absolute', top: 4, right: 4, fontSize: 10 }}>🟡</div>
-                )}
                 <div 
                   className="cal-day-num" 
                   style={{ 
                     position: 'relative', zIndex: 2,
-                    color: ps.length > 0 ? '#ffffff' : 'inherit', 
-                    textShadow: ps.length > 0 ? '0 1px 3px rgba(0,0,0,0.8)' : 'none',
-                    fontWeight: ps.length > 0 ? 800 : 500
+                    color: ps.some(p => p.status_conflito) ? '#ef4444' : (ps.length > 0 ? '#ffffff' : '#94a3b8'),
+                    textShadow: ps.length > 0 && !ps.some(p => p.status_conflito) ? '0 1px 3px rgba(0,0,0,0.8)' : 'none',
+                    fontWeight: 'bold'
                   }}
                 >
                   {cell.dia}
