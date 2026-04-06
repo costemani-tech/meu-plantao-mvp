@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { supabase, LocalTrabalho } from '../../lib/supabase';
 import { gerarProximosPlantoes, SlotPlantao } from '../../lib/scale-generator';
+import { useRouter } from 'next/navigation';
 
 const CORES_PRESET = [
   '#4f8ef7', '#7c6af7', '#22d3b5', '#f97316',
@@ -47,6 +48,7 @@ const DESCRICAO_REGRA: Record<string, string> = {
 };
 
 export default function EscalasPage() {
+  const router = useRouter();
   const [locais, setLocais] = useState<LocalTrabalho[]>([]);
   const [localId, setLocalId] = useState('');
   const [dataInicioSo, setDataInicioSo] = useState('');
@@ -68,9 +70,7 @@ export default function EscalasPage() {
   const [toast, setToast] = useState<Toast | null>(null);
   const [ultimoResultado, setUltimoResultado] = useState<ResultadoAPI | null>(null);
 
-  // Estados de conflito
-  const [pendingConflito, setPendingConflito] = useState<ConflitoDados | null>(null);
-  const [pendingPayload, setPendingPayload] = useState<{ data_inicio: string; regra: string; local_id: string } | null>(null);
+  // Estados de conflito (removidos, lote puro direto pro Supabase)
 
   // Estados de gestão de escalas
   const [escalasAtivas, setEscalasAtivas] = useState<EscalaAtiva[]>([]);
@@ -162,7 +162,7 @@ export default function EscalasPage() {
     setSavingLocal(false);
   };
 
-  const salvarEscala = async (forcar_conflito = false) => {
+  const salvarEscala = async () => {
     if (!localId || !dataInicioSo || !horaInicio) {
       showToast('Preencha o Local, o Dia e a Hora do plantão.', 'error');
       return;
@@ -171,57 +171,77 @@ export default function EscalasPage() {
     setSaving(true);
     setUltimoResultado(null);
 
-    const payload = {
-      data_inicio: new Date(dataCompletaISO).toISOString(),
-      regra: regraFinal,
-      local_id: localId,
-      ...(forcar_conflito && { forcar_conflito: true }),
-    };
-
     try {
-      const response = await fetch('/api/escalas', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Usuário não autenticado. Faça login novamente.');
 
-      const resultado = await response.json();
+      const parts = regraFinal.split('x');
+      const trabalho = parseInt(parts[0], 10) || 12;
+      const descanso = parseInt(parts[1], 10) || 36;
+      const ciclo = trabalho + descanso;
 
-      // ── CONFLITO DETECTADO (409) ──
-      if (response.status === 409 && resultado.conflito) {
-        setPendingConflito(resultado as ConflitoDados);
-        setPendingPayload({ data_inicio: payload.data_inicio, regra: payload.regra, local_id: payload.local_id });
-        setSaving(false);
-        return;
+      const anoAtual = new Date().getFullYear();
+      const dataFinal = new Date(anoAtual, 11, 31, 23, 59, 59);
+      let dataAtual = new Date(`${dataInicioSo}T${horaInicio}:00`);
+
+      const { data: escalaCriada, error: erroEscala } = await supabase
+        .from('escalas')
+        .insert({
+          usuario_id: user.id,
+          local_id: localId,
+          data_inicio: dataInicioSo,
+          regra: regraFinal
+        })
+        .select()
+        .single();
+
+      if (erroEscala) throw erroEscala;
+
+      const arrayDePlantoes = [];
+
+      while (dataAtual <= dataFinal) {
+        const inicioIso = dataAtual.toISOString();
+        const fimObj = new Date(dataAtual);
+        fimObj.setHours(fimObj.getHours() + trabalho);
+
+        if (dataAtual <= dataFinal) {
+          arrayDePlantoes.push({
+            escala_id: escalaCriada.id,
+            usuario_id: user.id,
+            local_id: localId,
+            data_hora_inicio: inicioIso,
+            data_hora_fim: fimObj.toISOString(),
+            status: 'Agendado',
+            is_extra: false
+          });
+        }
+
+        dataAtual.setHours(dataAtual.getHours() + ciclo);
       }
 
-      if (!response.ok || !resultado.success) {
-        showToast('❌ Erro: ' + (resultado.error ?? 'Falha ao criar escala.'), 'error');
-      } else {
-        const sufixo = resultado.com_conflito ? ' (com sobreposição confirmada)' : '';
-        showToast(` ${resultado.total_plantoes} plantões gerados até ${resultado.periodo_ate}!${sufixo}`, 'success');
-        setUltimoResultado(resultado as ResultadoAPI);
-        window.dispatchEvent(new CustomEvent('plantoes-atualizados'));
-        setLocalId('');
-        setDataInicioSo('');
-        setHoraInicio('07:00');
-        setRegra('12x36');
-        setPreview([]);
-        fetchEscalas();
+      if (arrayDePlantoes.length > 0) {
+        const { error: erroInsert } = await supabase.from('plantoes').insert(arrayDePlantoes);
+        if (erroInsert) {
+          await supabase.from('escalas').delete().eq('id', escalaCriada.id);
+          throw erroInsert;
+        }
       }
-    } catch (err) {
-      showToast('❌ Erro de conexão com o servidor.', 'error');
-      console.error(err);
+
+      showToast('Escala gerada com sucesso!', 'success');
+      window.dispatchEvent(new CustomEvent('plantoes-atualizados'));
+      
+      setTimeout(() => {
+        router.push('/calendario');
+      }, 1500);
+
+    } catch (err: any) {
+      showToast('Erro: ' + (err?.message || 'Falha ao criar escala.'), 'error');
+    } finally {
+      setSaving(false);
     }
-
-    setSaving(false);
   };
 
-  const confirmarConflito = async () => {
-    if (!pendingPayload) return;
-    setPendingConflito(null);
-    await salvarEscala(true);
-  };
+
 
   const excluirEscala = async (id: string, modo: 'completo' | 'encerrar_em', dataCorte?: string) => {
     setDeletando(true);
@@ -595,41 +615,6 @@ export default function EscalasPage() {
                 </div>
               </div>
             ))}
-          </div>
-        </div>
-      )}
-
-      {/* ══ MODAL: Conflito de Horário (Amarelo) ══ */}
-      {pendingConflito && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(2px)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-          <div className="card" style={{ maxWidth: 440, width: '100%', border: '2px solid #f59e0b', boxShadow: '0 20px 40px rgba(245,158,11,0.2)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-              <span style={{ fontSize: 24 }}></span>
-              <h2 style={{ fontSize: 16, fontWeight: 800, color: '#92400e' }}>Conflito de Horário Detectado</h2>
-            </div>
-            <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 12, lineHeight: 1.6 }}>
-              {pendingConflito.message}
-            </p>
-            <div style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)', borderRadius: 8, padding: 12, marginBottom: 16 }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: '#92400e', marginBottom: 6 }}>Exemplos de sobreposição:</div>
-              {pendingConflito.exemplos.map((ex, i) => (
-                <div key={i} style={{ fontSize: 12, color: 'var(--text-secondary)', padding: '3px 0' }}>
-                  {new Date(ex.inicio).toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' })} · {new Date(ex.inicio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} às {new Date(ex.fim).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-                </div>
-              ))}
-            </div>
-            <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 16 }}>
-              Você já tem um plantão neste horário. Deseja confirmar a duplicidade?
-            </p>
-            <div style={{ display: 'flex', gap: 10 }}>
-              <button className="btn btn-secondary" style={{ flex: 1 }} onClick={() => { setPendingConflito(null); setPendingPayload(null); }}>Cancelar</button>
-              <button
-                className="btn btn-primary"
-                style={{ flex: 1, background: '#f59e0b', borderColor: '#f59e0b' }}
-                onClick={confirmarConflito}
-                disabled={saving}
-              >{saving ? ' Salvando...' : ' Confirmar Duplicidade'}</button>
-            </div>
           </div>
         </div>
       )}
