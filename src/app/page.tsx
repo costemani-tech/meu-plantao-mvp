@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { CalendarDays, Building2, Activity, Calendar, Clock } from 'lucide-react';
+import { CalendarDays, Building2, Activity, Calendar, Clock, Lock } from 'lucide-react';
 import { supabase, Plantao, LocalTrabalho } from '../lib/supabase';
 import { useRouter } from 'next/navigation';
 import jsPDF from 'jspdf';
@@ -328,16 +328,40 @@ export default function DashboardPage() {
               </span>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
-              <button
-                className="btn btn-secondary"
-                style={{ justifyContent: 'center', gap: 8, padding: 16, fontWeight: 700 }}
-                onClick={() => setShowRelatorioModal(true)}
+              
+              <div 
+                style={{ 
+                  background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: 12, padding: 16, 
+                  cursor: 'pointer', opacity: !isPro ? 0.7 : 1, position: 'relative',
+                  display: 'flex', flexDirection: 'column'
+                }} 
+                onClick={() => isPro ? setShowRelatorioModal(true) : showToast("Recurso exclusivo para assinantes.", "error")}
               >
-                📊 Relatórios de Plantões Pro
-              </button>
-              <button className="btn btn-secondary" style={{ justifyContent: 'center', gap: 8, padding: 16 }} onClick={() => setShowEscalaExportModal(true)}>
-                Compartilhar Escala Pro
-              </button>
+                {!isPro && <Lock size={16} color="var(--text-muted)" style={{ position: 'absolute', top: 12, right: 12 }} />}
+                <div style={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, fontSize: 14 }}>
+                  📊 Relatórios Pro
+                </div>
+                <div className="text-sm text-gray-500" style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.4 }}>
+                  Tenha controle dos seus plantões e saiba quanto irá receber de extra no mês.
+                </div>
+              </div>
+
+              <div 
+                style={{ 
+                  background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: 12, padding: 16, 
+                  cursor: 'pointer', opacity: !isPro ? 0.7 : 1, position: 'relative',
+                  display: 'flex', flexDirection: 'column'
+                }} 
+                onClick={() => isPro ? setShowEscalaExportModal(true) : showToast("Recurso exclusivo para assinantes.", "error")}
+              >
+                {!isPro && <Lock size={16} color="var(--text-muted)" style={{ position: 'absolute', top: 12, right: 12 }} />}
+                <div style={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, fontSize: 14 }}>
+                   Compartilhar Escala Pro
+                </div>
+                <div className="text-sm text-gray-500" style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.4 }}>
+                  Tenha o controle dos seus plantões e compartilhe com quem você quiser.
+                </div>
+              </div>
             </div>
           </div>
 

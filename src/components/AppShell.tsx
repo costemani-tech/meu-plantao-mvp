@@ -286,6 +286,35 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           </button>
         </nav>
       )}
+
+      {/* Botão flutuante de Sugestões VIP */}
+      {pathname !== '/login' && (
+        <a 
+          href={`https://wa.me/?text=${encodeURIComponent('Fala Vinicius, estou testando o app e tenho uma sugestão: ')}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            position: 'fixed',
+            bottom: '90px',
+            right: '24px',
+            background: 'var(--bg-secondary)',
+            color: 'var(--text-primary)',
+            padding: '10px 16px',
+            borderRadius: 'var(--radius-lg)',
+            boxShadow: 'var(--shadow-float)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            fontSize: '13px',
+            fontWeight: 700,
+            textDecoration: 'none',
+            border: '1px solid var(--border-subtle)',
+            zIndex: 999
+          }}
+        >
+          💡 Sugestões?
+        </a>
+      )}
     </div>
   );
 }
