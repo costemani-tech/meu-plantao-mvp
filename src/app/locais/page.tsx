@@ -21,8 +21,18 @@ export default function LocaisPage() {
   const [showProModal, setShowProModal] = useState(false);
   const [localEmEdicao, setLocalEmEdicao] = useState<LocalTrabalho | null>(null);
 
-  const isPro = true; // Trava Freemium (Temporário local state)
+  const [isPro, setIsPro] = useState(false);
+  const [limiteLocaisAtingido, setLimiteLocaisAtingido] = useState(false);
 
+  useEffect(() => {
+    const checkUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data: profile } = await supabase.from('profiles').select('is_pro').eq('id', user.id).single();
+      if (profile) setIsPro(profile.is_pro);
+    };
+    checkUser();
+  }, []);
   const showToast = (msg: string, type: 'success' | 'error') => {
     setToast({ msg, type });
     setTimeout(() => setToast(null), 3500);
@@ -30,7 +40,9 @@ export default function LocaisPage() {
 
   const fetchLocais = useCallback(async () => {
     const { data } = await supabase.from('locais_trabalho').select('*').eq('ativo', true).order('nome');
-    setLocais((data as LocalTrabalho[]) ?? []);
+    const locaisBuscados = (data as LocalTrabalho[]) ?? [];
+    setLocais(locaisBuscados);
+    setLimiteLocaisAtingido(locaisBuscados.length >= 2);
   }, []);
 
   // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -39,17 +51,13 @@ export default function LocaisPage() {
   const adicionarLocal = async () => {
     if (!nome.trim()) { showToast('Informe o nome do local.', 'error'); return; }
 
-    if (!isPro) {
-      setSaving(true);
-      const { count } = await supabase.from('locais_trabalho').select('*', { count: 'exact', head: true }).eq('ativo', true);
-      if (count !== null && count >= 2) {
-        setShowProModal(true);
-        setSaving(false);
-        return;
-      }
-    } else {
-      setSaving(true);
+    if (!isPro && limiteLocaisAtingido) {
+      showToast('Limite de 2 locais atingido. Assine o plano Pro para hospitais ilimitados.', 'error');
+      setShowProModal(true);
+      return;
     }
+
+    setSaving(true);
     const { error } = await supabase.from('locais_trabalho').insert({ 
       nome: nome.trim(), 
       cor_calendario: cor,
@@ -198,7 +206,19 @@ export default function LocaisPage() {
             </div>
           </div>
 
-          <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }} onClick={adicionarLocal} disabled={saving}>
+          <button 
+            className="btn btn-primary" 
+            style={{ width: '100%', justifyContent: 'center', opacity: (!isPro && limiteLocaisAtingido) ? 0.6 : 1 }} 
+            onClick={() => {
+              if (!isPro && limiteLocaisAtingido) {
+                showToast('Limite de 2 locais atingido. Assine o plano Pro para hospitais ilimitados.', 'error');
+                setShowProModal(true);
+              } else {
+                adicionarLocal();
+              }
+            }} 
+            disabled={saving}
+          >
             {saving ? '⏳ Salvando...' : '➕ Adicionar Local'}
           </button>
         </div>

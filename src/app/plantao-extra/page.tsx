@@ -22,13 +22,32 @@ export default function PlantaoExtraPage() {
   const [payloadPendente, setPayloadPendente] = useState<{ inicioIso: string; fimIso: string } | null>(null);
 
   const [isPro, setIsPro] = useState(false);
+  const [limiteExtrasAtingido, setLimiteExtrasAtingido] = useState(false);
 
   useEffect(() => {
     const checkPro = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
       const { data } = await supabase.from('profiles').select('is_pro').eq('id', user.id).single();
-      if (data) setIsPro(data.is_pro);
+      const userIsPro = data?.is_pro ?? false;
+      setIsPro(userIsPro);
+
+      if (!userIsPro) {
+        const dataStart = new Date();
+        const pInicioMes = new Date(dataStart.getFullYear(), dataStart.getMonth(), 1).toISOString();
+        const pFimMes = new Date(dataStart.getFullYear(), dataStart.getMonth() + 1, 0, 23, 59, 59).toISOString();
+        const { count } = await supabase
+          .from('plantoes')
+          .select('id', { count: 'exact', head: true })
+          .eq('is_extra', true)
+          .gte('data_hora_inicio', pInicioMes)
+          .lte('data_hora_inicio', pFimMes)
+          .neq('status', 'Cancelado');
+
+        if (count && count >= 4) {
+          setLimiteExtrasAtingido(true);
+        }
+      }
     };
     checkPro();
   }, []);
@@ -73,7 +92,7 @@ export default function PlantaoExtraPage() {
           .neq('status', 'Cancelado');
 
         if (count && count >= 4) {
-          showToast(' O Plano Free permite no máximo 4 Plantões Extras (Avulsos) por mês. Faça o Upgrade!', 'error');
+          showToast('Limite de 4 plantões extras no mês atingido. Assine o plano Pro para registros ilimitados.', 'error');
           setSaving(false);
           return;
         }
@@ -237,8 +256,14 @@ export default function PlantaoExtraPage() {
 
           <button
             className="btn btn-primary"
-            style={{ width: '100%', justifyContent: 'center', marginTop: 16, padding: '14px', background: 'var(--accent-teal)' }}
-            onClick={() => salvarPlantaoExtra()}
+            style={{ width: '100%', justifyContent: 'center', marginTop: 16, padding: '14px', background: 'var(--accent-teal)', opacity: (!isPro && limiteExtrasAtingido) ? 0.6 : 1 }}
+            onClick={() => {
+              if (!isPro && limiteExtrasAtingido) {
+                showToast('Limite de 4 plantões extras no mês atingido. Assine o plano Pro para registros ilimitados.', 'error');
+              } else {
+                salvarPlantaoExtra();
+              }
+            }}
             disabled={saving}
           >
             {saving ? ' Inserindo no calendário...' : ' Salvar Plantão Avulso'}
