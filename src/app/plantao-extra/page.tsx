@@ -151,11 +151,6 @@ export default function PlantaoExtraPage() {
     <>
       <div className="page-header">
         <h1>Cadastrar Plantão Extra</h1>
-        <p>
-          {isPro 
-            ? "Cadastre seus plantões e valores para seu controle financeiro." 
-            : "Plano Free: Cadastre até 4 plantões extras por mês."}
-        </p>
       </div>
 
       <div className="mobile-stack" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 500px)', justifyContent: 'start' }}>
@@ -165,8 +160,10 @@ export default function PlantaoExtraPage() {
               
             </div>
             <div>
-              <h2 style={{ fontWeight: 700, fontSize: 18, margin: 0 }}>Inserir Novo Relato</h2>
-              <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>Módulo Financeiro</span>
+              <h2 style={{ fontWeight: 700, fontSize: 18, margin: 0 }}>Novo Plantão Extra</h2>
+              <span style={{ fontSize: 13, color: isPro ? '#059669' : '#d97706', fontWeight: 600 }}>
+                {isPro ? 'Acesso PRO: Lançamentos ilimitados liberados.' : 'Plano Free: Limite de 4 plantões extras por mês.'}
+              </span>
             </div>
           </div>
 
