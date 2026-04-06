@@ -73,7 +73,7 @@ export default function PlantaoExtraPage() {
           .neq('status', 'Cancelado');
 
         if (count && count >= 4) {
-          showToast('🔒 O Plano Free permite no máximo 4 Plantões Extras (Avulsos) por mês. Faça o Upgrade!', 'error');
+          showToast(' O Plano Free permite no máximo 4 Plantões Extras (Avulsos) por mês. Faça o Upgrade!', 'error');
           setSaving(false);
           return;
         }
@@ -116,7 +116,7 @@ export default function PlantaoExtraPage() {
       // ↓ Notifica o calendário para limpar cache e refazer fetch com is_extra correto
       window.dispatchEvent(new CustomEvent('plantoes-atualizados'));
 
-      showToast('✅ Plantão Extra salvo com sucesso no calendário!', 'success');
+      showToast(' Plantão Extra salvo com sucesso no calendário!', 'success');
       setDataPlantao('');
       setConflitoPendente(null);
       setPayloadPendente(null);
@@ -139,7 +139,7 @@ export default function PlantaoExtraPage() {
         <div className="card">
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
             <div style={{ background: 'rgba(34,211,181,0.1)', color: 'var(--accent-teal)', width: 48, height: 48, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}>
-              💸
+              
             </div>
             <div>
               <h2 style={{ fontWeight: 700, fontSize: 18, margin: 0 }}>Inserir Novo Relato</h2>
@@ -169,7 +169,7 @@ export default function PlantaoExtraPage() {
           <div className="form-group mobile-stack" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 20 }}>
             <div>
               <label className="form-label" style={{ display: 'flex', gap: 6 }}>
-                ▶️ Hora Início *
+                 Hora Início *
               </label>
               <input
                 type="time"
@@ -181,7 +181,7 @@ export default function PlantaoExtraPage() {
             </div>
             <div>
               <label className="form-label" style={{ display: 'flex', gap: 6 }}>
-                ⏹️ Hora Fim *
+                 Hora Fim *
               </label>
               <input
                 type="time"
@@ -226,7 +226,7 @@ export default function PlantaoExtraPage() {
           ) : (
             <div className="form-group" style={{ marginTop: 20 }}>
               <div style={{ background: 'rgba(245,158,11,0.1)', border: '1px dashed #f59e0b', padding: 14, borderRadius: 8, display: 'flex', alignItems: 'center', gap: 10 }}>
-                <span style={{ fontSize: 24 }}>⭐</span>
+                <span style={{ fontSize: 24 }}></span>
                 <div>
                   <h4 style={{ margin: 0, fontSize: 14, color: '#92400e', fontWeight: 800 }}>Recurso Pro</h4>
                   <p style={{ margin: 0, fontSize: 12, color: '#b45309' }}>Cadastrar valores financeiros e trocas/folgas é exclusivo para assinantes.</p>
@@ -241,7 +241,7 @@ export default function PlantaoExtraPage() {
             onClick={() => salvarPlantaoExtra()}
             disabled={saving}
           >
-            {saving ? '⏳ Inserindo no calendário...' : '💵 Salvar Plantão Avulso'}
+            {saving ? ' Inserindo no calendário...' : ' Salvar Plantão Avulso'}
           </button>
         </div>
       </div>
@@ -251,7 +251,7 @@ export default function PlantaoExtraPage() {
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(2px)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
           <div className="card" style={{ maxWidth: 400, width: '100%', border: '2px solid #f59e0b', boxShadow: '0 20px 40px rgba(245,158,11,0.2)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-              <span style={{ fontSize: 22 }}>⚠️</span>
+              <span style={{ fontSize: 22 }}></span>
               <h2 style={{ fontSize: 15, fontWeight: 800, color: '#92400e' }}>Conflito de Horário</h2>
             </div>
             <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 16, lineHeight: 1.6 }}>
@@ -265,7 +265,7 @@ export default function PlantaoExtraPage() {
                 style={{ flex: 1, background: '#f59e0b', borderColor: '#f59e0b' }}
                 onClick={() => salvarPlantaoExtra(true)}
                 disabled={saving}
-              >{saving ? '⏳...' : '✅ Confirmar'}</button>
+              >{saving ? '...' : ' Confirmar'}</button>
             </div>
           </div>
         </div>

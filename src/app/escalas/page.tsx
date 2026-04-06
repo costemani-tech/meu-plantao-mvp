@@ -199,7 +199,7 @@ export default function EscalasPage() {
         showToast('❌ Erro: ' + (resultado.error ?? 'Falha ao criar escala.'), 'error');
       } else {
         const sufixo = resultado.com_conflito ? ' (com sobreposição confirmada)' : '';
-        showToast(`✅ ${resultado.total_plantoes} plantões gerados até ${resultado.periodo_ate}!${sufixo}`, 'success');
+        showToast(` ${resultado.total_plantoes} plantões gerados até ${resultado.periodo_ate}!${sufixo}`, 'success');
         setUltimoResultado(resultado as ResultadoAPI);
         window.dispatchEvent(new CustomEvent('plantoes-atualizados'));
         setLocalId('');
@@ -236,8 +236,8 @@ export default function EscalasPage() {
         showToast('❌ ' + (resultado.error ?? 'Erro ao excluir escala.'), 'error');
       } else {
         const msg = modo === 'completo'
-          ? '🗑️ Escala excluída completamente!'
-          : `✂️ Escala encerrada em ${new Date(dataCorte!).toLocaleDateString('pt-BR')}. ${resultado.plantoes_removidos} plantões futuros removidos.`;
+          ? ' Escala excluída completamente!'
+          : ` Escala encerrada em ${new Date(dataCorte!).toLocaleDateString('pt-BR')}. ${resultado.plantoes_removidos} plantões futuros removidos.`;
         showToast(msg, 'success');
         setModalEncerrar(null);
         setDataEncerramento('');
@@ -257,7 +257,7 @@ export default function EscalasPage() {
   return (
     <>
       <div className="page-header">
-        <h1>Configurar Escala ⚙️</h1>
+        <h1>Configurar Escala </h1>
         <p>Gera plantões automaticamente até <strong>31/12/{anoAtual}</strong></p>
       </div>
 
@@ -274,7 +274,7 @@ export default function EscalasPage() {
                 onClick={() => setIsCreatingLocal(!isCreatingLocal)}
                 style={{ background: 'none', border: 'none', color: 'var(--accent-blue)', fontSize: 13, fontWeight: 600, cursor: 'pointer', padding: 0 }}
               >
-                {isCreatingLocal ? 'Cancelar' : '➕ Criar Novo'}
+                {isCreatingLocal ? 'Cancelar' : ' Criar Novo'}
               </button>
             </div>
 
@@ -297,7 +297,7 @@ export default function EscalasPage() {
                     style={{ width: 16, height: 16, accentColor: 'var(--accent-teal)' }}
                   />
                   <label htmlFor="homecareCheckbox" style={{ fontSize: 13, color: 'var(--text-secondary)', cursor: 'pointer' }}>
-                    É atendimento <strong>Home Care</strong> 🏠
+                    É atendimento <strong>Home Care</strong> 
                   </label>
                 </div>
 
@@ -344,7 +344,7 @@ export default function EscalasPage() {
                   disabled={savingLocal}
                   style={{ width: '100%', padding: '6px 12px', fontSize: 13 }}
                 >
-                  {savingLocal ? '⏳ Salvando...' : 'Salvar e Selecionar'}
+                  {savingLocal ? ' Salvando...' : 'Salvar e Selecionar'}
                 </button>
               </div>
             ) : (
@@ -377,7 +377,7 @@ export default function EscalasPage() {
             </div>
             <div>
               <label className="form-label" style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                ⏰ Horário de Início *
+                 Horário de Início *
               </label>
               <input
                 type="time"
@@ -460,7 +460,7 @@ export default function EscalasPage() {
             onClick={() => salvarEscala()}
             disabled={saving || (isCustomRule && (!(parseInt(horasTrabalhoOutro,10) > 0) || !(parseInt(horasDescansoOutro,10) > 0)))}
           >
-            {saving ? '⏳ Processando no servidor...' : '🚀 Criar Escala e Gerar Plantões'}
+            {saving ? ' Processando no servidor...' : ' Criar Escala e Gerar Plantões'}
           </button>
 
           {/* Resultado da última geração */}
@@ -474,10 +474,10 @@ export default function EscalasPage() {
               fontSize: 13,
             }}>
               <div style={{ fontWeight: 700, color: 'var(--accent-green)', marginBottom: 6 }}>
-                ✅ Escala criada com sucesso!
+                 Escala criada com sucesso!
               </div>
               <div style={{ color: 'var(--text-secondary)', lineHeight: 1.7 }}>
-                <span>📋 <strong>{ultimoResultado.total_plantoes}</strong> plantões gerados</span><br />
+                <span> <strong>{ultimoResultado.total_plantoes}</strong> plantões gerados</span><br />
                 <span>📅 Até <strong>{ultimoResultado.periodo_ate}</strong></span><br />
                 <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
                   O Calendário foi atualizado automaticamente.
@@ -528,7 +528,7 @@ export default function EscalasPage() {
                   alignItems: 'center',
                   gap: 6,
                 }}>
-                  <span>🔁</span>
+                  <span></span>
                   <span>Padrão continua até <strong style={{ color: 'var(--text-secondary)' }}>31/12/{anoAtual}</strong> ao salvar</span>
                 </div>
               </div>
@@ -547,7 +547,7 @@ export default function EscalasPage() {
             border: '1px solid rgba(79,142,247,0.15)',
           }}>
             <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.7 }}>
-              <strong style={{ color: 'var(--accent-blue)' }}>⚡ Processamento no servidor</strong><br />
+              <strong style={{ color: 'var(--accent-blue)' }}> Processamento no servidor</strong><br />
               O cálculo e a inserção são realizados via API Route Handler (backend) usando a Service Role Key,
               garantindo segurança transacional e performance na geração de dezenas a centenas de plantões.
             </div>
@@ -560,7 +560,7 @@ export default function EscalasPage() {
          ══════════════════════════════════════════ */}
       {escalasAtivas.length > 0 && (
         <div style={{ marginTop: 32 }}>
-          <h2 style={{ fontWeight: 700, fontSize: 16, marginBottom: 16 }}>📋 Minhas Escalas Ativas</h2>
+          <h2 style={{ fontWeight: 700, fontSize: 16, marginBottom: 16 }}> Minhas Escalas Ativas</h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {escalasAtivas.map(e => (
               <div key={e.id} className="card" style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative' }}>
@@ -584,12 +584,12 @@ export default function EscalasPage() {
                       <button
                         onClick={() => { if (confirm('Tem certeza? Isso apagará TODOS os plantões desta escala, incluindo os passados.')) excluirEscala(e.id, 'completo'); }}
                         style={{ width: '100%', padding: '12px 16px', background: 'none', border: 'none', textAlign: 'left', cursor: 'pointer', color: '#ef4444', fontWeight: 600, fontSize: 13, display: 'flex', alignItems: 'center', gap: 8 }}
-                      >🗑️ Excluir Escala Completa</button>
+                      > Excluir Escala Completa</button>
                       <div style={{ borderTop: '1px solid var(--border-subtle)' }} />
                       <button
                         onClick={() => { setModalEncerrar({ id: e.id, nome: e.local?.nome ?? 'Escala' }); setMenuEscalaId(null); }}
                         style={{ width: '100%', padding: '12px 16px', background: 'none', border: 'none', textAlign: 'left', cursor: 'pointer', color: 'var(--text-primary)', fontWeight: 600, fontSize: 13, display: 'flex', alignItems: 'center', gap: 8 }}
-                      >✂️ Encerrar na Data X</button>
+                      > Encerrar na Data X</button>
                     </div>
                   )}
                 </div>
@@ -604,7 +604,7 @@ export default function EscalasPage() {
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(2px)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
           <div className="card" style={{ maxWidth: 440, width: '100%', border: '2px solid #f59e0b', boxShadow: '0 20px 40px rgba(245,158,11,0.2)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-              <span style={{ fontSize: 24 }}>⚠️</span>
+              <span style={{ fontSize: 24 }}></span>
               <h2 style={{ fontSize: 16, fontWeight: 800, color: '#92400e' }}>Conflito de Horário Detectado</h2>
             </div>
             <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 12, lineHeight: 1.6 }}>
@@ -628,7 +628,7 @@ export default function EscalasPage() {
                 style={{ flex: 1, background: '#f59e0b', borderColor: '#f59e0b' }}
                 onClick={confirmarConflito}
                 disabled={saving}
-              >{saving ? '⏳ Salvando...' : '✅ Confirmar Duplicidade'}</button>
+              >{saving ? ' Salvando...' : ' Confirmar Duplicidade'}</button>
             </div>
           </div>
         </div>
@@ -638,7 +638,7 @@ export default function EscalasPage() {
       {modalEncerrar && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(2px)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
           <div className="card" style={{ maxWidth: 400, width: '100%', boxShadow: '0 20px 40px rgba(0,0,0,0.15)' }}>
-            <h2 style={{ fontSize: 16, fontWeight: 800, marginBottom: 8 }}>✂️ Encerrar Escala</h2>
+            <h2 style={{ fontSize: 16, fontWeight: 800, marginBottom: 8 }}> Encerrar Escala</h2>
             <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 16, lineHeight: 1.6 }}>
               Escolha a data de encerramento para <strong>{modalEncerrar.nome}</strong>.<br />
               Plantões <em>a partir desta data</em> serão removidos. O histórico anterior é preservado.
@@ -660,7 +660,7 @@ export default function EscalasPage() {
                 style={{ flex: 1 }}
                 disabled={!dataEncerramento || deletando}
                 onClick={() => excluirEscala(modalEncerrar.id, 'encerrar_em', dataEncerramento)}
-              >{deletando ? '⏳ Encerrando...' : 'Confirmar Encerramento'}</button>
+              >{deletando ? ' Encerrando...' : 'Confirmar Encerramento'}</button>
             </div>
           </div>
         </div>
@@ -670,7 +670,7 @@ export default function EscalasPage() {
       {showProModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
           <div className="card" style={{ maxWidth: 400, width: '100%', textAlign: 'center' }}>
-            <span style={{ fontSize: 48, display: 'block', marginBottom: 16 }}>⭐</span>
+            <span style={{ fontSize: 48, display: 'block', marginBottom: 16 }}></span>
             <h2 style={{ fontSize: 20, fontWeight: 800, marginBottom: 8, color: 'var(--text-primary)' }}>Upgrade para o Pro</h2>
             <p style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 24, lineHeight: 1.5 }}>
               Você atingiu o limite de 2 locais do plano gratuito. Assine o Pro para gerenciar hospitais ilimitados!
