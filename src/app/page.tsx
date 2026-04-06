@@ -69,6 +69,7 @@ export default function DashboardPage() {
           *,
           local:locais_trabalho(*)
         `)
+        .eq('usuario_id', user.id)
         .gte('data_hora_inicio', hoje)
         .order('data_hora_inicio', { ascending: true })
         .limit(20);
@@ -97,6 +98,7 @@ export default function DashboardPage() {
       const { count: countMes } = await supabase
         .from('plantoes')
         .select('*', { count: 'exact', head: true })
+        .eq('usuario_id', user.id)
         .gte('data_hora_inicio', inicioMes)
         .lte('data_hora_inicio', fimMes)
         .neq('status', 'Cancelado');
@@ -107,6 +109,7 @@ export default function DashboardPage() {
       const { count: countLocais } = await supabase
         .from('locais_trabalho')
         .select('*', { count: 'exact', head: true })
+        .eq('usuario_id', user.id)
         .eq('ativo', true);
         
       setLocaisAtivos(countLocais || 0);
@@ -139,11 +142,15 @@ export default function DashboardPage() {
     setEscalaExportLoading(true);
     setEscalaExportPreview([]);
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      
       const inicioMes = new Date(anoNum, mesNum - 1, 1).toISOString();
       const fimMes = new Date(anoNum, mesNum, 0, 23, 59, 59).toISOString();
       const { data } = await supabase
         .from('plantoes')
         .select('*, local:locais_trabalho(*)')
+        .eq('usuario_id', user.id)
         .gte('data_hora_inicio', inicioMes)
         .lte('data_hora_inicio', fimMes)
         .neq('status', 'Cancelado')
@@ -474,7 +481,7 @@ export default function DashboardPage() {
                     <span style={{ display: 'inline-block', width: 14, height: 14, border: '2px solid rgba(124,58,237,0.4)', borderTopColor: 'var(--accent-violet)', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
                     Calculando...
                   </>
-                ) : '📄 Gerar PDF'}
+                ) : '📄 Ver Relatório'}
               </button>
             </div>
           </div>

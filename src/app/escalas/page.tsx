@@ -89,14 +89,19 @@ export default function EscalasPage() {
   const dataCompletaISO = (dataInicioSo && horaInicio) ? `${dataInicioSo}T${horaInicio}:00` : '';
 
   const fetchLocais = useCallback(async () => {
-    const { data } = await supabase.from('locais_trabalho').select('*').eq('ativo', true).order('nome');
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    const { data } = await supabase.from('locais_trabalho').select('*').eq('usuario_id', user.id).eq('ativo', true).order('nome');
     setLocais((data as LocalTrabalho[]) ?? []);
   }, []);
 
   const fetchEscalas = useCallback(async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
     const { data } = await supabase
       .from('escalas')
       .select('id, regra, data_inicio, local:locais_trabalho(nome, cor_calendario), plantoes(data_hora_inicio, data_hora_fim)')
+      .eq('usuario_id', user.id)
       .order('created_at', { ascending: false })
       .limit(1, { foreignTable: 'plantoes' });
     setEscalasAtivas((data as unknown as EscalaAtiva[]) ?? []);
@@ -132,7 +137,8 @@ export default function EscalasPage() {
     
     if (!isPro) {
       setSavingLocal(true);
-      const { count } = await supabase.from('locais_trabalho').select('*', { count: 'exact', head: true });
+      const { data: { user } } = await supabase.auth.getUser();
+      const { count } = await supabase.from('locais_trabalho').select('*', { count: 'exact', head: true }).eq('usuario_id', user?.id);
       if (count !== null && count >= 2) {
         setShowProModal(true);
         setSavingLocal(false);
@@ -142,7 +148,11 @@ export default function EscalasPage() {
       setSavingLocal(true);
     }
     
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
     const { data, error } = await supabase.from('locais_trabalho').insert({
+      usuario_id: user.id,
       nome: novoLocalNome.trim(),
       cor_calendario: novoLocalCor,
       endereco: novoLocalIsHomeCare ? null : novoLocalEndereco.trim(),

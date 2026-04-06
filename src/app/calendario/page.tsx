@@ -68,9 +68,12 @@ export default function CalendarioPage() {
     try {
       const inicioMes = new Date(ano, mes, 1).toISOString();
       const fimMes = new Date(ano, mes + 1, 0, 23, 59, 59).toISOString();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
       const { data } = await supabase
         .from('plantoes')
         .select('*, local:locais_trabalho(*)')
+        .eq('usuario_id', user.id)
         .gte('data_hora_inicio', inicioMes)
         .lte('data_hora_inicio', fimMes)
         .neq('status', 'Cancelado')
@@ -110,7 +113,9 @@ export default function CalendarioPage() {
     const id = modalExclusao.id;
     setPlantoes(prev => prev.filter(p => p.id !== id));
     setModalExclusao(null);
-    const { error } = await supabase.from('plantoes').delete().eq('id', id);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    const { error } = await supabase.from('plantoes').delete().eq('usuario_id', user.id).eq('id', id);
     if (error) {
       fetchPlantoes();
     } else {
@@ -222,9 +227,12 @@ export default function CalendarioPage() {
     try {
       const inicioMes = new Date(anoNum, mesNum - 1, 1).toISOString();
       const fimMes = new Date(anoNum, mesNum, 0, 23, 59, 59).toISOString();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
       const { data } = await supabase
         .from('plantoes')
         .select('*, local:locais_trabalho(*)')
+        .eq('usuario_id', user.id)
         .gte('data_hora_inicio', inicioMes)
         .lte('data_hora_inicio', fimMes)
         .neq('status', 'Cancelado')

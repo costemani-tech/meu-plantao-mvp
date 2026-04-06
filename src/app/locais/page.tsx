@@ -39,7 +39,9 @@ export default function LocaisPage() {
   };
 
   const fetchLocais = useCallback(async () => {
-    const { data } = await supabase.from('locais_trabalho').select('*').eq('ativo', true).order('nome');
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    const { data } = await supabase.from('locais_trabalho').select('*').eq('usuario_id', user.id).eq('ativo', true).order('nome');
     const locaisBuscados = (data as LocalTrabalho[]) ?? [];
     setLocais(locaisBuscados);
     setLimiteLocaisAtingido(locaisBuscados.length >= 2);
@@ -57,8 +59,12 @@ export default function LocaisPage() {
       return;
     }
 
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    
     setSaving(true);
     const { error } = await supabase.from('locais_trabalho').insert({ 
+      usuario_id: user.id,
       nome: nome.trim(), 
       cor_calendario: cor,
       endereco: isHomeCare ? null : endereco.trim(),
@@ -79,9 +85,12 @@ export default function LocaisPage() {
   };
 
   const excluirLocal = async (id: string, nomeLocal: string) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
     // Não conta os que ficarão intocados no passado, conta apenas os avisos que serão apagados (futuros)
     const { count } = await supabase.from('plantoes').select('*', { count: 'exact', head: true })
-      .eq('local_id', id).gt('data_hora_inicio', new Date().toISOString());
+      .eq('usuario_id', user.id).eq('local_id', id).gt('data_hora_inicio', new Date().toISOString());
     const numPlantoesFuturos = count || 0;
 
     if (!confirm(`Atenção: Ao arquivar '${nomeLocal}', todos os ${numPlantoesFuturos} plantões FUTUROS agendados nele serão cancelados. Os plantões antigos do relatório continuarão existindo. Deseja arquivá-lo?`)) return;
@@ -89,10 +98,10 @@ export default function LocaisPage() {
     const hojeISO = new Date().toISOString();
     
     // Deleta os plantões vinculados apenas do FUTURO (preserva histórico)
-    await supabase.from('plantoes').delete().eq('local_id', id).gt('data_hora_inicio', hojeISO);
+    await supabase.from('plantoes').delete().eq('usuario_id', user.id).eq('local_id', id).gt('data_hora_inicio', hojeISO);
     
     // Realiza o Soft Delete (Arquivamento) do Local
-    const { error } = await supabase.from('locais_trabalho').update({ ativo: false }).eq('id', id);
+    const { error } = await supabase.from('locais_trabalho').update({ ativo: false }).eq('usuario_id', user.id).eq('id', id);
     
     if (error) { 
       showToast('Erro ao excluir: ' + error.message, 'error');
@@ -107,11 +116,14 @@ export default function LocaisPage() {
     if (!localEmEdicao) return;
     if (!localEmEdicao.nome.trim()) { showToast('Informe o nome do local.', 'error'); return; }
 
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
     setSaving(true);
     const { error } = await supabase.from('locais_trabalho').update({
       nome: localEmEdicao.nome.trim(),
       endereco: localEmEdicao.is_home_care ? null : (localEmEdicao.endereco?.trim() || null)
-    }).eq('id', localEmEdicao.id);
+    }).eq('usuario_id', user.id).eq('id', localEmEdicao.id);
 
     if (error) {
       showToast('Erro ao atualizar: ' + error.message, 'error');

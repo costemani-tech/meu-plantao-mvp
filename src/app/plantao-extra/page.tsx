@@ -39,6 +39,7 @@ export default function PlantaoExtraPage() {
         const { count } = await supabase
           .from('plantoes')
           .select('id', { count: 'exact', head: true })
+          .eq('usuario_id', user.id)
           .eq('is_extra', true)
           .gte('data_hora_inicio', pInicioMes)
           .lte('data_hora_inicio', pFimMes)
@@ -53,7 +54,9 @@ export default function PlantaoExtraPage() {
   }, []);
 
   const fetchLocais = useCallback(async () => {
-    const { data } = await supabase.from('locais_trabalho').select('*').eq('ativo', true).order('nome');
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    const { data } = await supabase.from('locais_trabalho').select('*').eq('usuario_id', user.id).eq('ativo', true).order('nome');
     setLocais((data as LocalTrabalho[]) ?? []);
   }, []);
 
@@ -67,6 +70,12 @@ export default function PlantaoExtraPage() {
   const salvarPlantaoExtra = async (forcarConflito = false) => {
     if (!localId || !dataPlantao || !horaInicio || !horaFim) {
       showToast('Por favor, preencha todos os campos.', 'error');
+      return;
+    }
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      showToast('Sessão expirada. Faça login novamente.', 'error');
       return;
     }
 
@@ -86,6 +95,7 @@ export default function PlantaoExtraPage() {
         const { count } = await supabase
           .from('plantoes')
           .select('id', { count: 'exact', head: true })
+          .eq('usuario_id', user.id)
           .eq('is_extra', true)
           .gte('data_hora_inicio', pInicioMes)
           .lte('data_hora_inicio', pFimMes)
@@ -103,6 +113,7 @@ export default function PlantaoExtraPage() {
         const { data: existentes } = await supabase
           .from('plantoes')
           .select('id, data_hora_inicio, data_hora_fim')
+          .eq('usuario_id', user.id)
           .neq('status', 'Cancelado')
           .lt('data_hora_inicio', fimIso)
           .gt('data_hora_fim', inicioIso);
@@ -121,6 +132,7 @@ export default function PlantaoExtraPage() {
 
       const valorNumerico = tipoExtra === 'Remunerado' ? (parseFloat(valorGanho.replace(',', '.')) || 0) : 0;
       const { error } = await supabase.from('plantoes').insert({
+        usuario_id: user.id,
         local_id: localId,
         escala_id: null,
         data_hora_inicio: payload.inicioIso,

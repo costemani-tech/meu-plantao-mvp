@@ -54,6 +54,7 @@ function RelatorioContent() {
           id, data_hora_inicio, data_hora_fim, notas, is_extra, status,
           local:locais_trabalho(nome)
         `)
+        .eq('usuario_id', user.id)
         .eq('is_extra', true)
         .neq('status', 'Cancelado')
         .gte('data_hora_inicio', inicioMes)
