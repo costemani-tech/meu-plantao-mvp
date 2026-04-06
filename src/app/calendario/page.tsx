@@ -427,41 +427,7 @@ export default function CalendarioPage() {
         </div>
       </div>
 
-      {/* Mini-lista da semana/mês inteligente */}
-      <div style={{ marginTop: 24, marginBottom: 80 }}>
-        <h2 style={{ fontWeight: 700, marginBottom: 16, fontSize: 16 }}>
-          Próximos Plantões ({MESES[mes]})
-        </h2>
-        {plantoes.filter(p => new Date(p.data_hora_inicio).getTime() >= new Date().setHours(0,0,0,0)).slice(0, 5).length === 0 ? (
-          <div className="card">
-             <p style={{ color: 'var(--text-muted)', fontSize: 13, textAlign: 'center' }}>Nenhum plantão futuro para este mês.</p>
-          </div>
-        ) : (
-          <div className="shift-list">
-            {plantoes.filter(p => new Date(p.data_hora_inicio).getTime() >= new Date().setHours(0,0,0,0)).slice(0, 5).map(p => (
-              <div key={p.id} className="shift-item" onClick={() => setDiaSelecionado(new Date(p.data_hora_inicio).getDate())} style={{ cursor: 'pointer' }}>
-                <div className="shift-color-bar" style={{ backgroundColor: (p as unknown as { is_extra?: boolean; status_conflito?: boolean }).is_extra ? '#8b5cf6' : (p as unknown as { status_conflito?: boolean }).status_conflito ? '#f59e0b' : (p.local?.cor_calendario ?? '#4f8ef7') }} />
-                <div className="shift-info" style={{ flex: 1, padding: '4px 0' }}>
-                  <div className="shift-local" style={{ fontWeight: 700, fontSize: 13, color: 'var(--text-primary)', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
-                    {p.local?.nome ?? 'Local não informado'}
-                    {(p as unknown as { is_extra?: boolean }).is_extra && (
-                      <span style={{ fontSize: 10, fontWeight: 700, color: '#8b5cf6', background: 'rgba(139,92,246,0.12)', padding: '2px 6px', borderRadius: 4 }}> Extra</span>
-                    )}
-                  </div>
-                  <div className="shift-time" style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--text-secondary)' }}>
-                    <Calendar size={13} /> 
-                    <span style={{ textTransform: 'capitalize' }}>
-                      {new Date(p.data_hora_inicio).toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' }).replace('.', '')}
-                    </span>
-                    <Clock size={13} style={{ marginLeft: 6 }} /> 
-                    {new Date(p.data_hora_inicio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} às {new Date(p.data_hora_fim).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+
 
       {/* Modal Popup de Detalhes do Dia Selecionado */}
       {diaSelecionado !== null && (

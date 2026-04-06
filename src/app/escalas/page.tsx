@@ -38,6 +38,7 @@ interface EscalaAtiva {
   regra: string;
   data_inicio: string;
   local?: { nome: string; cor_calendario: string };
+  plantoes?: { data_hora_inicio: string; data_hora_fim: string }[];
 }
 
 const DESCRICAO_REGRA: Record<string, string> = {
@@ -95,8 +96,9 @@ export default function EscalasPage() {
   const fetchEscalas = useCallback(async () => {
     const { data } = await supabase
       .from('escalas')
-      .select('id, regra, data_inicio, local:locais_trabalho(nome, cor_calendario)')
-      .order('created_at', { ascending: false });
+      .select('id, regra, data_inicio, local:locais_trabalho(nome, cor_calendario), plantoes(data_hora_inicio, data_hora_fim)')
+      .order('created_at', { ascending: false })
+      .limit(1, { foreignTable: 'plantoes' });
     setEscalasAtivas((data as unknown as EscalaAtiva[]) ?? []);
   }, []);
 
@@ -559,19 +561,6 @@ export default function EscalasPage() {
               </div>
             )}
           </div>
-
-          {/* Info sobre o backend */}
-          <div className="card" style={{
-            marginTop: 16,
-            background: 'rgba(79,142,247,0.05)',
-            border: '1px solid rgba(79,142,247,0.15)',
-          }}>
-            <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.7 }}>
-              <strong style={{ color: 'var(--accent-blue)' }}> Processamento no servidor</strong><br />
-              O cálculo e a inserção são realizados via API Route Handler (backend) usando a Service Role Key,
-              garantindo segurança transacional e performance na geração de dezenas a centenas de plantões.
-            </div>
-          </div>
         </div>
       </div>
 
@@ -589,7 +578,9 @@ export default function EscalasPage() {
                   <div>
                     <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--text-primary)' }}>{e.local?.nome ?? 'Local desconhecido'}</div>
                     <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                      {e.regra} · a partir de {new Date(e.data_inicio + 'T12:00:00').toLocaleDateString('pt-BR')}
+                      {e.regra} • {
+                        e.plantoes?.[0] ? `${new Date(e.plantoes[0].data_hora_inicio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} às ${new Date(e.plantoes[0].data_hora_fim).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}` : '--:-- às --:--'
+                      } • Início: {new Date(e.data_inicio + 'T12:00:00').toLocaleDateString('pt-BR')}
                     </div>
                   </div>
                 </div>
