@@ -290,7 +290,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       {/* Botão flutuante de Sugestões VIP */}
       {pathname !== '/login' && (
         <a 
-          href="https://wa.me/5521991847945?text=Fala%20Vinicius%2C%20estou%20testando%20o%20app%20Meu%20Plant%C3%A3o%20e%20tenho%20uma%20sugest%C3%A3o%3A%20"
+          href="https://wa.me/5521991847945?text=Fala%20Costemani%2C%20estou%20testando%20o%20app%20Meu%20Plant%C3%A3o%20e%20tenho%20uma%20sugest%C3%A3o%3A%20"
           target="_blank"
           rel="noopener noreferrer"
           style={{
