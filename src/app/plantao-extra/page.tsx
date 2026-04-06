@@ -149,9 +149,7 @@ export default function PlantaoExtraPage() {
 
   return (
     <>
-      <div className="page-header">
-        <h1>Cadastrar Plantão Extra</h1>
-      </div>
+      {/* div.page-header removida para centralizar tudo no card a pedido do usuário */}
 
       <div className="mobile-stack" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 500px)', justifyContent: 'start' }}>
         <div className="card">
@@ -160,9 +158,9 @@ export default function PlantaoExtraPage() {
               
             </div>
             <div>
-              <h2 style={{ fontWeight: 700, fontSize: 18, margin: 0 }}>Novo Plantão Extra</h2>
+              <h2 style={{ fontWeight: 700, fontSize: 18, margin: 0 }}>Cadastrar Plantão Extra</h2>
               <span style={{ fontSize: 13, color: isPro ? '#059669' : '#d97706', fontWeight: 600 }}>
-                {isPro ? 'Acesso PRO: Lançamentos ilimitados liberados.' : 'Plano Free: Limite de 4 plantões extras por mês.'}
+                {isPro ? 'Cadastre seus plantões para controle financeiro.' : 'Plano Free: Limite de 4 plantões extras por mês.'}
               </span>
             </div>
           </div>
