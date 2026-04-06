@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react';
 import { LayoutDashboard, CalendarDays, Settings2, PlusCircle, LogOut, Sun, Moon, Activity, Bell } from 'lucide-react';
 
 const navItems = [
-  { icon: LayoutDashboard, label: 'Mission Control', href: '/' },
+  { icon: LayoutDashboard, label: 'Central de Plantões', href: '/' },
   { icon: CalendarDays, label: 'Calendário', href: '/calendario' },
   { icon: Settings2, label: 'Escalas', href: '/escalas' },
   { icon: PlusCircle, label: 'Plantão Extra', href: '/plantao-extra' },
@@ -258,7 +258,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             const Icon = item.icon;
             // Simplificando textos compridos para caber no rodapé do celular
             let shortLabel = item.label;
-            if (item.label === 'Mission Control') shortLabel = 'Início';
+            if (item.label === 'Central de Plantões') shortLabel = 'Início';
             if (item.label === 'Plantão Extra') shortLabel = 'Extra';
             
             return (

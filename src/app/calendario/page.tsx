@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { supabase, Plantao, LocalTrabalho } from '../../lib/supabase';
-import { Calendar, Clock, MoreVertical, Link, Check, LogOut } from 'lucide-react';
+import { Calendar, Clock, MoreVertical, Link, Check, LogOut, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import jsPDF from 'jspdf';
 
@@ -353,11 +353,15 @@ export default function CalendarioPage() {
           </p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <button className="btn btn-secondary" onClick={mesAnterior}>â†</button>
+          <button className="btn btn-secondary" onClick={mesAnterior} style={{ padding: "8px 12px" }}>
+            <ChevronLeft size={20} />
+          </button>
           <span style={{ fontWeight: 700, fontSize: 16, minWidth: 160, textAlign: 'center' }}>
             {MESES[mes]} {ano}
           </span>
-          <button className="btn btn-secondary" onClick={proximoMes}>→</button>
+          <button className="btn btn-secondary" onClick={proximoMes} style={{ padding: "8px 12px" }}>
+            <ChevronRight size={20} />
+          </button>
           
           <div style={{ position: 'relative' }}>
              <button onClick={() => setMenuAberto(!menuAberto)} className="btn btn-secondary" style={{ padding: '8px 12px' }}>

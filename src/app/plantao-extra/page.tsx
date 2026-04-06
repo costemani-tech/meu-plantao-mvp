@@ -150,8 +150,12 @@ export default function PlantaoExtraPage() {
   return (
     <>
       <div className="page-header">
-        <h1>Plantão Extra</h1>
-        <p>Cadastre aqui os plantões avulsos, substituições e ganhos extras fora da escala fixa.</p>
+        <h1>Cadastrar Plantão Extra</h1>
+        <p>
+          {isPro 
+            ? "Cadastre seus plantões e valores para seu controle financeiro." 
+            : "Plano Free: Cadastre até 4 plantões extras por mês."}
+        </p>
       </div>
 
       <div className="mobile-stack" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 500px)', justifyContent: 'start' }}>

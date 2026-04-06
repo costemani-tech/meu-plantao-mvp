@@ -128,22 +128,9 @@ export default function DashboardPage() {
 
   const gerarRelatorioFinanceiro = async () => {
     setIsCalculating(true);
-    try {
-      const res = await fetch(`/api/relatorios/financeiro?mes=${relatorioMes}&ano=${relatorioAno}`);
-      const json = await res.json();
-      if (!res.ok || json.error) {
-        showToast(json.message ?? 'Não foi possível gerar o relatório.', 'error');
-        return;
-      }
-      console.log('[Relatório Financeiro] Dados completos:', json);
-      const totalFormatado = json.total_geral.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-      alert(`✅ Total de Extras em ${relatorioMes}/${relatorioAno}: ${totalFormatado}\n\nDetalhes no console (F12).`);
-      setShowRelatorioModal(false);
-    } catch {
-      showToast('Erro de conexão. Verifique sua internet e tente novamente.', 'error');
-    } finally {
-      setIsCalculating(false);
-    }
+    router.push(`/relatorio?mes=${relatorioMes}&ano=${relatorioAno}`);
+    setShowRelatorioModal(false);
+    setIsCalculating(false);
   };
 
   const MESES_EXPORT = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
@@ -290,7 +277,7 @@ export default function DashboardPage() {
         <div>
           <h1 style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <Activity size={32} color="var(--accent-blue)" /> 
-            Mission Control
+            Central de Plantões
           </h1>
           <p>Visão estratégica das suas escalas — {loading && <span style={{ color: 'var(--accent-blue)', fontSize: 13 }}>⟳ Atualizando...</span>}</p>
         </div>
