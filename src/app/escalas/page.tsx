@@ -55,6 +55,12 @@ export default function EscalasPage() {
   const [dataInicioSo, setDataInicioSo] = useState('');
   const [horaInicio, setHoraInicio] = useState('07:00'); // valor padrão comum para plantões
   const [regra, setRegra] = useState<Regra>('12x36');
+  const [tipoJornada, setTipoJornada] = useState<'Plantonista' | 'Diarista'>('Plantonista');
+  const [regraDiarista, setRegraDiarista] = useState('5x2');
+  const [diasTrabalhoOutro, setDiasTrabalhoOutro] = useState('');
+  const [diasDescansoOutro, setDiasDescansoOutro] = useState('');
+  const [horaFim, setHoraFim] = useState('18:00');
+  const [dataTerminoSo, setDataTerminoSo] = useState(`${new Date().getFullYear()}-12-31`);
   const [isCustomRule, setIsCustomRule] = useState(false);
   const [horasTrabalhoOutro, setHorasTrabalhoOutro] = useState('');
   const [horasDescansoOutro, setHorasDescansoOutro] = useState('');
@@ -304,7 +310,7 @@ export default function EscalasPage() {
       });
       const resultado = await response.json();
       if (!response.ok) {
-        showToast('❌ ' + (resultado.error ?? 'Erro ao excluir escala.'), 'error');
+        showToast(' ' + (resultado.error ?? 'Erro ao excluir escala.'), 'error');
       } else {
         const msg = modo === 'completo'
           ? ' Escala excluída completamente!'
@@ -316,7 +322,7 @@ export default function EscalasPage() {
         window.dispatchEvent(new CustomEvent('plantoes-atualizados'));
       }
     } catch {
-      showToast('❌ Erro de conexão.', 'error');
+      showToast(' Erro de conexão.', 'error');
     }
     setDeletando(false);
     setMenuEscalaId(null);
@@ -329,7 +335,7 @@ export default function EscalasPage() {
     <>
       <div className="page-header">
         <h1>Configurar Escala </h1>
-        <p>Gera plantões automaticamente até <strong>31/12/{anoAtual}</strong></p>
+        <p>Configure a sua jornada, datas e locais de trabalho</p>
       </div>
 
       <div className="mobile-stack" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
@@ -436,7 +442,7 @@ export default function EscalasPage() {
           <div className="form-group mobile-stack" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <div>
               <label className="form-label" style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                📆 Dia do 1º Plantão *
+                Dia do 1º Plantão *
               </label>
               <input
                 type="date"
@@ -534,7 +540,7 @@ export default function EscalasPage() {
           }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }} onClick={() => setReceberAlerta(!receberAlerta)}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <span style={{ fontSize: 18 }}>🔔</span>
+                <span style={{ fontSize: 18 }}></span>
                 <div>
                   <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>Alertas no Celular</div>
                   <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Deseja receber avisos destes plantões?</div>

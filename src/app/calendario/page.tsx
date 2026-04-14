@@ -355,9 +355,9 @@ export default function CalendarioPage() {
     <>
       <div className="page-header mobile-col" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
-          <h1>Calendário </h1>
+          <h1>Calendário</h1>
           <p>
-            Visualize seus plantões — {loading && <span style={{ color: 'var(--accent-blue)', fontSize: 13 }}>⟳ Atualizando...</span>}
+            Visualize seus plantões — {loading && <span style={{ color: 'var(--accent-blue)', fontSize: 13 }}>Atualizando...</span>}
           </p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -509,7 +509,7 @@ export default function CalendarioPage() {
                         rel="noreferrer"
                         style={{ display: 'inline-block', marginTop: 12, fontSize: 12, color: 'var(--accent-blue)', textDecoration: 'none', fontWeight: 600 }}
                       >
-                        Abrir Rota no Mapa ↗
+                        Abrir Rota no Mapa 
                       </a>
                     )}
                   </div>

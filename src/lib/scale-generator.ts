@@ -30,21 +30,43 @@ function parseRegra(regra: Regra): { duracaoTrabalho: number; cicloHoras: number
 export function gerarProximosPlantoes(
   dataInicio: Date,
   regra: Regra,
+  tipoJornada: string = 'Plantonista',
+  horaFim: string = '18:00',
   quantidade: number = 5
 ): SlotPlantao[] {
-  const { duracaoTrabalho, cicloHoras } = parseRegra(regra);
   const slots: SlotPlantao[] = [];
-
   const cursor = new Date(dataInicio);
 
-  for (let i = 0; i < quantidade; i++) {
-    const inicio = new Date(cursor);
-    const fim = new Date(cursor);
-    fim.setHours(fim.getHours() + duracaoTrabalho);
+  if (tipoJornada === 'Plantonista') {
+    const parts = regra.split('x');
+    const duracaoTrabalho = parseInt(parts[0], 10);
+    const duracaoDescanso = parseInt(parts[1], 10);
+    const cicloHoras = duracaoTrabalho + duracaoDescanso;
 
-    slots.push({ inicio, fim });
-
-    cursor.setHours(cursor.getHours() + cicloHoras);
+    for (let i = 0; i < quantidade; i++) {
+      const inicio = new Date(cursor);
+      const fim = new Date(cursor);
+      fim.setHours(fim.getHours() + duracaoTrabalho);
+      slots.push({ inicio, fim });
+      cursor.setHours(cursor.getHours() + cicloHoras);
+    }
+  } else {
+    const [dTrabalho, dDescanso] = regra.split('x').map(n => parseInt(n, 10));
+    const [hFim, mFim] = horaFim.split(':').map(Number);
+    const cicloDias = (dTrabalho || 5) + (dDescanso || 2);
+    let idx = 0;
+    
+    while (slots.length < quantidade) {
+      if (idx < (dTrabalho || 5)) {
+        const inicio = new Date(cursor);
+        const fim = new Date(cursor);
+        fim.setHours(hFim, mFim, 0, 0);
+        if (fim <= inicio) fim.setDate(fim.getDate() + 1);
+        slots.push({ inicio, fim });
+      }
+      cursor.setDate(cursor.getDate() + 1);
+      idx = (idx + 1) % cicloDias;
+    }
   }
 
   return slots;
