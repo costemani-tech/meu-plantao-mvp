@@ -466,6 +466,27 @@ export default function EscalasPage() {
             </div>
           </div>
 
+          <div className="form-group" style={{ marginBottom: 20 }}>
+            <label className="form-label">Tipo de Jornada</label>
+            <div style={{ display: 'flex', gap: 12 }}>
+              <button 
+                className={`btn ${tipoJornada === 'Plantonista' ? 'btn-primary' : 'btn-secondary'}`} 
+                style={{ flex: 1 }} 
+                onClick={() => setTipoJornada('Plantonista')}
+              >
+                Plantonista
+              </button>
+              <button 
+                className={`btn ${tipoJornada === 'Diarista' ? 'btn-primary' : 'btn-secondary'}`} 
+                style={{ flex: 1 }} 
+                onClick={() => setTipoJornada('Diarista')}
+              >
+                Diarista
+              </button>
+            </div>
+          </div>
+
+          {tipoJornada === 'Plantonista' ? (
           <div className="form-group">
             <label className="form-label">Regra de Escala *</label>
             <select
@@ -527,6 +548,41 @@ export default function EscalasPage() {
                 <p style={{ gridColumn: '1 / -1', fontSize: 11, color: 'var(--text-muted)', margin: 0 }}>
                   Ciclo total: {(parseInt(horasTrabalhoOutro,10)||0) + (parseInt(horasDescansoOutro,10)||0)}h &nbsp;·&nbsp; Formato gerado: <strong style={{ color: 'var(--text-secondary)' }}>{horasTrabalhoOutro||'?'}x{horasDescansoOutro||'?'}</strong>
                 </p>
+              </div>
+            )}
+          </div>
+          ) : (
+          <div className="form-group">
+            <label className="form-label">Dias Trabalhados vs Folga *</label>
+            <select className="form-select" value={regraDiarista} onChange={e => setRegraDiarista(e.target.value)}>
+                <option value="5x2">5 Dias Trabalho / 2 Dias Folga (Ex: Seg-Sex)</option>
+                <option value="6x1">6 Dias Trabalho / 1 Dia Folga</option>
+                <option value="Outro">Outro (Personalizado)</option>
+            </select>
+            {regraDiarista === 'Outro' && (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 12, padding: 16, background: 'var(--bg-secondary)', borderRadius: 12, border: '1px solid var(--border-subtle)' }}>
+                <div>
+                  <label className="form-label" style={{ fontSize: 11, letterSpacing: '0.05em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Dias Seq. Trabalho</label>
+                  <input type="number" min="1" className="form-input" value={diasTrabalhoOutro} onChange={e => setDiasTrabalhoOutro(e.target.value)} placeholder="Ex: 4" style={{ marginTop: 4, background: 'var(--bg-primary)', border: '1px solid var(--border-subtle)', borderRadius: 8, padding: '10px 12px', width: '100%' }} />
+                </div>
+                <div>
+                  <label className="form-label" style={{ fontSize: 11, letterSpacing: '0.05em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Dias Seq. Folga</label>
+                  <input type="number" min="1" className="form-input" value={diasDescansoOutro} onChange={e => setDiasDescansoOutro(e.target.value)} placeholder="Ex: 3" style={{ marginTop: 4, background: 'var(--bg-primary)', border: '1px solid var(--border-subtle)', borderRadius: 8, padding: '10px 12px', width: '100%' }} />
+                </div>
+              </div>
+            )}
+          </div>
+          )}
+
+          <div className="mobile-stack" style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 12 }}>
+            <div className="form-group" style={{ marginBottom: 0 }}>
+              <label className="form-label">Data de Término do Ciclo *</label>
+              <input type="date" className="form-input" value={dataTerminoSo} onChange={e => setDataTerminoSo(e.target.value)} />
+            </div>
+            {tipoJornada === 'Diarista' && (
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Hora de Término (Saída) *</label>
+                <input type="time" className="form-input" value={horaFim} onChange={e => setHoraFim(e.target.value)} />
               </div>
             )}
           </div>
