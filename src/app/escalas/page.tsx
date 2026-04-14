@@ -242,15 +242,12 @@ export default function EscalasPage() {
         }
 
         if (receberAlerta) {
-          const pushHeader = {
-            "Content-Type": "application/json; charset=utf-8",
-            "Authorization": `Basic ${process.env.NEXT_PUBLIC_ONESIGNAL_REST_KEY || 'SUA_REST_API_KEY'}`
-          };
-          
           const localSelecionado = locais.find(l => l.id === localId);
           const nomeLocal = localSelecionado?.nome || 'seu local de trabalho';
 
-          const pushPromises = arrayDePlantoes.map(async (plantao) => {
+          const pushNotifications: any[] = [];
+
+          arrayDePlantoes.forEach((plantao) => {
             const startDate = new Date(plantao.data_hora_inicio);
             const antecedencia = parseInt(tempoAlerta, 10);
             const sendAfter = new Date(startDate.getTime() - antecedencia * 60 * 60 * 1000);
@@ -258,24 +255,26 @@ export default function EscalasPage() {
             if (sendAfter > new Date()) {
               const horaStr = startDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
               
-              return fetch('https://onesignal.com/api/v1/notifications', {
-                method: 'POST',
-                headers: pushHeader,
-                body: JSON.stringify({
-                  app_id: process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID || "SUA_CHAVE_ONESIGNAL",
-                  include_external_user_ids: [user.id],
-                  headings: { "en": "Alerta de Plantão", "pt": "Alerta de Plantão" },
-                  contents: { 
-                    "en": `Seu plantão em ${nomeLocal} começa em breve (às ${horaStr}). Bom trabalho!`,
-                    "pt": `Seu plantão em ${nomeLocal} começa em breve (às ${horaStr}). Bom trabalho!`
-                  },
-                  send_after: sendAfter.toISOString()
-                })
-              }).catch(() => {});
+              pushNotifications.push({
+                app_id: process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID || "SUA_CHAVE_ONESIGNAL",
+                include_external_user_ids: [user.id],
+                headings: { "en": "Alerta de Plantão", "pt": "Alerta de Plantão" },
+                contents: { 
+                  "en": `Seu plantão em ${nomeLocal} começa em breve (às ${horaStr}). Bom trabalho!`,
+                  "pt": `Seu plantão em ${nomeLocal} começa em breve (às ${horaStr}). Bom trabalho!`
+                },
+                send_after: sendAfter.toISOString()
+              });
             }
           });
           
-          await Promise.all(pushPromises);
+          if (pushNotifications.length > 0) {
+            await fetch('/api/onesignal', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ notifications: pushNotifications })
+            }).catch(() => {});
+          }
         }
       }
 
