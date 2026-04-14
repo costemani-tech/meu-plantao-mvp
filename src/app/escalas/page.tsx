@@ -59,6 +59,9 @@ export default function EscalasPage() {
   const [horasTrabalhoOutro, setHorasTrabalhoOutro] = useState('');
   const [horasDescansoOutro, setHorasDescansoOutro] = useState('');
 
+  const [receberAlerta, setReceberAlerta] = useState(false);
+  const [tempoAlerta, setTempoAlerta] = useState('2');
+
   const [isCreatingLocal, setIsCreatingLocal] = useState(false);
   const [novoLocalNome, setNovoLocalNome] = useState('');
   const [novoLocalIsHomeCare, setNovoLocalIsHomeCare] = useState(false);
@@ -236,6 +239,43 @@ export default function EscalasPage() {
         if (erroInsert) {
           await supabase.from('escalas').delete().eq('id', escalaCriada.id);
           throw erroInsert;
+        }
+
+        if (receberAlerta) {
+          const pushHeader = {
+            "Content-Type": "application/json; charset=utf-8",
+            "Authorization": `Basic ${process.env.NEXT_PUBLIC_ONESIGNAL_REST_KEY || 'SUA_REST_API_KEY'}`
+          };
+          
+          const localSelecionado = locais.find(l => l.id === localId);
+          const nomeLocal = localSelecionado?.nome || 'seu local de trabalho';
+
+          const pushPromises = arrayDePlantoes.map(async (plantao) => {
+            const startDate = new Date(plantao.data_hora_inicio);
+            const antecedencia = parseInt(tempoAlerta, 10);
+            const sendAfter = new Date(startDate.getTime() - antecedencia * 60 * 60 * 1000);
+            
+            if (sendAfter > new Date()) {
+              const horaStr = startDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+              
+              return fetch('https://onesignal.com/api/v1/notifications', {
+                method: 'POST',
+                headers: pushHeader,
+                body: JSON.stringify({
+                  app_id: process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID || "SUA_CHAVE_ONESIGNAL",
+                  include_external_user_ids: [user.id],
+                  headings: { "en": "Alerta de Plantão", "pt": "Alerta de Plantão" },
+                  contents: { 
+                    "en": `Seu plantão em ${nomeLocal} começa em breve (às ${horaStr}). Bom trabalho!`,
+                    "pt": `Seu plantão em ${nomeLocal} começa em breve (às ${horaStr}). Bom trabalho!`
+                  },
+                  send_after: sendAfter.toISOString()
+                })
+              }).catch(() => {});
+            }
+          });
+          
+          await Promise.all(pushPromises);
         }
       }
 
@@ -482,6 +522,53 @@ export default function EscalasPage() {
                 <p style={{ gridColumn: '1 / -1', fontSize: 11, color: 'var(--text-muted)', margin: 0 }}>
                   Ciclo total: {(parseInt(horasTrabalhoOutro,10)||0) + (parseInt(horasDescansoOutro,10)||0)}h &nbsp;·&nbsp; Formato gerado: <strong style={{ color: 'var(--text-secondary)' }}>{horasTrabalhoOutro||'?'}x{horasDescansoOutro||'?'}</strong>
                 </p>
+              </div>
+            )}
+          </div>
+
+          <div className="form-group" style={{ 
+            marginTop: 16, 
+            padding: 16, 
+            background: 'var(--bg-secondary)', 
+            borderRadius: 12, 
+            border: '1px solid var(--border-subtle)' 
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }} onClick={() => setReceberAlerta(!receberAlerta)}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span style={{ fontSize: 18 }}>🔔</span>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>Alertas no Celular</div>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Deseja receber avisos destes plantões?</div>
+                </div>
+              </div>
+              <div style={{
+                width: 44, height: 24, borderRadius: 12, background: receberAlerta ? 'var(--accent-teal)' : 'var(--border-subtle)',
+                position: 'relative', transition: 'background 0.3s'
+              }}>
+                <div style={{
+                  width: 20, height: 20, borderRadius: '50%', background: 'white', position: 'absolute', top: 2, left: receberAlerta ? 22 : 2,
+                  transition: 'left 0.3s', boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                }} />
+              </div>
+            </div>
+
+            {receberAlerta && (
+              <div style={{ marginTop: 16, animation: 'fadeInDown 0.3s ease' }}>
+                <label className="form-label" style={{ fontSize: 12, marginBottom: 8, display: 'block' }}>Avisar com qual antecedência?</label>
+                <select 
+                  className="form-select w-full" 
+                  value={tempoAlerta} 
+                  onChange={e => setTempoAlerta(e.target.value)}
+                  style={{ background: 'var(--bg-primary)', padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--border-subtle)', outline: 'none', transition: 'all 0.2s ease', cursor: 'pointer', color: 'var(--text-primary)' }}
+                  onFocus={(e) => e.target.style.borderColor = 'var(--accent-teal)'}
+                  onBlur={(e) => e.target.style.borderColor = 'var(--border-subtle)'}
+                >
+                  <option value="1">1 Hora antes</option>
+                  <option value="2">2 Horas antes</option>
+                  <option value="4">4 Horas antes</option>
+                  <option value="8">8 Horas antes</option>
+                  <option value="12">12 Horas antes</option>
+                </select>
               </div>
             )}
           </div>
