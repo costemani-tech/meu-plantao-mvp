@@ -57,6 +57,7 @@ export default function EscalasPage() {
   const [regra, setRegra] = useState<Regra>('12x36');
   const [tipoJornada, setTipoJornada] = useState<'Plantonista' | 'Diarista'>('Plantonista');
   const [regraDiarista, setRegraDiarista] = useState('5x2');
+  const [diasDiarista, setDiasDiarista] = useState<{ [key: string]: boolean }>({ d0: false, d1: true, d2: true, d3: true, d4: true, d5: true, d6: false });
   const [diasTrabalhoOutro, setDiasTrabalhoOutro] = useState('');
   const [diasDescansoOutro, setDiasDescansoOutro] = useState('');
   const [horaFim, setHoraFim] = useState('18:00');
@@ -344,237 +345,26 @@ export default function EscalasPage() {
           <h2 style={{ fontWeight: 700, marginBottom: 20, fontSize: 16 }}>Nova Escala</h2>
 
           <div className="form-group">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-              <label className="form-label" style={{ margin: 0 }}>Local de Trabalho *</label>
-              <button
-                type="button"
-                onClick={() => setIsCreatingLocal(!isCreatingLocal)}
-                style={{ background: 'none', border: 'none', color: 'var(--accent-blue)', fontSize: 13, fontWeight: 600, cursor: 'pointer', padding: 0 }}
-              >
-                {isCreatingLocal ? 'Cancelar' : ' Criar Novo'}
-              </button>
+            <label className="form-label">Dias da Semana Trabalhados *</label>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 4 }}>
+                {[
+                  { id: 'd1', label: 'Seg' }, { id: 'd2', label: 'Ter' }, { id: 'd3', label: 'Qua' },
+                  { id: 'd4', label: 'Qui' }, { id: 'd5', label: 'Sex' }, { id: 'd6', label: 'Sáb' }, { id: 'd0', label: 'Dom' }
+                ].map(d => (
+                  <button 
+                    key={d.id} 
+                    className={`btn ${diasDiarista[d.id] ? 'btn-primary' : ''}`}
+                    style={{ flex: 1, padding: '8px 4px', fontSize: 13, background: !diasDiarista[d.id] ? 'var(--bg-secondary)' : undefined, border: !diasDiarista[d.id] ? '1px solid var(--border-subtle)' : undefined, color: !diasDiarista[d.id] ? 'var(--text-primary)' : undefined }}
+                    onClick={() => setDiasDiarista(prev => ({ ...prev, [d.id]: !prev[d.id] }))}
+                  >
+                    {d.label}
+                  </button>
+                ))}
             </div>
-
-            {isCreatingLocal ? (
-              <div style={{ padding: 12, border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-md)', background: 'var(--bg-secondary)', marginBottom: 8 }}>
-                <input
-                  type="text"
-                  className="form-input"
-                  placeholder="Nome do novo local"
-                  value={novoLocalNome}
-                  onChange={e => setNovoLocalNome(e.target.value)}
-                  style={{ marginBottom: 8 }}
-                />
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-                  <input
-                    type="checkbox"
-                    id="homecareCheckbox"
-                    checked={novoLocalIsHomeCare}
-                    onChange={e => setNovoLocalIsHomeCare(e.target.checked)}
-                    style={{ width: 16, height: 16, accentColor: 'var(--accent-teal)' }}
-                  />
-                  <label htmlFor="homecareCheckbox" style={{ fontSize: 13, color: 'var(--text-secondary)', cursor: 'pointer' }}>
-                    É atendimento <strong>Home Care</strong> 
-                  </label>
-                </div>
-
-                {!novoLocalIsHomeCare && (
-                  <div style={{ marginBottom: 12 }}>
-                    <label className="form-label" style={{ fontSize: 12 }}>Endereço (Opcional)</label>
-                    <input
-                      type="text"
-                      className="form-input"
-                      placeholder="Ex: Av. Paulista, 1000 - Bela Vista"
-                      value={novoLocalEndereco}
-                      onChange={e => setNovoLocalEndereco(e.target.value)}
-                    />
-                  </div>
-                )}
-
-                <div style={{ marginBottom: 16 }}>
-                  <label className="form-label" style={{ fontSize: 12 }}>Cor no Calendário</label>
-                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 4 }}>
-                    {CORES_PRESET.map(c => (
-                      <button
-                        type="button"
-                        key={c}
-                        onClick={() => setNovoLocalCor(c)}
-                        style={{
-                          width: 24,
-                          height: 24,
-                          borderRadius: '50%',
-                          background: c,
-                          border: novoLocalCor === c ? '2px solid white' : '2px solid transparent',
-                          boxShadow: novoLocalCor === c ? '0 0 0 1px var(--text-primary)' : 'none',
-                          cursor: 'pointer',
-                          padding: 0
-                        }}
-                        title="Escolher Cor"
-                      />
-                    ))}
-                  </div>
-                </div>
-
-                <button
-                  className="btn btn-primary"
-                  onClick={salvarNovoLocal}
-                  disabled={savingLocal}
-                  style={{ width: '100%', padding: '6px 12px', fontSize: 13 }}
-                >
-                  {savingLocal ? ' Salvando...' : 'Salvar e Selecionar'}
-                </button>
-              </div>
-            ) : (
-              <>
-                <select className="form-select" value={localId} onChange={e => setLocalId(e.target.value)}>
-                  <option value="">Selecione um local...</option>
-                  {locais.map(l => <option key={l.id} value={l.id}>{l.nome}</option>)}
-                </select>
-                {locais.length === 0 && (
-                  <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6 }}>
-                    Ainda não há locais. Clique em &quot;Criar Novo&quot; acima.
-                  </p>
-                )}
-              </>
-            )}
-          </div>
-
-          <div className="form-group mobile-stack" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-            <div>
-              <label className="form-label" style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                Dia do 1º Plantão *
-              </label>
-              <input
-                type="date"
-                className="form-input"
-                style={{ cursor: 'pointer' }}
-                value={dataInicioSo}
-                onChange={e => setDataInicioSo(e.target.value)}
-              />
-            </div>
-            <div>
-              <label className="form-label" style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                 Horário de Início *
-              </label>
-              <input
-                type="time"
-                className="form-input"
-                style={{ cursor: 'pointer' }}
-                value={horaInicio}
-                onChange={e => setHoraInicio(e.target.value)}
-              />
-            </div>
-          </div>
-
-          <div className="form-group" style={{ marginBottom: 20 }}>
-            <label className="form-label">Tipo de Jornada</label>
-            <div style={{ display: 'flex', gap: 12 }}>
-              <button 
-                className={`btn ${tipoJornada === 'Plantonista' ? 'btn-primary' : 'btn-secondary'}`} 
-                style={{ flex: 1 }} 
-                onClick={() => setTipoJornada('Plantonista')}
-              >
-                Plantonista
-              </button>
-              <button 
-                className={`btn ${tipoJornada === 'Diarista' ? 'btn-primary' : 'btn-secondary'}`} 
-                style={{ flex: 1 }} 
-                onClick={() => setTipoJornada('Diarista')}
-              >
-                Diarista
-              </button>
-            </div>
-          </div>
-
-          {tipoJornada === 'Plantonista' ? (
-          <div className="form-group">
-            <label className="form-label">Regra de Escala *</label>
-            <select
-              className="form-select"
-              value={regra}
-              onChange={e => {
-                const v = e.target.value;
-                setRegra(v);
-                setIsCustomRule(v === 'Outro');
-                if (v !== 'Outro') { setHorasTrabalhoOutro(''); setHorasDescansoOutro(''); }
-              }}
-            >
-              {REGRAS_PADRAO.map(r => (
-                <option key={r.value} value={r.value}>{r.label}</option>
-              ))}
-            </select>
-            <p style={{ fontSize: 12, color: 'var(--accent-teal)', marginTop: 6, fontWeight: 500 }}>
-              {DESCRICAO_REGRA[regra] ?? 'Personalize suas horas de trabalho e folga'}
-            </p>
-
-            {isCustomRule && (
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: '1fr 1fr',
-                  gap: 12,
-                  marginTop: 12,
-                  padding: 16,
-                  background: 'var(--bg-secondary)',
-                  borderRadius: 12,
-                  border: '1px solid var(--border-subtle)',
-                  animation: 'fadeInDown 0.2s ease',
-                }}
-              >
-                <div>
-                  <label className="form-label" style={{ fontSize: 11, letterSpacing: '0.05em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Horas Trabalhadas</label>
-                  <input
-                    type="number"
-                    min="1"
-                    className="form-input"
-                    value={horasTrabalhoOutro}
-                    onChange={e => setHorasTrabalhoOutro(e.target.value)}
-                    placeholder="Ex: 12"
-                    style={{ marginTop: 4, background: 'var(--bg-primary)', border: '1px solid var(--border-subtle)', borderRadius: 8, padding: '10px 12px', fontSize: 14, color: 'var(--text-primary)', width: '100%', boxSizing: 'border-box' }}
-                  />
-                </div>
-                <div>
-                  <label className="form-label" style={{ fontSize: 11, letterSpacing: '0.05em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Horas de Descanso</label>
-                  <input
-                    type="number"
-                    min="1"
-                    className="form-input"
-                    value={horasDescansoOutro}
-                    onChange={e => setHorasDescansoOutro(e.target.value)}
-                    placeholder="Ex: 60"
-                    style={{ marginTop: 4, background: 'var(--bg-primary)', border: '1px solid var(--border-subtle)', borderRadius: 8, padding: '10px 12px', fontSize: 14, color: 'var(--text-primary)', width: '100%', boxSizing: 'border-box' }}
-                  />
-                </div>
-                <p style={{ gridColumn: '1 / -1', fontSize: 11, color: 'var(--text-muted)', margin: 0 }}>
-                  Ciclo total: {(parseInt(horasTrabalhoOutro,10)||0) + (parseInt(horasDescansoOutro,10)||0)}h &nbsp;·&nbsp; Formato gerado: <strong style={{ color: 'var(--text-secondary)' }}>{horasTrabalhoOutro||'?'}x{horasDescansoOutro||'?'}</strong>
-                </p>
-              </div>
-            )}
-          </div>
-          ) : (
-          <div className="form-group">
-            <label className="form-label">Dias Trabalhados vs Folga *</label>
-            <select className="form-select" value={regraDiarista} onChange={e => setRegraDiarista(e.target.value)}>
-                <option value="5x2">5 Dias Trabalho / 2 Dias Folga (Ex: Seg-Sex)</option>
-                <option value="6x1">6 Dias Trabalho / 1 Dia Folga</option>
-                <option value="Outro">Outro (Personalizado)</option>
-            </select>
-            {regraDiarista === 'Outro' && (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 12, padding: 16, background: 'var(--bg-secondary)', borderRadius: 12, border: '1px solid var(--border-subtle)' }}>
-                <div>
-                  <label className="form-label" style={{ fontSize: 11, letterSpacing: '0.05em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Dias Seq. Trabalho</label>
-                  <input type="number" min="1" className="form-input" value={diasTrabalhoOutro} onChange={e => setDiasTrabalhoOutro(e.target.value)} placeholder="Ex: 4" style={{ marginTop: 4, background: 'var(--bg-primary)', border: '1px solid var(--border-subtle)', borderRadius: 8, padding: '10px 12px', width: '100%' }} />
-                </div>
-                <div>
-                  <label className="form-label" style={{ fontSize: 11, letterSpacing: '0.05em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Dias Seq. Folga</label>
-                  <input type="number" min="1" className="form-input" value={diasDescansoOutro} onChange={e => setDiasDescansoOutro(e.target.value)} placeholder="Ex: 3" style={{ marginTop: 4, background: 'var(--bg-primary)', border: '1px solid var(--border-subtle)', borderRadius: 8, padding: '10px 12px', width: '100%' }} />
-                </div>
-              </div>
-            )}
           </div>
           )}
 
-          <div className="mobile-stack" style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 12 }}>
+          <div className="mobile-stack" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 16 }}>
             <div className="form-group" style={{ marginBottom: 0 }}>
               <label className="form-label">Data de Término do Ciclo *</label>
               <input type="date" className="form-input" value={dataTerminoSo} onChange={e => setDataTerminoSo(e.target.value)} />
@@ -585,109 +375,7 @@ export default function EscalasPage() {
                 <input type="time" className="form-input" value={horaFim} onChange={e => setHoraFim(e.target.value)} />
               </div>
             )}
-          </div>
-
-          <div className="form-group" style={{ 
-            marginTop: 16, 
-            padding: 16, 
-            background: 'var(--bg-secondary)', 
-            borderRadius: 12, 
-            border: '1px solid var(--border-subtle)' 
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }} onClick={() => setReceberAlerta(!receberAlerta)}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <span style={{ fontSize: 18 }}></span>
-                <div>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>Alertas no Celular</div>
-                  <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Deseja receber avisos destes plantões?</div>
-                </div>
-              </div>
-              <div style={{
-                width: 44, height: 24, borderRadius: 12, background: receberAlerta ? 'var(--accent-teal)' : 'var(--border-subtle)',
-                position: 'relative', transition: 'background 0.3s'
-              }}>
-                <div style={{
-                  width: 20, height: 20, borderRadius: '50%', background: 'white', position: 'absolute', top: 2, left: receberAlerta ? 22 : 2,
-                  transition: 'left 0.3s', boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
-                }} />
-              </div>
-            </div>
-
-            {receberAlerta && (
-              <div style={{ marginTop: 16, animation: 'fadeInDown 0.3s ease' }}>
-                <label className="form-label" style={{ fontSize: 12, marginBottom: 8, display: 'block' }}>Avisar com qual antecedência?</label>
-                <select 
-                  className="form-select w-full" 
-                  value={tempoAlerta} 
-                  onChange={e => setTempoAlerta(e.target.value)}
-                  style={{ background: 'var(--bg-primary)', padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--border-subtle)', outline: 'none', transition: 'all 0.2s ease', cursor: 'pointer', color: 'var(--text-primary)' }}
-                  onFocus={(e) => e.target.style.borderColor = 'var(--accent-teal)'}
-                  onBlur={(e) => e.target.style.borderColor = 'var(--border-subtle)'}
-                >
-                  <option value="1">1 Hora antes</option>
-                  <option value="2">2 Horas antes</option>
-                  <option value="4">4 Horas antes</option>
-                  <option value="8">8 Horas antes</option>
-                  <option value="12">12 Horas antes</option>
-                </select>
-              </div>
-            )}
-          </div>
-
-          <button
-            className="btn btn-primary"
-            style={{ width: '100%', justifyContent: 'center', marginTop: 8 }}
-            onClick={() => salvarEscala()}
-            disabled={saving || (isCustomRule && (!(parseInt(horasTrabalhoOutro,10) > 0) || !(parseInt(horasDescansoOutro,10) > 0)))}
-          >
-            {saving ? ' Processando no servidor...' : ' Criar Escala e Gerar Plantões'}
-          </button>
-
-          {/* Resultado da última geração */}
-          {ultimoResultado?.success && (
-            <div style={{
-              marginTop: 16,
-              padding: '14px 16px',
-              background: 'rgba(34,197,94,0.08)',
-              border: '1px solid rgba(34,197,94,0.2)',
-              borderRadius: 'var(--radius-md)',
-              fontSize: 13,
-            }}>
-              <div style={{ fontWeight: 700, color: 'var(--accent-green)', marginBottom: 6 }}>
-                 Escala criada com sucesso!
-              </div>
-              <div style={{ color: 'var(--text-secondary)', lineHeight: 1.7 }}>
-                <span> <strong>{ultimoResultado.total_plantoes}</strong> plantões gerados</span><br />
-                <span>📅 Até <strong>{ultimoResultado.periodo_ate}</strong></span><br />
-                <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
-                  O Calendário foi atualizado automaticamente.
-                </span>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Preview */}
-        <div>
-          <div className="card" style={{ height: 'fit-content' }}>
-            <h2 style={{ fontWeight: 700, marginBottom: 4, fontSize: 16 }}>Preview das Próximas Datas</h2>
-            <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 16 }}>
-              As 5 primeiras datas projetadas — calculadas em tempo real
-            </p>
-
-            {preview.length > 0 ? (
-              <div className="dates-preview">
-                <div className="dates-preview-title">
-                  📆 Próximas 5 ocorrências — {regra}
-                </div>
-                {preview.map((slot, i) => (
-                  <div key={i} className="date-preview-item" style={{
-                    display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 6px', borderBottom: '1px solid var(--border-subtle)'
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                      <div className="date-preview-num" style={{ fontWeight: 800, color: 'var(--text-muted)' }}>#{i + 1}</div>
-                      <div className="date-preview-date" style={{ fontWeight: 600, color: 'var(--text-primary)', display: 'flex', gap: 6, alignItems: 'center' }}>
-                        {new Date(slot.inicio).toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit', year: '2-digit' })}
+          </div>}
                         <span style={{ color: 'var(--text-secondary)' }}>
                           {new Date(slot.inicio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                         </span>
