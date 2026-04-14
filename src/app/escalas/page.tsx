@@ -57,10 +57,12 @@ export default function EscalasPage() {
   const [regra, setRegra] = useState<Regra>('12x36');
   const [tipoJornada, setTipoJornada] = useState<'Plantonista' | 'Diarista'>('Plantonista');
   const [regraDiarista, setRegraDiarista] = useState('5x2');
+  const [diasDiarista, setDiasDiarista] = useState<{ [key: string]: boolean }>({ d0: false, d1: true, d2: true, d3: true, d4: true, d5: true, d6: false });
+  const anoAtualLocal = new Date().getFullYear();
+  const [dataTerminoSo, setDataTerminoSo] = useState(`${anoAtualLocal}-12-31`);
   const [diasTrabalhoOutro, setDiasTrabalhoOutro] = useState('');
   const [diasDescansoOutro, setDiasDescansoOutro] = useState('');
   const [horaFim, setHoraFim] = useState('18:00');
-  const [dataTerminoSo, setDataTerminoSo] = useState(`${new Date().getFullYear()}-12-31`);
   const [isCustomRule, setIsCustomRule] = useState(false);
   const [horasTrabalhoOutro, setHorasTrabalhoOutro] = useState('');
   const [horasDescansoOutro, setHorasDescansoOutro] = useState('');
@@ -135,11 +137,16 @@ export default function EscalasPage() {
         setPreview([]);
         return;
       }
-      setPreview(gerarProximosPlantoes(new Date(dataCompletaISO), regraFinal, 5));
+      if (tipoJornada === 'Diarista') {
+        const diasSelecionadosStr = Object.entries(diasDiarista).filter(([d, v]) => v).map(([d]) => d.replace('d', '')).join(',');
+        setPreview(gerarProximosPlantoes(new Date(dataCompletaISO), diasSelecionadosStr, 'Diarista', horaFim, 5));
+      } else {
+        setPreview(gerarProximosPlantoes(new Date(dataCompletaISO), regraFinal, tipoJornada, horaFim, 5));
+      }
     } else {
       setPreview([]);
     }
-  }, [dataCompletaISO, regraFinal, regra, horasTrabalhoOutro, horasDescansoOutro]);
+  }, [dataCompletaISO, regraFinal, regra, horasTrabalhoOutro, horasDescansoOutro, tipoJornada, diasDiarista, horaFim]);
 
   const salvarNovoLocal = async () => {
     if (!novoLocalNome.trim()) { showToast('Informe o nome do local.', 'error'); return; }
@@ -203,8 +210,6 @@ export default function EscalasPage() {
 
       const anoAtual = new Date().getFullYear();
       const dataFinal = new Date(anoAtual, 11, 31, 23, 59, 59);
-      let dataAtual = new Date(`${dataInicioSo}T${horaInicio}:00`);
-
       const { data: escalaCriada, error: erroEscala } = await supabase
         .from('escalas')
         .insert({
@@ -219,25 +224,53 @@ export default function EscalasPage() {
       if (erroEscala) throw erroEscala;
 
       const arrayDePlantoes = [];
+      const dataFinalObj = new Date(`${dataTerminoSo}T23:59:59`);
+      const dataAtualObj = new Date(`${dataInicioSo}T${horaInicio}:00`);
 
-      while (dataAtual <= dataFinal) {
-        const inicioIso = dataAtual.toISOString();
-        const fimObj = new Date(dataAtual);
-        fimObj.setHours(fimObj.getHours() + trabalho);
+      if (tipoJornada === 'Plantonista') {
+        while (dataAtualObj <= dataFinalObj) {
+          const inicioIso = dataAtualObj.toISOString();
+          const fimObj = new Date(dataAtualObj);
+          fimObj.setHours(fimObj.getHours() + trabalho);
 
-        if (dataAtual <= dataFinal) {
-          arrayDePlantoes.push({
-            escala_id: escalaCriada.id,
-            usuario_id: user.id,
-            local_id: localId,
-            data_hora_inicio: inicioIso,
-            data_hora_fim: fimObj.toISOString(),
-            status: 'Agendado',
-            is_extra: false
-          });
+          if (dataAtualObj <= dataFinalObj) {
+            arrayDePlantoes.push({
+              escala_id: escalaCriada.id,
+              usuario_id: user.id,
+              local_id: localId,
+              data_hora_inicio: inicioIso,
+              data_hora_fim: fimObj.toISOString(),
+              status: 'Agendado',
+              is_extra: false
+            });
+          }
+
+          dataAtualObj.setHours(dataAtualObj.getHours() + ciclo);
         }
+      } else {
+        const [hFim, mFim] = horaFim.split(':').map(Number);
+        const diasSelecionadosStr = Object.entries(diasDiarista).filter(([d, v]) => v).map(([d]) => d.replace('d', '')).join(',');
+        const diasPermitidos = diasSelecionadosStr.split(',').map(Number);
+        
+        while (dataAtualObj <= dataFinalObj) {
+          if (diasPermitidos.includes(dataAtualObj.getDay())) {
+            const inicioIso = dataAtualObj.toISOString();
+            const fimObj = new Date(dataAtualObj);
+            fimObj.setHours(hFim, mFim, 0, 0);
+            if (fimObj <= dataAtualObj) fimObj.setDate(fimObj.getDate() + 1);
 
-        dataAtual.setHours(dataAtual.getHours() + ciclo);
+            arrayDePlantoes.push({
+              escala_id: escalaCriada.id,
+              usuario_id: user.id,
+              local_id: localId,
+              data_hora_inicio: inicioIso,
+              data_hora_fim: fimObj.toISOString(),
+              status: 'Agendado',
+              is_extra: false
+            });
+          }
+          dataAtualObj.setDate(dataAtualObj.getDate() + 1);
+        }
       }
 
       if (arrayDePlantoes.length > 0) {
@@ -553,28 +586,39 @@ export default function EscalasPage() {
           </div>
           ) : (
           <div className="form-group">
-            <label className="form-label">Dias Trabalhados vs Folga *</label>
-            <select className="form-select" value={regraDiarista} onChange={e => setRegraDiarista(e.target.value)}>
-                <option value="5x2">5 Dias Trabalho / 2 Dias Folga (Ex: Seg-Sex)</option>
-                <option value="6x1">6 Dias Trabalho / 1 Dia Folga</option>
-                <option value="Outro">Outro (Personalizado)</option>
-            </select>
-            {regraDiarista === 'Outro' && (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 12, padding: 16, background: 'var(--bg-secondary)', borderRadius: 12, border: '1px solid var(--border-subtle)' }}>
-                <div>
-                  <label className="form-label" style={{ fontSize: 11, letterSpacing: '0.05em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Dias Seq. Trabalho</label>
-                  <input type="number" min="1" className="form-input" value={diasTrabalhoOutro} onChange={e => setDiasTrabalhoOutro(e.target.value)} placeholder="Ex: 4" style={{ marginTop: 4, background: 'var(--bg-primary)', border: '1px solid var(--border-subtle)', borderRadius: 8, padding: '10px 12px', width: '100%' }} />
-                </div>
-                <div>
-                  <label className="form-label" style={{ fontSize: 11, letterSpacing: '0.05em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Dias Seq. Folga</label>
-                  <input type="number" min="1" className="form-input" value={diasDescansoOutro} onChange={e => setDiasDescansoOutro(e.target.value)} placeholder="Ex: 3" style={{ marginTop: 4, background: 'var(--bg-primary)', border: '1px solid var(--border-subtle)', borderRadius: 8, padding: '10px 12px', width: '100%' }} />
-                </div>
-              </div>
-            )}
+            <label className="form-label">Dias da Semana Trabalhados *</label>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 4 }}>
+              {[
+                { id: 'd1', label: 'Seg' }, { id: 'd2', label: 'Ter' }, { id: 'd3', label: 'Qua' },
+                { id: 'd4', label: 'Qui' }, { id: 'd5', label: 'Sex' }, { id: 'd6', label: 'Sáb' }, { id: 'd0', label: 'Dom' }
+              ].map(d => (
+                <button
+                  key={d.id}
+                  type="button"
+                  style={{
+                    flex: 1,
+                    padding: '8px 4px',
+                    fontSize: 13,
+                    fontWeight: 600,
+                    borderRadius: 8,
+                    border: diasDiarista[d.id] ? 'none' : '1px solid var(--border-subtle)',
+                    background: diasDiarista[d.id] ? 'var(--accent-blue)' : 'var(--bg-secondary)',
+                    color: diasDiarista[d.id] ? '#fff' : 'var(--text-primary)',
+                    cursor: 'pointer',
+                  }}
+                  onClick={() => setDiasDiarista(prev => ({ ...prev, [d.id]: !prev[d.id] }))}
+                >
+                  {d.label}
+                </button>
+              ))}
+            </div>
+            <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6 }}>
+              Selecione os dias em que o profissional trabalha. O horário de saída é informado abaixo.
+            </p>
           </div>
           )}
 
-          <div className="mobile-stack" style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 12 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: tipoJornada === 'Diarista' ? '1fr 1fr' : '1fr', gap: 12, marginTop: 8 }}>
             <div className="form-group" style={{ marginBottom: 0 }}>
               <label className="form-label">Data de Término do Ciclo *</label>
               <input type="date" className="form-input" value={dataTerminoSo} onChange={e => setDataTerminoSo(e.target.value)} />
