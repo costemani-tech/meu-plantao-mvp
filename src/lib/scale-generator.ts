@@ -38,15 +38,10 @@ export function gerarProximosPlantoes(
   const cursor = new Date(dataInicio);
 
   if (tipoJornada === 'Plantonista') {
-    let duracaoTrabalho = 12;
-    let cicloHoras = 48;
-    
-    if (regra.includes('x')) {
-      const parts = regra.split('x');
-      duracaoTrabalho = parseInt(parts[0], 10) || 12;
-      const duracaoDescanso = parseInt(parts[1], 10) || 36;
-      cicloHoras = duracaoTrabalho + duracaoDescanso;
-    }
+    const parts = regra.split('x');
+    const duracaoTrabalho = parseInt(parts[0], 10);
+    const duracaoDescanso = parseInt(parts[1], 10);
+    const cicloHoras = duracaoTrabalho + duracaoDescanso;
 
     for (let i = 0; i < quantidade; i++) {
       const inicio = new Date(cursor);
@@ -56,13 +51,13 @@ export function gerarProximosPlantoes(
       cursor.setHours(cursor.getHours() + cicloHoras);
     }
   } else {
-    // Diarista based on explicit days of the week (comma separated integers)
-    // 0=Dom, 1=Seg, 2=Ter, 3=Qua, 4=Qui, 5=Sex, 6=Sab
-    const diasPermitidos = regra.split(',').map(Number);
+    const [dTrabalho, dDescanso] = regra.split('x').map(n => parseInt(n, 10));
     const [hFim, mFim] = horaFim.split(':').map(Number);
+    const cicloDias = (dTrabalho || 5) + (dDescanso || 2);
+    let idx = 0;
     
     while (slots.length < quantidade) {
-      if (diasPermitidos.includes(cursor.getDay())) {
+      if (idx < (dTrabalho || 5)) {
         const inicio = new Date(cursor);
         const fim = new Date(cursor);
         fim.setHours(hFim, mFim, 0, 0);
@@ -70,8 +65,7 @@ export function gerarProximosPlantoes(
         slots.push({ inicio, fim });
       }
       cursor.setDate(cursor.getDate() + 1);
-      // Failsafe to not infinity loop
-      if (cursor.getTime() - dataInicio.getTime() > 1000 * 60 * 60 * 24 * 365 * 3) break;
+      idx = (idx + 1) % cicloDias;
     }
   }
 

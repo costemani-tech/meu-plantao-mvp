@@ -169,17 +169,24 @@ export default function CalendarioPage() {
     if (ps.length === 0) return 'transparent';
     const getCor = (p: PlantaoComLocal) => p.is_extra ? '#8b5cf6' : (p.local?.cor_calendario ?? '#4f8ef7');
 
-    const locaisUnicos = new Set(ps.map(p => p.local_id || p.local?.nome || p.is_extra));
+    if (ps.length === 1) {
+      const p = ps[0];
+      const dInicio = new Date(p.data_hora_inicio);
+      const dFim = new Date(p.data_hora_fim);
+      const crossesMidnight = dInicio.getDate() !== dFim.getDate() || dInicio.getMonth() !== dFim.getMonth() || dInicio.getFullYear() !== dFim.getFullYear();
+      const cor = getCor(p);
 
-    if (locaisUnicos.size === 1) {
-      return getCor(ps[0]);
+      if (crossesMidnight) {
+        if (dInicio.getDate() === dia) return `linear-gradient(to bottom, transparent 50%, ${cor} 50%)`;
+        return `linear-gradient(to bottom, ${cor} 50%, transparent 50%)`;
+      }
+      return cor;
     }
 
     if (ps.length >= 2) {
       const cor1 = getCor(ps[0]);
-      const pDiferente = ps.find(p => getCor(p) !== cor1);
-      const cor2 = pDiferente ? getCor(pDiferente) : cor1;
-      return `linear-gradient(to bottom right, ${cor1} 50%, ${cor2} 50%)`;
+      const cor2 = getCor(ps[1]);
+      return `linear-gradient(to bottom, ${cor1} 50%, ${cor2} 50%)`;
     }
     return 'transparent';
   };
