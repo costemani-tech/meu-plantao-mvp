@@ -55,9 +55,28 @@ export function gerarProximosPlantoes(
       slots.push({ inicio, fim });
       cursor.setHours(cursor.getHours() + cicloHoras);
     }
+  } else if (tipoJornada === 'Diarista-Corridos') {
+    // Dias corridos: trabalha X dias, folga Y dias (ex: 6x1, 5x2)
+    const parts = regra.split('x');
+    const dTrabalho = parseInt(parts[0], 10) || 5;
+    const dDescanso = parseInt(parts[1], 10) || 2;
+    const cicloDias = dTrabalho + dDescanso;
+    const [hFim, mFim] = horaFim.split(':').map(Number);
+    let idx = 0;
+    
+    while (slots.length < quantidade) {
+      if (idx < dTrabalho) {
+        const inicio = new Date(cursor);
+        const fim = new Date(cursor);
+        fim.setHours(hFim, mFim, 0, 0);
+        if (fim <= inicio) fim.setDate(fim.getDate() + 1);
+        slots.push({ inicio, fim });
+      }
+      cursor.setDate(cursor.getDate() + 1);
+      idx = (idx + 1) % cicloDias;
+    }
   } else {
-    // Diarista based on explicit days of the week (comma separated integers)
-    // 0=Dom, 1=Seg, 2=Ter, 3=Qua, 4=Qui, 5=Sex, 6=Sab
+    // Diarista por dias da semana fixos (comma separated: "1,2,3,4,5")
     const diasPermitidos = regra.split(',').map(Number);
     const [hFim, mFim] = horaFim.split(':').map(Number);
     
@@ -70,7 +89,6 @@ export function gerarProximosPlantoes(
         slots.push({ inicio, fim });
       }
       cursor.setDate(cursor.getDate() + 1);
-      // Failsafe to not infinity loop
       if (cursor.getTime() - dataInicio.getTime() > 1000 * 60 * 60 * 24 * 365 * 3) break;
     }
   }

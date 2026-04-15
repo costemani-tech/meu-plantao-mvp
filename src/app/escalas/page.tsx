@@ -56,6 +56,7 @@ export default function EscalasPage() {
   const [horaInicio, setHoraInicio] = useState('07:00'); // valor padrão comum para plantões
   const [regra, setRegra] = useState<Regra>('12x36');
   const [tipoJornada, setTipoJornada] = useState<'Plantonista' | 'Diarista'>('Plantonista');
+  const [tipoDiarista, setTipoDiarista] = useState<'semana' | 'corridos'>('semana');
   const [regraDiarista, setRegraDiarista] = useState('5x2');
   const [diasDiarista, setDiasDiarista] = useState<{ [key: string]: boolean }>({ d0: false, d1: true, d2: true, d3: true, d4: true, d5: true, d6: false });
   const anoAtualLocal = new Date().getFullYear();
@@ -121,6 +122,13 @@ export default function EscalasPage() {
   // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { fetchLocais(); fetchEscalas(); }, [fetchLocais, fetchEscalas]);
 
+  // Recarrega escalas quando um plantão for atualizado/deletado no calendário
+  useEffect(() => {
+    const handler = () => fetchEscalas();
+    window.addEventListener('plantoes-atualizados', handler);
+    return () => window.removeEventListener('plantoes-atualizados', handler);
+  }, [fetchEscalas]);
+
 
   const showToast = (msg: string, type: 'success' | 'error') => {
     setToast({ msg, type });
@@ -138,15 +146,25 @@ export default function EscalasPage() {
         return;
       }
       if (tipoJornada === 'Diarista') {
-        const diasSelecionadosStr = Object.entries(diasDiarista).filter(([d, v]) => v).map(([d]) => d.replace('d', '')).join(',');
-        setPreview(gerarProximosPlantoes(new Date(dataCompletaISO), diasSelecionadosStr, 'Diarista', horaFim, 5));
+        if (tipoDiarista === 'semana') {
+          const diasSelecionadosStr = Object.entries(diasDiarista).filter(([, v]) => v).map(([d]) => d.replace('d', '')).join(',');
+          if (!diasSelecionadosStr) { setPreview([]); return; }
+          setPreview(gerarProximosPlantoes(new Date(dataCompletaISO), diasSelecionadosStr, 'Diarista', horaFim, 5));
+        } else {
+          // Dias corridos: usa regraDiarista como "Xtrabalho x Y folga"
+          const regCorr = regraDiarista === 'Outro'
+            ? (diasTrabalhoOutro && diasDescansoOutro ? `${diasTrabalhoOutro}x${diasDescansoOutro}` : '')
+            : regraDiarista;
+          if (!regCorr) { setPreview([]); return; }
+          setPreview(gerarProximosPlantoes(new Date(dataCompletaISO), regCorr, 'Diarista-Corridos', horaFim, 5));
+        }
       } else {
         setPreview(gerarProximosPlantoes(new Date(dataCompletaISO), regraFinal, tipoJornada, horaFim, 5));
       }
     } else {
       setPreview([]);
     }
-  }, [dataCompletaISO, regraFinal, regra, horasTrabalhoOutro, horasDescansoOutro, tipoJornada, diasDiarista, horaFim]);
+  }, [dataCompletaISO, regraFinal, regra, horasTrabalhoOutro, horasDescansoOutro, tipoJornada, tipoDiarista, diasDiarista, regraDiarista, diasTrabalhoOutro, diasDescansoOutro, horaFim]);
 
   const salvarNovoLocal = async () => {
     if (!novoLocalNome.trim()) { showToast('Informe o nome do local.', 'error'); return; }
@@ -247,9 +265,30 @@ export default function EscalasPage() {
 
           dataAtualObj.setHours(dataAtualObj.getHours() + ciclo);
         }
+      } else if (tipoJornada === 'Diarista' && tipoDiarista === 'corridos') {
+        const [hFim, mFim] = horaFim.split(':').map(Number);
+        const regCorr = regraDiarista === 'Outro'
+          ? `${diasTrabalhoOutro}x${diasDescansoOutro}`
+          : regraDiarista;
+        const parts2 = regCorr.split('x');
+        const dTrabalho2 = parseInt(parts2[0], 10) || 5;
+        const dDescanso2 = parseInt(parts2[1], 10) || 2;
+        const cicloDias2 = dTrabalho2 + dDescanso2;
+        let idx2 = 0;
+        while (dataAtualObj <= dataFinalObj) {
+          if (idx2 < dTrabalho2) {
+            const inicioIso = dataAtualObj.toISOString();
+            const fimObj = new Date(dataAtualObj);
+            fimObj.setHours(hFim, mFim, 0, 0);
+            if (fimObj <= dataAtualObj) fimObj.setDate(fimObj.getDate() + 1);
+            arrayDePlantoes.push({ escala_id: escalaCriada.id, usuario_id: user.id, local_id: localId, data_hora_inicio: inicioIso, data_hora_fim: fimObj.toISOString(), status: 'Agendado', is_extra: false });
+          }
+          dataAtualObj.setDate(dataAtualObj.getDate() + 1);
+          idx2 = (idx2 + 1) % cicloDias2;
+        }
       } else {
         const [hFim, mFim] = horaFim.split(':').map(Number);
-        const diasSelecionadosStr = Object.entries(diasDiarista).filter(([d, v]) => v).map(([d]) => d.replace('d', '')).join(',');
+        const diasSelecionadosStr = Object.entries(diasDiarista).filter(([, v]) => v).map(([d]) => d.replace('d', '')).join(',');
         const diasPermitidos = diasSelecionadosStr.split(',').map(Number);
         
         while (dataAtualObj <= dataFinalObj) {
@@ -586,37 +625,66 @@ export default function EscalasPage() {
           </div>
           ) : (
           <div className="form-group">
-            <label className="form-label">Dias da Semana Trabalhados *</label>
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 4 }}>
-              {[
-                { id: 'd1', label: 'Seg' }, { id: 'd2', label: 'Ter' }, { id: 'd3', label: 'Qua' },
-                { id: 'd4', label: 'Qui' }, { id: 'd5', label: 'Sex' }, { id: 'd6', label: 'Sáb' }, { id: 'd0', label: 'Dom' }
-              ].map(d => (
-                <button
-                  key={d.id}
-                  type="button"
-                  style={{
-                    flex: 1,
-                    padding: '8px 4px',
-                    fontSize: 13,
-                    fontWeight: 600,
-                    borderRadius: 8,
-                    border: diasDiarista[d.id] ? 'none' : '1px solid var(--border-subtle)',
-                    background: diasDiarista[d.id] ? 'var(--accent-blue)' : 'var(--bg-secondary)',
-                    color: diasDiarista[d.id] ? '#fff' : 'var(--text-primary)',
-                    cursor: 'pointer',
-                  }}
-                  onClick={() => setDiasDiarista(prev => ({ ...prev, [d.id]: !prev[d.id] }))}
-                >
-                  {d.label}
-                </button>
-              ))}
+            <label className="form-label">Tipo de Diarista *</label>
+            <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+              <button
+                type="button"
+                style={{ flex: 1, padding: '8px', fontSize: 13, fontWeight: 600, borderRadius: 8, border: tipoDiarista === 'semana' ? 'none' : '1px solid var(--border-subtle)', background: tipoDiarista === 'semana' ? 'var(--accent-blue)' : 'var(--bg-secondary)', color: tipoDiarista === 'semana' ? '#fff' : 'var(--text-primary)', cursor: 'pointer' }}
+                onClick={() => setTipoDiarista('semana')}
+              >Dias da Semana Fixos</button>
+              <button
+                type="button"
+                style={{ flex: 1, padding: '8px', fontSize: 13, fontWeight: 600, borderRadius: 8, border: tipoDiarista === 'corridos' ? 'none' : '1px solid var(--border-subtle)', background: tipoDiarista === 'corridos' ? 'var(--accent-blue)' : 'var(--bg-secondary)', color: tipoDiarista === 'corridos' ? '#fff' : 'var(--text-primary)', cursor: 'pointer' }}
+                onClick={() => setTipoDiarista('corridos')}
+              >Dias Corridos (Ex: 6x1)</button>
             </div>
-            <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6 }}>
-              Selecione os dias em que o profissional trabalha. O horário de saída é informado abaixo.
-            </p>
+
+            {tipoDiarista === 'semana' ? (
+              <>
+                <label className="form-label" style={{ fontSize: 12 }}>Dias da Semana Trabalhados *</label>
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 4 }}>
+                  {[
+                    { id: 'd1', label: 'Seg' }, { id: 'd2', label: 'Ter' }, { id: 'd3', label: 'Qua' },
+                    { id: 'd4', label: 'Qui' }, { id: 'd5', label: 'Sex' }, { id: 'd6', label: 'Sáb' }, { id: 'd0', label: 'Dom' }
+                  ].map(d => (
+                    <button
+                      key={d.id}
+                      type="button"
+                      style={{ flex: 1, padding: '8px 4px', fontSize: 13, fontWeight: 600, borderRadius: 8, border: diasDiarista[d.id] ? 'none' : '1px solid var(--border-subtle)', background: diasDiarista[d.id] ? 'var(--accent-blue)' : 'var(--bg-secondary)', color: diasDiarista[d.id] ? '#fff' : 'var(--text-primary)', cursor: 'pointer' }}
+                      onClick={() => setDiasDiarista(prev => ({ ...prev, [d.id]: !prev[d.id] }))}
+                    >{d.label}</button>
+                  ))}
+                </div>
+                <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6 }}>Ex: enfermaria em hospital com dias fixos na semana.</p>
+              </>
+            ) : (
+              <>
+                <label className="form-label" style={{ fontSize: 12 }}>Escala em dias corridos *</label>
+                <select className="form-select" value={regraDiarista} onChange={e => setRegraDiarista(e.target.value)}>
+                  <option value="6x1">6 Dias Trabalho / 1 Dia Folga</option>
+                  <option value="5x2">5 Dias Trabalho / 2 Dias Folga</option>
+                  <option value="4x2">4 Dias Trabalho / 2 Dias Folga</option>
+                  <option value="12x2">12 Dias Trabalho / 2 Dias Folga</option>
+                  <option value="Outro">Outro (Personalizado)</option>
+                </select>
+                {regraDiarista === 'Outro' && (
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 10, padding: 14, background: 'var(--bg-secondary)', borderRadius: 10, border: '1px solid var(--border-subtle)' }}>
+                    <div>
+                      <label className="form-label" style={{ fontSize: 11, textTransform: 'uppercase', color: 'var(--text-muted)' }}>Dias Trabalhando</label>
+                      <input type="number" min="1" className="form-input" value={diasTrabalhoOutro} onChange={e => setDiasTrabalhoOutro(e.target.value)} placeholder="Ex: 6" style={{ marginTop: 4 }} />
+                    </div>
+                    <div>
+                      <label className="form-label" style={{ fontSize: 11, textTransform: 'uppercase', color: 'var(--text-muted)' }}>Dias Folgando</label>
+                      <input type="number" min="1" className="form-input" value={diasDescansoOutro} onChange={e => setDiasDescansoOutro(e.target.value)} placeholder="Ex: 1" style={{ marginTop: 4 }} />
+                    </div>
+                  </div>
+                )}
+                <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6 }}>Ex: shopping, que trabalha 6 dias seguidos e folga 1, independente do dia da semana.</p>
+              </>
+            )}
           </div>
           )}
+
 
           <div style={{ display: 'grid', gridTemplateColumns: tipoJornada === 'Diarista' ? '1fr 1fr' : '1fr', gap: 12, marginTop: 8 }}>
             <div className="form-group" style={{ marginBottom: 0 }}>
@@ -722,9 +790,14 @@ export default function EscalasPage() {
             {preview.length > 0 ? (
               <div className="dates-preview">
                 <div className="dates-preview-title">
-                  📆 Próximas 5 ocorrências — {regra}
+                  📆 Próximas {preview.length} ocorrências — {tipoJornada === 'Diarista' ? 'Diarista (dias selecionados)' : (regraFinal === 'Outro' ? `${horasTrabalhoOutro}x${horasDescansoOutro}` : regraFinal)}
                 </div>
-                {preview.map((slot, i) => (
+                {preview.map((slot, i) => {
+                  const duracaoMin = Math.round((slot.fim.getTime() - slot.inicio.getTime()) / 60000);
+                  const duracaoLabel = tipoJornada === 'Diarista'
+                    ? `${new Date(slot.inicio).toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'})}–${horaFim}`
+                    : `${duracaoMin / 60}h`;
+                  return (
                   <div key={i} className="date-preview-item" style={{
                     display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 6px', borderBottom: '1px solid var(--border-subtle)'
                   }}>
@@ -738,10 +811,11 @@ export default function EscalasPage() {
                       </div>
                     </div>
                     <div className="date-preview-duration" style={{ background: 'var(--bg-primary)', padding: '4px 8px', borderRadius: 6, fontSize: 11, fontWeight: 700, color: 'var(--text-secondary)' }}>
-                      {duracaoHoras(regraFinal)}h
+                      {duracaoLabel}
                     </div>
                   </div>
-                ))}
+                );})}
+
                 <div style={{
                   marginTop: 12,
                   paddingTop: 12,
@@ -753,7 +827,7 @@ export default function EscalasPage() {
                   gap: 6,
                 }}>
                   <span></span>
-                  <span>Padrão continua até <strong style={{ color: 'var(--text-secondary)' }}>31/12/{anoAtual}</strong> ao salvar</span>
+                  <span>Padrão continua até <strong style={{ color: 'var(--text-secondary)' }}>{new Date(dataTerminoSo + 'T12:00:00').toLocaleDateString('pt-BR')}</strong> ao salvar</span>
                 </div>
               </div>
             ) : (
