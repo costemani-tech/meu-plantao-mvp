@@ -91,6 +91,10 @@ export default function EscalasPage() {
   const [modalEncerrar, setModalEncerrar] = useState<{ id: string; nome: string } | null>(null);
   const [dataEncerramento, setDataEncerramento] = useState('');
   const [deletando, setDeletando] = useState(false);
+  const [modalAlertas, setModalAlertas] = useState<EscalaAtiva | null>(null);
+  const [alertasAtivo, setAlertasAtivo] = useState(false);
+  const [alertasHoras, setAlertasHoras] = useState('2');
+  const [enviandoAlertas, setEnviandoAlertas] = useState(false);
   
   const [showProModal, setShowProModal] = useState(false);
   const isPro = true; // Trava Freemium
@@ -618,28 +622,64 @@ export default function EscalasPage() {
           </div>
           ) : (
           <div className="form-group">
-            <label className="form-label">Ciclo de Trabalho *</label>
-            <select className="form-select" value={regraDiarista} onChange={e => setRegraDiarista(e.target.value)}>
-              <option value="5x2">5 Dias / 2 Folga</option>
-              <option value="6x1">6 Dias / 1 Folga</option>
-              <option value="4x3">4 Dias / 3 Folga</option>
-              <option value="3x1">3 Dias / 1 Folga</option>
-              <option value="12x2">12 Dias / 2 Folga</option>
-              <option value="Outro">Outro (Personalizado)</option>
-            </select>
-            {regraDiarista === 'Outro' && (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 10, padding: 14, background: 'var(--bg-secondary)', borderRadius: 10, border: '1px solid var(--border-subtle)' }}>
-                <div>
-                  <label className="form-label" style={{ fontSize: 11, textTransform: 'uppercase', color: 'var(--text-muted)' }}>Dias Trabalhando</label>
-                  <input type="number" min="1" className="form-input" value={diasTrabalhoOutro} onChange={e => setDiasTrabalhoOutro(e.target.value)} placeholder="Ex: 6" style={{ marginTop: 4 }} />
+            <label className="form-label">Modo de Jornada*</label>
+            <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
+              <button
+                type="button"
+                style={{ flex: 1, padding: '8px', fontSize: 13, fontWeight: 600, borderRadius: 8, border: tipoDiarista === 'semana' ? 'none' : '1px solid var(--border-subtle)', background: tipoDiarista === 'semana' ? 'var(--accent-blue)' : 'var(--bg-secondary)', color: tipoDiarista === 'semana' ? '#fff' : 'var(--text-primary)', cursor: 'pointer' }}
+                onClick={() => setTipoDiarista('semana')}
+              >Dias da Semana</button>
+              <button
+                type="button"
+                style={{ flex: 1, padding: '8px', fontSize: 13, fontWeight: 600, borderRadius: 8, border: tipoDiarista === 'corridos' ? 'none' : '1px solid var(--border-subtle)', background: tipoDiarista === 'corridos' ? 'var(--accent-blue)' : 'var(--bg-secondary)', color: tipoDiarista === 'corridos' ? '#fff' : 'var(--text-primary)', cursor: 'pointer' }}
+                onClick={() => setTipoDiarista('corridos')}
+              >Dias Corridos</button>
+            </div>
+
+            {tipoDiarista === 'semana' ? (
+              <>
+                <label className="form-label" style={{ fontSize: 12 }}>Dias Trabalhados *</label>
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 4 }}>
+                  {[
+                    { id: 'd1', label: 'Seg' }, { id: 'd2', label: 'Ter' }, { id: 'd3', label: 'Qua' },
+                    { id: 'd4', label: 'Qui' }, { id: 'd5', label: 'Sex' }, { id: 'd6', label: 'Sáb' }, { id: 'd0', label: 'Dom' }
+                  ].map(d => (
+                    <button
+                      key={d.id}
+                      type="button"
+                      style={{ flex: 1, padding: '8px 4px', fontSize: 13, fontWeight: 600, borderRadius: 8, border: diasDiarista[d.id] ? 'none' : '1px solid var(--border-subtle)', background: diasDiarista[d.id] ? 'var(--accent-blue)' : 'var(--bg-secondary)', color: diasDiarista[d.id] ? '#fff' : 'var(--text-primary)', cursor: 'pointer' }}
+                      onClick={() => setDiasDiarista(prev => ({ ...prev, [d.id]: !prev[d.id] }))}
+                    >{d.label}</button>
+                  ))}
                 </div>
-                <div>
-                  <label className="form-label" style={{ fontSize: 11, textTransform: 'uppercase', color: 'var(--text-muted)' }}>Dias Folgando</label>
-                  <input type="number" min="1" className="form-input" value={diasDescansoOutro} onChange={e => setDiasDescansoOutro(e.target.value)} placeholder="Ex: 1" style={{ marginTop: 4 }} />
-                </div>
-              </div>
+                <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6 }}>Ex: hospital com dias fixos — marque apenas quais dias você trabalha.</p>
+              </>
+            ) : (
+              <>
+                <label className="form-label" style={{ fontSize: 12 }}>Ciclo em Dias Corridos *</label>
+                <select className="form-select" value={regraDiarista} onChange={e => setRegraDiarista(e.target.value)}>
+                  <option value="5x2">5 Dias / 2 Folga</option>
+                  <option value="6x1">6 Dias / 1 Folga</option>
+                  <option value="4x3">4 Dias / 3 Folga</option>
+                  <option value="3x1">3 Dias / 1 Folga</option>
+                  <option value="12x2">12 Dias / 2 Folga</option>
+                  <option value="Outro">Outro (Personalizado)</option>
+                </select>
+                {regraDiarista === 'Outro' && (
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 10, padding: 14, background: 'var(--bg-secondary)', borderRadius: 10, border: '1px solid var(--border-subtle)' }}>
+                    <div>
+                      <label className="form-label" style={{ fontSize: 11, textTransform: 'uppercase', color: 'var(--text-muted)' }}>Dias Trabalhando</label>
+                      <input type="number" min="1" className="form-input" value={diasTrabalhoOutro} onChange={e => setDiasTrabalhoOutro(e.target.value)} placeholder="Ex: 6" style={{ marginTop: 4 }} />
+                    </div>
+                    <div>
+                      <label className="form-label" style={{ fontSize: 11, textTransform: 'uppercase', color: 'var(--text-muted)' }}>Dias Folgando</label>
+                      <input type="number" min="1" className="form-input" value={diasDescansoOutro} onChange={e => setDiasDescansoOutro(e.target.value)} placeholder="Ex: 1" style={{ marginTop: 4 }} />
+                    </div>
+                  </div>
+                )}
+                <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6 }}>Ex: shopping — trabalha 6 dias seguidos independente do dia da semana.</p>
+              </>
             )}
-            <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6 }}>Ciclo em dias corridos, ex: shopping que trabalha 6 seguidos e folga 1.</p>
           </div>
           )}
 
@@ -818,14 +858,19 @@ export default function EscalasPage() {
                     </div>
                   </div>
                 </div>
-                <div style={{ position: 'relative' }}>
+              <div style={{ position: 'relative' }}>
                   <button
                     onClick={() => setMenuEscalaId(menuEscalaId === e.id ? null : e.id)}
                     style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: 'var(--text-muted)', padding: '4px 8px', borderRadius: 6 }}
                     title="Opções da escala"
                   >⋮</button>
                   {menuEscalaId === e.id && (
-                    <div style={{ position: 'absolute', right: 0, top: '100%', zIndex: 100, background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)', borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,0.15)', minWidth: 200, overflow: 'hidden' }}>
+                    <div style={{ position: 'absolute', right: 0, top: '100%', zIndex: 100, background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)', borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,0.15)', minWidth: 220, overflow: 'hidden' }}>
+                      <button
+                        onClick={() => { setMenuEscalaId(null); setModalAlertas(e); }}
+                        style={{ width: '100%', padding: '12px 16px', background: 'none', border: 'none', textAlign: 'left', cursor: 'pointer', color: 'var(--text-primary)', fontWeight: 600, fontSize: 13, display: 'flex', alignItems: 'center', gap: 8 }}
+                      >🔔 Configurar Alertas</button>
+                      <div style={{ borderTop: '1px solid var(--border-subtle)' }} />
                       <button
                         onClick={() => { if (confirm('Tem certeza? Isso apagará TODOS os plantões desta escala, incluindo os passados.')) excluirEscala(e.id, 'completo'); }}
                         style={{ width: '100%', padding: '12px 16px', background: 'none', border: 'none', textAlign: 'left', cursor: 'pointer', color: '#ef4444', fontWeight: 600, fontSize: 13, display: 'flex', alignItems: 'center', gap: 8 }}
@@ -840,6 +885,92 @@ export default function EscalasPage() {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* ══ MODAL: Configurar Alertas em Escala Existente ══ */}
+      {modalAlertas && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(2px)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }} onClick={() => setModalAlertas(null)}>
+          <div className="card" style={{ maxWidth: 400, width: '100%' }} onClick={e => e.stopPropagation()}>
+            <h2 style={{ fontSize: 16, fontWeight: 800, marginBottom: 6 }}>🔔 Alertas — {modalAlertas.local?.nome}</h2>
+            <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 20, lineHeight: 1.5 }}>
+              Ative para receber notificações antes dos seus plantões desta escala.
+            </p>
+
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 14, background: 'var(--bg-secondary)', borderRadius: 10, marginBottom: 16 }}
+              onClick={() => setAlertasAtivo(v => !v)}
+            >
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>Ativar alertas no celular</div>
+                <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Avisos antes de cada plantão</div>
+              </div>
+              <div style={{ width: 44, height: 24, borderRadius: 12, background: alertasAtivo ? 'var(--accent-teal)' : 'var(--border-subtle)', position: 'relative', transition: 'background 0.3s', cursor: 'pointer' }}>
+                <div style={{ position: 'absolute', width: 18, height: 18, borderRadius: '50%', background: '#fff', top: 3, left: alertasAtivo ? 23 : 3, transition: 'left 0.3s', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }} />
+              </div>
+            </div>
+
+            {alertasAtivo && (
+              <div className="form-group" style={{ marginBottom: 20 }}>
+                <label className="form-label">Avisar com quantas horas de antecedência?</label>
+                <select className="form-select" value={alertasHoras} onChange={e => setAlertasHoras(e.target.value)}>
+                  <option value="1">1 hora antes</option>
+                  <option value="2">2 horas antes</option>
+                  <option value="4">4 horas antes</option>
+                  <option value="8">8 horas antes</option>
+                  <option value="12">12 horas antes</option>
+                  <option value="24">24 horas antes (1 dia)</option>
+                </select>
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button className="btn btn-secondary" style={{ flex: 1, justifyContent: 'center' }} onClick={() => setModalAlertas(null)}>Cancelar</button>
+              <button
+                className="btn btn-primary"
+                style={{ flex: 1, justifyContent: 'center', background: 'var(--accent-blue)', color: '#fff', border: 'none' }}
+                disabled={enviandoAlertas}
+                onClick={async () => {
+                  if (!alertasAtivo) { setModalAlertas(null); return; }
+                  setEnviandoAlertas(true);
+                  try {
+                    const { data: { user } } = await supabase.auth.getUser();
+                    if (!user) throw new Error('Não autenticado');
+                    const { data: plantoesFuturos } = await supabase
+                      .from('plantoes')
+                      .select('data_hora_inicio')
+                      .eq('escala_id', modalAlertas.id)
+                      .eq('usuario_id', user.id)
+                      .gte('data_hora_inicio', new Date().toISOString())
+                      .order('data_hora_inicio', { ascending: true })
+                      .limit(60);
+
+                    const antecedencia = parseInt(alertasHoras, 10);
+                    const localNome = modalAlertas.local?.nome ?? 'seu local';
+                    const notifs: any[] = [];
+
+                    (plantoesFuturos ?? []).forEach((p: any) => {
+                      const start = new Date(p.data_hora_inicio);
+                      const sendAt = new Date(start.getTime() - antecedencia * 3600000);
+                      if (sendAt > new Date()) {
+                        const hora = start.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                        const dia = start.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' });
+                        notifs.push({ usuario_id: user.id, titulo: `🏥 Plantão em ${antecedencia}h`, mensagem: `Você tem plantão em ${localNome} amanhã às ${hora} (${dia})`, send_after: sendAt.toISOString() });
+                      }
+                    });
+
+                    if (notifs.length > 0) {
+                      await fetch('/api/onesignal', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ notifications: notifs }) }).catch(() => {});
+                    }
+                    showToast(`✅ ${notifs.length} alertas agendados!`, 'success');
+                    setModalAlertas(null);
+                  } catch {
+                    showToast('Erro ao agendar alertas.', 'error');
+                  }
+                  setEnviandoAlertas(false);
+                }}
+              >{enviandoAlertas ? 'Agendando...' : 'Salvar Alertas'}</button>
+            </div>
           </div>
         </div>
       )}
