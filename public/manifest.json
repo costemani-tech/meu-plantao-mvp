@@ -1,6 +1,6 @@
 {
   "name": "Meu Plantão",
-  "short_name": "Plantão",
+  "short_name": "Meu Plantão",
   "description": "Sua Central de Escalas Médicas Segura",
   "start_url": "/",
   "display": "standalone",

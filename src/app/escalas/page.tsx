@@ -146,18 +146,11 @@ export default function EscalasPage() {
         return;
       }
       if (tipoJornada === 'Diarista') {
-        if (tipoDiarista === 'semana') {
-          const diasSelecionadosStr = Object.entries(diasDiarista).filter(([, v]) => v).map(([d]) => d.replace('d', '')).join(',');
-          if (!diasSelecionadosStr) { setPreview([]); return; }
-          setPreview(gerarProximosPlantoes(new Date(dataCompletaISO), diasSelecionadosStr, 'Diarista', horaFim, 5));
-        } else {
-          // Dias corridos: usa regraDiarista como "Xtrabalho x Y folga"
           const regCorr = regraDiarista === 'Outro'
             ? (diasTrabalhoOutro && diasDescansoOutro ? `${diasTrabalhoOutro}x${diasDescansoOutro}` : '')
             : regraDiarista;
           if (!regCorr) { setPreview([]); return; }
           setPreview(gerarProximosPlantoes(new Date(dataCompletaISO), regCorr, 'Diarista-Corridos', horaFim, 5));
-        }
       } else {
         setPreview(gerarProximosPlantoes(new Date(dataCompletaISO), regraFinal, tipoJornada, horaFim, 5));
       }
@@ -625,75 +618,40 @@ export default function EscalasPage() {
           </div>
           ) : (
           <div className="form-group">
-            <label className="form-label">Tipo de Diarista *</label>
-            <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-              <button
-                type="button"
-                style={{ flex: 1, padding: '8px', fontSize: 13, fontWeight: 600, borderRadius: 8, border: tipoDiarista === 'semana' ? 'none' : '1px solid var(--border-subtle)', background: tipoDiarista === 'semana' ? 'var(--accent-blue)' : 'var(--bg-secondary)', color: tipoDiarista === 'semana' ? '#fff' : 'var(--text-primary)', cursor: 'pointer' }}
-                onClick={() => setTipoDiarista('semana')}
-              >Dias da Semana Fixos</button>
-              <button
-                type="button"
-                style={{ flex: 1, padding: '8px', fontSize: 13, fontWeight: 600, borderRadius: 8, border: tipoDiarista === 'corridos' ? 'none' : '1px solid var(--border-subtle)', background: tipoDiarista === 'corridos' ? 'var(--accent-blue)' : 'var(--bg-secondary)', color: tipoDiarista === 'corridos' ? '#fff' : 'var(--text-primary)', cursor: 'pointer' }}
-                onClick={() => setTipoDiarista('corridos')}
-              >Dias Corridos (Ex: 6x1)</button>
-            </div>
-
-            {tipoDiarista === 'semana' ? (
-              <>
-                <label className="form-label" style={{ fontSize: 12 }}>Dias da Semana Trabalhados *</label>
-                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 4 }}>
-                  {[
-                    { id: 'd1', label: 'Seg' }, { id: 'd2', label: 'Ter' }, { id: 'd3', label: 'Qua' },
-                    { id: 'd4', label: 'Qui' }, { id: 'd5', label: 'Sex' }, { id: 'd6', label: 'Sáb' }, { id: 'd0', label: 'Dom' }
-                  ].map(d => (
-                    <button
-                      key={d.id}
-                      type="button"
-                      style={{ flex: 1, padding: '8px 4px', fontSize: 13, fontWeight: 600, borderRadius: 8, border: diasDiarista[d.id] ? 'none' : '1px solid var(--border-subtle)', background: diasDiarista[d.id] ? 'var(--accent-blue)' : 'var(--bg-secondary)', color: diasDiarista[d.id] ? '#fff' : 'var(--text-primary)', cursor: 'pointer' }}
-                      onClick={() => setDiasDiarista(prev => ({ ...prev, [d.id]: !prev[d.id] }))}
-                    >{d.label}</button>
-                  ))}
+            <label className="form-label">Ciclo de Trabalho *</label>
+            <select className="form-select" value={regraDiarista} onChange={e => setRegraDiarista(e.target.value)}>
+              <option value="5x2">5 Dias / 2 Folga</option>
+              <option value="6x1">6 Dias / 1 Folga</option>
+              <option value="4x3">4 Dias / 3 Folga</option>
+              <option value="3x1">3 Dias / 1 Folga</option>
+              <option value="12x2">12 Dias / 2 Folga</option>
+              <option value="Outro">Outro (Personalizado)</option>
+            </select>
+            {regraDiarista === 'Outro' && (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 10, padding: 14, background: 'var(--bg-secondary)', borderRadius: 10, border: '1px solid var(--border-subtle)' }}>
+                <div>
+                  <label className="form-label" style={{ fontSize: 11, textTransform: 'uppercase', color: 'var(--text-muted)' }}>Dias Trabalhando</label>
+                  <input type="number" min="1" className="form-input" value={diasTrabalhoOutro} onChange={e => setDiasTrabalhoOutro(e.target.value)} placeholder="Ex: 6" style={{ marginTop: 4 }} />
                 </div>
-                <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6 }}>Ex: enfermaria em hospital com dias fixos na semana.</p>
-              </>
-            ) : (
-              <>
-                <label className="form-label" style={{ fontSize: 12 }}>Escala em dias corridos *</label>
-                <select className="form-select" value={regraDiarista} onChange={e => setRegraDiarista(e.target.value)}>
-                  <option value="6x1">6 Dias Trabalho / 1 Dia Folga</option>
-                  <option value="5x2">5 Dias Trabalho / 2 Dias Folga</option>
-                  <option value="4x2">4 Dias Trabalho / 2 Dias Folga</option>
-                  <option value="12x2">12 Dias Trabalho / 2 Dias Folga</option>
-                  <option value="Outro">Outro (Personalizado)</option>
-                </select>
-                {regraDiarista === 'Outro' && (
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 10, padding: 14, background: 'var(--bg-secondary)', borderRadius: 10, border: '1px solid var(--border-subtle)' }}>
-                    <div>
-                      <label className="form-label" style={{ fontSize: 11, textTransform: 'uppercase', color: 'var(--text-muted)' }}>Dias Trabalhando</label>
-                      <input type="number" min="1" className="form-input" value={diasTrabalhoOutro} onChange={e => setDiasTrabalhoOutro(e.target.value)} placeholder="Ex: 6" style={{ marginTop: 4 }} />
-                    </div>
-                    <div>
-                      <label className="form-label" style={{ fontSize: 11, textTransform: 'uppercase', color: 'var(--text-muted)' }}>Dias Folgando</label>
-                      <input type="number" min="1" className="form-input" value={diasDescansoOutro} onChange={e => setDiasDescansoOutro(e.target.value)} placeholder="Ex: 1" style={{ marginTop: 4 }} />
-                    </div>
-                  </div>
-                )}
-                <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6 }}>Ex: shopping, que trabalha 6 dias seguidos e folga 1, independente do dia da semana.</p>
-              </>
+                <div>
+                  <label className="form-label" style={{ fontSize: 11, textTransform: 'uppercase', color: 'var(--text-muted)' }}>Dias Folgando</label>
+                  <input type="number" min="1" className="form-input" value={diasDescansoOutro} onChange={e => setDiasDescansoOutro(e.target.value)} placeholder="Ex: 1" style={{ marginTop: 4 }} />
+                </div>
+              </div>
             )}
+            <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6 }}>Ciclo em dias corridos, ex: shopping que trabalha 6 seguidos e folga 1.</p>
           </div>
           )}
 
 
-          <div style={{ display: 'grid', gridTemplateColumns: tipoJornada === 'Diarista' ? '1fr 1fr' : '1fr', gap: 12, marginTop: 8 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: tipoJornada === 'Diarista' ? '1fr 1fr' : '1fr', gap: 12, marginTop: 8, alignItems: 'start' }}>
             <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="form-label">Data de Término do Ciclo *</label>
+              <label className="form-label" style={{ whiteSpace: 'nowrap' }}>Término *</label>
               <input type="date" className="form-input" value={dataTerminoSo} onChange={e => setDataTerminoSo(e.target.value)} />
             </div>
             {tipoJornada === 'Diarista' && (
               <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label">Hora de Término (Saída) *</label>
+                <label className="form-label" style={{ whiteSpace: 'nowrap' }}>Saída *</label>
                 <input type="time" className="form-input" value={horaFim} onChange={e => setHoraFim(e.target.value)} />
               </div>
             )}
