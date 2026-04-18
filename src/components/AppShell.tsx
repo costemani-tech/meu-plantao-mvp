@@ -27,6 +27,12 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   const isPro = false; // Trava Central do Freemium
 
+  // Detectar se deve mostrar o banner de instalação PWA
+  useEffect(() => {
+    const isStandalone =
+      window.matchMedia('(display-mode: standalone)').matches ||
+      (navigator as any).standalone === true;
+
     if (!isStandalone) {
       const dismissed = sessionStorage.getItem('pwa-banner-dismissed');
       if (!dismissed) {
