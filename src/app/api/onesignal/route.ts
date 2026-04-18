@@ -16,6 +16,7 @@ export async function POST(request: Request) {
       "Authorization": `Key ${restKey}`
     };
 
+    const promises = notifications.map(async (notif: any) => {
       // Garante app_id e utiliza obrigatoriamente a sintaxe v2 (include_aliases)
       const payload: Record<string, unknown> = { 
         app_id: appId, 
