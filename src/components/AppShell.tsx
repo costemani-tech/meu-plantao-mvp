@@ -257,7 +257,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         {/* BANNER DE INSTALAÇÃO PWA */}
         {showPwaBanner && pathname !== '/login' && (
           <div style={{
-            position: 'fixed', bottom: 80, left: 12, right: 12, zIndex: 9998,
+            position: 'fixed', top: 12, left: 12, right: 12, zIndex: 9998,
             background: 'linear-gradient(135deg, #1e3a5f 0%, #1a2d5c 100%)',
             borderRadius: 'var(--radius-lg)', padding: '14px 16px',
             boxShadow: '0 8px 32px rgba(0,0,0,0.35)',
@@ -268,7 +268,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             <div style={{ fontSize: 28, flexShrink: 0 }}>📲</div>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 13, fontWeight: 700, color: '#fff', marginBottom: 2 }}>
-                Instale o Meu Plantão no seu celular
+                Instale o app na tela inicial para alertas
               </div>
               <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.75)', lineHeight: 1.4 }}>
                 {pwaPlatform === 'ios'

@@ -16,13 +16,16 @@ export async function POST(request: Request) {
       "Authorization": `Key ${restKey}`
     };
 
-    const promises = notifications.map(async (notif) => {
-      // Garante app_id e converte include_external_user_ids legado para include_aliases
-      const payload: Record<string, unknown> = { app_id: appId, ...notif };
+      // Garante app_id e utiliza obrigatoriamente a sintaxe v2 (include_aliases)
+      const payload: Record<string, unknown> = { 
+        app_id: appId, 
+        target_channel: 'push',
+        ...notif 
+      };
 
-      if (payload.include_external_user_ids && !payload.include_aliases) {
+      // Força o mapeamento para include_aliases se ainda estiver usando o modo antigo
+      if (payload.include_external_user_ids) {
         payload.include_aliases = { external_id: payload.include_external_user_ids };
-        payload.target_channel = 'push';
         delete payload.include_external_user_ids;
       }
 
