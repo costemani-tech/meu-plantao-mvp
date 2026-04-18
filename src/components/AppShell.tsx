@@ -22,16 +22,10 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const [overCapacity, setOverCapacity] = useState(false);
    const [showPwaBanner, setShowPwaBanner] = useState(false);
    const [pwaPlatform, setPwaPlatform] = useState<'android' | 'ios' | null>(null);
-   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
    const [showIosGuide, setShowIosGuide] = useState(false);
+   const [hasPrompt, setHasPrompt] = useState(false);
 
   const isPro = false; // Trava Central do Freemium
-
-  // Detectar se deve mostrar o banner de instalação PWA
-  useEffect(() => {
-    const isStandalone =
-      window.matchMedia('(display-mode: standalone)').matches ||
-      (navigator as Navigator & { standalone?: boolean }).standalone === true;
 
     if (!isStandalone) {
       const dismissed = sessionStorage.getItem('pwa-banner-dismissed');
@@ -46,13 +40,15 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       }
     }
 
-    const handleBeforeInstallPrompt = (e: any) => {
-      e.preventDefault();
-      setDeferredPrompt(e);
-    };
+    // Monitora o estado do prompt global para habilitar o botão de instalação
+    const interval = setInterval(() => {
+      if ((window as any).deferredPrompt) {
+        setHasPrompt(true);
+        clearInterval(interval);
+      }
+    }, 1000);
 
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
@@ -327,12 +323,19 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               onClick={async () => {
                 if (pwaPlatform === 'ios') {
                   setShowIosGuide(!showIosGuide);
-                } else if (deferredPrompt) {
-                  deferredPrompt.prompt();
-                  const { outcome } = await deferredPrompt.userChoice;
-                  if (outcome === 'accepted') {
-                    setDeferredPrompt(null);
-                    setShowPwaBanner(false);
+                } else {
+                  const prompt = (window as any).deferredPrompt;
+                  if (prompt) {
+                    prompt.prompt();
+                    const { outcome } = await prompt.userChoice;
+                    if (outcome === 'accepted') {
+                      (window as any).deferredPrompt = null;
+                      setHasPrompt(false);
+                      setShowPwaBanner(false);
+                    }
+                  } else {
+                    // Fallback para quando o evento ainda não foi capturado no Android
+                    alert("O navegador ainda está preparando o instalador. Tente novamente em alguns segundos ou use o menu do Chrome.");
                   }
                 }
               }}
@@ -344,10 +347,11 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 fontSize: 14, 
                 fontWeight: 800,
                 background: 'var(--accent-blue)',
-                boxShadow: '0 6px 20px rgba(37, 99, 235, 0.25)'
+                boxShadow: '0 6px 20px rgba(37, 99, 235, 0.25)',
+                opacity: (pwaPlatform !== 'ios' && !hasPrompt) ? 0.7 : 1
               }}
             >
-              {pwaPlatform === 'ios' ? (showIosGuide ? 'FECHAR GUIA' : 'COMO INSTALAR?') : 'INSTALAR APP GRÁTIS'}
+              {pwaPlatform === 'ios' ? (showIosGuide ? 'FECHAR GUIA' : 'COMO INSTALAR?') : (hasPrompt ? 'INSTALAR APP GRÁTIS' : 'PREPARANDO...')}
             </button>
           </div>
         )}
