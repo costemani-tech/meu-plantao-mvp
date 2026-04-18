@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { supabase } from '../lib/supabase';
 import { useEffect, useState } from 'react';
-import { LayoutDashboard, CalendarDays, Settings2, PlusCircle, LogOut, Sun, Moon, Activity, Bell } from 'lucide-react';
+import { LayoutDashboard, CalendarDays, Settings2, PlusCircle, LogOut, Sun, Moon, Activity, Bell, X } from 'lucide-react';
 
 const navItems = [
   { icon: LayoutDashboard, label: 'Central de Plantões', href: '/' },
@@ -20,8 +20,30 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const [unreadCount, setUnreadCount] = useState(0);
   const [toast, setToast] = useState<{titulo: string, mensagem: string} | null>(null);
   const [overCapacity, setOverCapacity] = useState(false);
+  const [showPwaBanner, setShowPwaBanner] = useState(false);
+  const [pwaPlatform, setPwaPlatform] = useState<'android' | 'ios' | null>(null);
 
   const isPro = false; // Trava Central do Freemium
+
+  // Detectar se deve mostrar o banner de instalação PWA
+  useEffect(() => {
+    const isStandalone =
+      window.matchMedia('(display-mode: standalone)').matches ||
+      (navigator as Navigator & { standalone?: boolean }).standalone === true;
+
+    if (!isStandalone) {
+      const dismissed = sessionStorage.getItem('pwa-banner-dismissed');
+      if (!dismissed) {
+        const ua = navigator.userAgent.toLowerCase();
+        const isMobile = /android|iphone|ipad|ipod/.test(ua);
+        if (isMobile) {
+          const isIos = /iphone|ipad|ipod/.test(ua);
+          setPwaPlatform(isIos ? 'ios' : 'android');
+          setShowPwaBanner(true);
+        }
+      }
+    }
+  }, []);
 
   useEffect(() => {
     let currentUser: { id: string } | null = null;
@@ -30,6 +52,20 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
       currentUser = user;
+
+      // Vincula o dispositivo ao usuário no OneSignal (necessário para push personalizado)
+      try {
+        const win = window as any;
+        if (win.OneSignalDeferred) {
+          win.OneSignalDeferred.push(async (OneSignal: any) => {
+            await OneSignal.login(user.id);
+          });
+        } else if (win.OneSignal?.login) {
+          await win.OneSignal.login(user.id);
+        }
+      } catch (e) {
+        console.log('OneSignal login error:', e);
+      }
       
       const { count } = await supabase
         .from('notificacoes')
@@ -215,6 +251,41 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               <h4 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>{toast.titulo}</h4>
               <p style={{ margin: 0, fontSize: 13, color: 'var(--text-secondary)', marginTop: 4 }}>{toast.mensagem}</p>
             </div>
+          </div>
+        )}
+
+        {/* BANNER DE INSTALAÇÃO PWA */}
+        {showPwaBanner && pathname !== '/login' && (
+          <div style={{
+            position: 'fixed', bottom: 80, left: 12, right: 12, zIndex: 9998,
+            background: 'linear-gradient(135deg, #1e3a5f 0%, #1a2d5c 100%)',
+            borderRadius: 'var(--radius-lg)', padding: '14px 16px',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.35)',
+            display: 'flex', alignItems: 'center', gap: 12,
+            border: '1px solid rgba(79,142,247,0.3)',
+            animation: 'fadeInDown 0.4s ease'
+          }}>
+            <div style={{ fontSize: 28, flexShrink: 0 }}>📲</div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: '#fff', marginBottom: 2 }}>
+                Instale o Meu Plantão no seu celular
+              </div>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.75)', lineHeight: 1.4 }}>
+                {pwaPlatform === 'ios'
+                  ? 'Toque em 🔗 (compartilhar) → "Adicionar à Tela de Início"'
+                  : 'Toque em ⋮ (menu) → "Adicionar à tela inicial"'}
+              </div>
+            </div>
+            <button
+              onClick={() => {
+                sessionStorage.setItem('pwa-banner-dismissed', '1');
+                setShowPwaBanner(false);
+              }}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.6)', padding: 4, display: 'flex', flexShrink: 0 }}
+              title="Fechar"
+            >
+              <X size={18} />
+            </button>
           </div>
         )}
 

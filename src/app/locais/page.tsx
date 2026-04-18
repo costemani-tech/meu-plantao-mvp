@@ -147,7 +147,7 @@ export default function LocaisPage() {
           <h2 style={{ fontWeight: 700, marginBottom: 20, fontSize: 16 }}>Novo Local</h2>
 
           <div className="form-group">
-            <label className="form-label">Nome do Local *</label>
+            <label className="form-label">Nome do Local</label>
             <input
               type="text"
               className="form-input"

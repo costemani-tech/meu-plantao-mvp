@@ -116,11 +116,20 @@ export default function EscalasPage() {
     if (!user) return;
     const { data } = await supabase
       .from('escalas')
-      .select('id, regra, data_inicio, local:locais_trabalho(nome, cor_calendario), plantoes(data_hora_inicio, data_hora_fim)')
+      .select('id, regra, data_inicio, local_id, local:locais_trabalho(nome, cor_calendario), plantoes(data_hora_inicio, data_hora_fim)')
       .eq('usuario_id', user.id)
       .order('created_at', { ascending: false })
       .limit(1, { foreignTable: 'plantoes' });
-    setEscalasAtivas((data as unknown as EscalaAtiva[]) ?? []);
+
+    // Agrupar: manter apenas a escala mais recente por local_id
+    const todas = (data as unknown as (EscalaAtiva & { local_id: string })[]) ?? [];
+    const vistas = new Set<string>();
+    const agrupadas = todas.filter(e => {
+      if (!e.local_id || vistas.has(e.local_id)) return false;
+      vistas.add(e.local_id);
+      return true;
+    });
+    setEscalasAtivas(agrupadas);
   }, []);
 
   // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -239,7 +248,8 @@ export default function EscalasPage() {
       if (erroEscala) throw erroEscala;
 
       const arrayDePlantoes = [];
-      const dataFinalObj = new Date(`${dataTerminoSo}T23:59:59`);
+      const dataTerminoSegura = dataTerminoSo || `${anoAtual}-12-31`;
+      const dataFinalObj = new Date(`${dataTerminoSegura}T23:59:59`);
       const dataAtualObj = new Date(`${dataInicioSo}T${horaInicio}:00`);
 
       if (tipoJornada === 'Plantonista') {
@@ -321,24 +331,34 @@ export default function EscalasPage() {
           const nomeLocal = localSelecionado?.nome || 'seu local de trabalho';
 
           const pushNotifications: any[] = [];
+          const dbNotificacoes: any[] = [];
+          const antecedencia = parseInt(tempoAlerta, 10);
 
           arrayDePlantoes.forEach((plantao) => {
             const startDate = new Date(plantao.data_hora_inicio);
-            const antecedencia = parseInt(tempoAlerta, 10);
             const sendAfter = new Date(startDate.getTime() - antecedencia * 60 * 60 * 1000);
             
             if (sendAfter > new Date()) {
               const horaStr = startDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+              const diaStr = startDate.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' });
               
               pushNotifications.push({
                 app_id: process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID || "SUA_CHAVE_ONESIGNAL",
-                include_external_user_ids: [user.id],
+                include_aliases: { external_id: [user.id] },
+                target_channel: 'push',
                 headings: { "en": "Alerta de Plantão", "pt": "Alerta de Plantão" },
                 contents: { 
-                  "en": `Seu plantão em ${nomeLocal} começa em breve (às ${horaStr}). Bom trabalho!`,
-                  "pt": `Seu plantão em ${nomeLocal} começa em breve (às ${horaStr}). Bom trabalho!`
+                  "en": `Plantão em ${nomeLocal} às ${horaStr} (${diaStr}). Bom trabalho!`,
+                  "pt": `Plantão em ${nomeLocal} às ${horaStr} (${diaStr}). Bom trabalho!`
                 },
                 send_after: sendAfter.toISOString()
+              });
+
+              dbNotificacoes.push({
+                usuario_id: user.id,
+                titulo: `🏥 Plantão em ${antecedencia}h — ${nomeLocal}`,
+                mensagem: `Você tem plantão em ${nomeLocal} às ${horaStr} (${diaStr}). Bom trabalho!`,
+                lida: false
               });
             }
           });
@@ -349,6 +369,10 @@ export default function EscalasPage() {
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ notifications: pushNotifications })
             }).catch(() => {});
+          }
+
+          if (dbNotificacoes.length > 0) {
+            await supabase.from('notificacoes').insert(dbNotificacoes).catch(() => {});
           }
         }
       }
@@ -414,7 +438,7 @@ export default function EscalasPage() {
 
           <div className="form-group">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-              <label className="form-label" style={{ margin: 0 }}>Local de Trabalho *</label>
+              <label className="form-label" style={{ margin: 0 }}>Local de Trabalho</label>
               <button
                 type="button"
                 onClick={() => setIsCreatingLocal(!isCreatingLocal)}
@@ -511,7 +535,7 @@ export default function EscalasPage() {
           <div className="form-group mobile-stack" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <div>
               <label className="form-label" style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                Dia do 1º Plantão *
+                Dia do 1º Plantão
               </label>
               <input
                 type="date"
@@ -523,7 +547,7 @@ export default function EscalasPage() {
             </div>
             <div>
               <label className="form-label" style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                 Horário de Início *
+                Horário de Início
               </label>
               <input
                 type="time"
@@ -557,7 +581,7 @@ export default function EscalasPage() {
 
           {tipoJornada === 'Plantonista' ? (
           <div className="form-group">
-            <label className="form-label">Regra de Escala *</label>
+            <label className="form-label">Regra de Escala</label>
             <select
               className="form-select"
               value={regra}
@@ -622,7 +646,7 @@ export default function EscalasPage() {
           </div>
           ) : (
           <div className="form-group">
-            <label className="form-label">Modo de Jornada*</label>
+            <label className="form-label">Modo de Jornada</label>
             <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
               <button
                 type="button"
@@ -638,7 +662,7 @@ export default function EscalasPage() {
 
             {tipoDiarista === 'semana' ? (
               <>
-                <label className="form-label" style={{ fontSize: 12 }}>Dias Trabalhados *</label>
+                <label className="form-label" style={{ fontSize: 12 }}>Dias Trabalhados</label>
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 4 }}>
                   {[
                     { id: 'd1', label: 'Seg' }, { id: 'd2', label: 'Ter' }, { id: 'd3', label: 'Qua' },
@@ -656,7 +680,7 @@ export default function EscalasPage() {
               </>
             ) : (
               <>
-                <label className="form-label" style={{ fontSize: 12 }}>Ciclo em Dias Corridos *</label>
+                <label className="form-label" style={{ fontSize: 12 }}>Ciclo em Dias Corridos</label>
                 <select className="form-select" value={regraDiarista} onChange={e => setRegraDiarista(e.target.value)}>
                   <option value="5x2">5 Dias / 2 Folga</option>
                   <option value="6x1">6 Dias / 1 Folga</option>
@@ -686,12 +710,12 @@ export default function EscalasPage() {
 
           <div style={{ display: 'grid', gridTemplateColumns: tipoJornada === 'Diarista' ? '1fr 1fr' : '1fr', gap: 12, marginTop: 8, alignItems: 'start' }}>
             <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="form-label" style={{ whiteSpace: 'nowrap' }}>Término *</label>
+              <label className="form-label" style={{ whiteSpace: 'nowrap' }}>Escala até</label>
               <input type="date" className="form-input" value={dataTerminoSo} onChange={e => setDataTerminoSo(e.target.value)} />
             </div>
             {tipoJornada === 'Diarista' && (
               <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label" style={{ whiteSpace: 'nowrap' }}>Saída *</label>
+                <label className="form-label" style={{ whiteSpace: 'nowrap' }}>Saída</label>
                 <input type="time" className="form-input" value={horaFim} onChange={e => setHoraFim(e.target.value)} />
               </div>
             )}
@@ -947,7 +971,8 @@ export default function EscalasPage() {
 
                     const antecedencia = parseInt(alertasHoras, 10);
                     const localNome = modalAlertas.local?.nome ?? 'seu local';
-                    const notifs: any[] = [];
+                    const pushNotifs: any[] = [];
+                    const dbNotifs: any[] = [];
 
                     (plantoesFuturos ?? []).forEach((p: any) => {
                       const start = new Date(p.data_hora_inicio);
@@ -955,14 +980,33 @@ export default function EscalasPage() {
                       if (sendAt > new Date()) {
                         const hora = start.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
                         const dia = start.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' });
-                        notifs.push({ usuario_id: user.id, titulo: `🏥 Plantão em ${antecedencia}h`, mensagem: `Você tem plantão em ${localNome} amanhã às ${hora} (${dia})`, send_after: sendAt.toISOString() });
+                        pushNotifs.push({
+                          app_id: process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID || 'SUA_CHAVE_ONESIGNAL',
+                          include_aliases: { external_id: [user.id] },
+                          target_channel: 'push',
+                          headings: { en: 'Alerta de Plantão', pt: 'Alerta de Plantão' },
+                          contents: {
+                            en: `Plantão em ${localNome} às ${hora} (${dia}). Bom trabalho!`,
+                            pt: `Plantão em ${localNome} às ${hora} (${dia}). Bom trabalho!`
+                          },
+                          send_after: sendAt.toISOString()
+                        });
+                        dbNotifs.push({
+                          usuario_id: user.id,
+                          titulo: `🏥 Plantão em ${antecedencia}h — ${localNome}`,
+                          mensagem: `Você tem plantão em ${localNome} às ${hora} (${dia}). Bom trabalho!`,
+                          lida: false
+                        });
                       }
                     });
 
-                    if (notifs.length > 0) {
-                      await fetch('/api/onesignal', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ notifications: notifs }) }).catch(() => {});
+                    if (pushNotifs.length > 0) {
+                      await fetch('/api/onesignal', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ notifications: pushNotifs }) }).catch(() => {});
                     }
-                    showToast(`✅ ${notifs.length} alertas agendados!`, 'success');
+                    if (dbNotifs.length > 0) {
+                      await supabase.from('notificacoes').insert(dbNotifs).catch(() => {});
+                    }
+                    showToast(`✅ ${pushNotifs.length} alertas agendados!`, 'success');
                     setModalAlertas(null);
                   } catch {
                     showToast('Erro ao agendar alertas.', 'error');
