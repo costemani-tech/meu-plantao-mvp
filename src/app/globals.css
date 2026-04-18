@@ -601,7 +601,8 @@ body {
   to { transform: rotate(360deg); }
 }
 
-@keyframes fadeInDown {
-  from { opacity: 0; transform: translateY(-8px); }
-  to   { opacity: 1; transform: translateY(0); }
+@keyframes cardEntrance {
+  0% { opacity: 0; transform: translateY(-20px) scale(0.95); }
+  60% { transform: translateY(5px) scale(1.02); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
 }

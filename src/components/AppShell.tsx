@@ -20,8 +20,10 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const [unreadCount, setUnreadCount] = useState(0);
   const [toast, setToast] = useState<{titulo: string, mensagem: string} | null>(null);
   const [overCapacity, setOverCapacity] = useState(false);
-  const [showPwaBanner, setShowPwaBanner] = useState(false);
-  const [pwaPlatform, setPwaPlatform] = useState<'android' | 'ios' | null>(null);
+   const [showPwaBanner, setShowPwaBanner] = useState(false);
+   const [pwaPlatform, setPwaPlatform] = useState<'android' | 'ios' | null>(null);
+   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+   const [showIosGuide, setShowIosGuide] = useState(false);
 
   const isPro = false; // Trava Central do Freemium
 
@@ -43,6 +45,14 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         }
       }
     }
+
+    const handleBeforeInstallPrompt = (e: any) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
   }, []);
 
   useEffect(() => {
@@ -254,37 +264,90 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         )}
 
-        {/* BANNER DE INSTALAÇÃO PWA */}
+        {/* BANNER DE INSTALAÇÃO PWA PRO */}
         {showPwaBanner && pathname !== '/login' && (
           <div style={{
             position: 'fixed', top: 12, left: 12, right: 12, zIndex: 9998,
-            background: 'linear-gradient(135deg, #1e3a5f 0%, #1a2d5c 100%)',
-            borderRadius: 'var(--radius-lg)', padding: '14px 16px',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.35)',
-            display: 'flex', alignItems: 'center', gap: 12,
-            border: '1px solid rgba(79,142,247,0.3)',
-            animation: 'fadeInDown 0.4s ease'
+            background: 'var(--bg-secondary)',
+            borderRadius: 'var(--radius-md)', padding: '20px',
+            boxShadow: '0 20px 40px rgba(0,0,0,0.2), 0 0 1px rgba(0,0,0,0.1)',
+            display: 'flex', flexDirection: 'column', gap: 16,
+            border: '1px solid var(--border-subtle)',
+            animation: 'cardEntrance 0.6s cubic-bezier(0.16, 1, 0.3, 1)'
           }}>
-            <div style={{ fontSize: 28, flexShrink: 0 }}>📲</div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: '#fff', marginBottom: 2 }}>
-                Instale o app na tela inicial para alertas
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+              <div style={{ 
+                width: 48, height: 48, background: 'linear-gradient(135deg, var(--accent-blue), var(--accent-violet))',
+                borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                boxShadow: '0 4px 12px rgba(37, 99, 235, 0.2)'
+              }}>
+                <Activity color="white" size={24} />
               </div>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.75)', lineHeight: 1.4 }}>
-                {pwaPlatform === 'ios'
-                  ? 'Toque em 🔗 (compartilhar) → "Adicionar à Tela de Início"'
-                  : 'Toque em ⋮ (menu) → "Adicionar à tela inicial"'}
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 2 }}>
+                  Meu Plantão no seu celular
+                </div>
+                <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.4, fontWeight: 500 }}>
+                  Instale o app na tela inicial para receber alertas em tempo real.
+                </div>
               </div>
+              <button
+                onClick={() => {
+                  sessionStorage.setItem('pwa-banner-dismissed', '1');
+                  setShowPwaBanner(false);
+                }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: 4 }}
+              >
+                <X size={20} />
+              </button>
             </div>
+
+            {showIosGuide && pwaPlatform === 'ios' && (
+              <div style={{ 
+                padding: '16px', background: 'var(--bg-primary)', borderRadius: 'var(--radius-sm)',
+                border: '1px solid var(--border-subtle)', animation: 'fadeInDown 0.3s ease'
+              }}>
+                <div style={{ fontSize: 13, color: 'var(--text-primary)', marginBottom: 12, fontWeight: 600 }}>
+                  Siga os passos para instalar:
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 12, color: 'var(--text-secondary)' }}>
+                    <span style={{ width: 20, height: 20, background: 'var(--accent-blue)', color: 'white', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, flexShrink: 0 }}>1</span>
+                    <span>Toque no ícone de <strong>compartilhar</strong> (quadrado com seta) na barra inferior.</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 12, color: 'var(--text-secondary)' }}>
+                    <span style={{ width: 20, height: 20, background: 'var(--accent-blue)', color: 'white', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, flexShrink: 0 }}>2</span>
+                    <span>Role a lista e toque em <strong>&quot;Adicionar à Tela de Início&quot;</strong>.</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <button
-              onClick={() => {
-                sessionStorage.setItem('pwa-banner-dismissed', '1');
-                setShowPwaBanner(false);
+              onClick={async () => {
+                if (pwaPlatform === 'ios') {
+                  setShowIosGuide(!showIosGuide);
+                } else if (deferredPrompt) {
+                  deferredPrompt.prompt();
+                  const { outcome } = await deferredPrompt.userChoice;
+                  if (outcome === 'accepted') {
+                    setDeferredPrompt(null);
+                    setShowPwaBanner(false);
+                  }
+                }
               }}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.6)', padding: 4, display: 'flex', flexShrink: 0 }}
-              title="Fechar"
+              className="btn btn-primary"
+              style={{ 
+                width: '100%', 
+                justifyContent: 'center', 
+                padding: '14px', 
+                fontSize: 14, 
+                fontWeight: 800,
+                background: 'var(--accent-blue)',
+                boxShadow: '0 6px 20px rgba(37, 99, 235, 0.25)'
+              }}
             >
-              <X size={18} />
+              {pwaPlatform === 'ios' ? (showIosGuide ? 'FECHAR GUIA' : 'COMO INSTALAR?') : 'INSTALAR APP GRÁTIS'}
             </button>
           </div>
         )}
