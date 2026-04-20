@@ -940,8 +940,22 @@ export default function EscalasPage() {
               Ative para receber notificações antes dos seus plantões desta escala.
             </p>
 
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 14, background: 'var(--bg-secondary)', borderRadius: 10, marginBottom: 16 }}
-              onClick={() => setAlertasAtivo(v => !v)}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 14, background: 'var(--bg-secondary)', borderRadius: 10, marginBottom: 16, cursor: 'pointer' }}
+              onClick={async () => {
+                const novoEstado = !alertasAtivo;
+                setAlertasAtivo(novoEstado);
+
+                if (novoEstado) {
+                  const win = window as any;
+                  if (win.OneSignalDeferred) {
+                    win.OneSignalDeferred.push(async (OneSignal: any) => {
+                      await OneSignal.Notifications.requestPermission();
+                      const user = (await supabase.auth.getUser()).data.user;
+                      if (user) await OneSignal.login(user.id);
+                    });
+                  }
+                }
+              }}
             >
               <div>
                 <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>Ativar alertas no celular</div>
@@ -978,6 +992,14 @@ export default function EscalasPage() {
                   try {
                     const { data: { user } } = await supabase.auth.getUser();
                     if (!user) throw new Error('Não autenticado');
+
+                    // Sincroniza ID com OneSignal antes de agendar
+                    const win = window as any;
+                    if (win.OneSignalDeferred) {
+                      win.OneSignalDeferred.push(async (OneSignal: any) => {
+                        await OneSignal.login(user.id);
+                      });
+                    }
                     const { data: plantoesFuturos } = await supabase
                       .from('plantoes')
                       .select('data_hora_inicio')
