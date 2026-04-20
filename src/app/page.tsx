@@ -234,11 +234,14 @@ export default function DashboardPage() {
     if (!localEmEdicao) return;
     if (!localEmEdicao.nome.trim()) { showToast('Informe o nome do local.', 'error'); return; }
 
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
     setSavingLocal(true);
     const { error } = await supabase.from('locais_trabalho').update({
       nome: localEmEdicao.nome.trim(),
       endereco: localEmEdicao.is_home_care ? null : (localEmEdicao.endereco?.trim() || null)
-    }).eq('id', localEmEdicao.id);
+    }).eq('usuario_id', user.id).eq('id', localEmEdicao.id);
 
     if (error) {
       showToast('Erro ao atualizar: ' + error.message, 'error');
@@ -295,6 +298,33 @@ export default function DashboardPage() {
           {[1, 2].map(i => (
             <div key={i} className="skeleton" style={{ height: 84, borderRadius: 'var(--radius-lg)' }} />
           ))}
+        </div>
+      ) : locaisAtivos === 0 ? (
+        <div className="card" style={{ 
+          display: 'flex', 
+          flexDirection: 'column', 
+          alignItems: 'center', 
+          textAlign: 'center', 
+          padding: '80px 24px',
+          background: 'var(--bg-secondary)',
+          border: '1px solid var(--border-subtle)',
+          borderRadius: 'var(--radius-lg)',
+          boxShadow: 'var(--shadow-sm)'
+        }}>
+          <div style={{ fontSize: 64, marginBottom: 24 }}>👋</div>
+          <h2 style={{ fontSize: 24, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 12 }}>
+            Bem-vindo ao Meu Plantão!
+          </h2>
+          <p style={{ fontSize: 16, color: 'var(--text-secondary)', maxWidth: 480, lineHeight: 1.6, marginBottom: 32 }}>
+            Cadastre os hospitais, clínicas ou pacientes de home care para organizar os seus plantões.
+          </p>
+          <button 
+            className="btn btn-primary" 
+            style={{ padding: '14px 40px', fontSize: 16, borderRadius: 12 }}
+            onClick={() => router.push('/locais')}
+          >
+            ➕ Adicionar Local
+          </button>
         </div>
       ) : (
         <>

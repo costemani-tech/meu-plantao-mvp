@@ -26,6 +26,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const [pwaPlatform, setPwaPlatform] = useState<'android' | 'ios' | null>(null);
   const [showIosGuide, setShowIosGuide] = useState(false);
   const [hasPrompt, setHasPrompt] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [isInstalling, setIsInstalling] = useState(false);
 
   // Detectar se deve mostrar o banner de instalação PWA
   useEffect(() => {
@@ -48,8 +50,10 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
     // Monitora o estado do prompt global para habilitar o botão de instalação
     const interval = setInterval(() => {
-      if ((window as any).deferredPrompt) {
+      const prompt = (window as any).deferredPrompt;
+      if (prompt) {
         setHasPrompt(true);
+        setDeferredPrompt(prompt);
         clearInterval(interval);
       }
     }, 1000);
@@ -296,7 +300,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         )}
 
         {/* BANNER DE INSTALAÇÃO PWA PRO */}
-        {showPwaBanner && pathname !== '/login' && (
+        {showPwaBanner && pathname !== '/login' && !window.matchMedia('(display-mode: standalone)').matches && (
           <div style={{
             position: 'fixed', top: 12, left: 12, right: 12, zIndex: 9998,
             background: 'var(--bg-secondary)',
@@ -359,13 +363,18 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 if (pwaPlatform === 'ios') {
                   setShowIosGuide(!showIosGuide);
                 } else {
-                  const prompt = (window as any).deferredPrompt;
-                  if (prompt) {
-                    prompt.prompt();
-                    const { outcome } = await prompt.userChoice;
-                    if (outcome === 'accepted') {
-                      (window as any).deferredPrompt = null;
+                  if (deferredPrompt) {
+                    setIsInstalling(true);
+                    try {
+                      await deferredPrompt.prompt();
+                      await deferredPrompt.userChoice;
+                    } catch (e) {
+                      console.error("Erro no prompt PWA:", e);
+                    } finally {
+                      setIsInstalling(false);
+                      setDeferredPrompt(null);
                       setHasPrompt(false);
+                      (window as any).deferredPrompt = null;
                       setShowPwaBanner(false);
                     }
                   } else {
@@ -386,7 +395,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 opacity: (pwaPlatform !== 'ios' && !hasPrompt) ? 0.7 : 1
               }}
             >
-              {pwaPlatform === 'ios' ? (showIosGuide ? 'FECHAR GUIA' : 'COMO INSTALAR?') : (hasPrompt ? 'INSTALAR APP GRÁTIS' : 'PREPARANDO...')}
+              {pwaPlatform === 'ios' ? (showIosGuide ? 'FECHAR GUIA' : 'COMO INSTALAR?') : (isInstalling ? 'PREPARANDO...' : 'INSTALAR APP GRÁTIS')}
             </button>
           </div>
         )}

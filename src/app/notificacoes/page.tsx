@@ -35,9 +35,13 @@ export default function NotificacoesPage() {
   useEffect(() => { fetchNotificacoes(); }, [fetchNotificacoes]);
 
   const marcarComoLida = async (id: string) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
     const { error } = await supabase
       .from('notificacoes')
       .update({ lida: true })
+      .eq('usuario_id', user.id)
       .eq('id', id);
     if (!error) {
       setNotis(prev => prev.map(n => n.id === id ? { ...n, lida: true } : n));
@@ -46,9 +50,13 @@ export default function NotificacoesPage() {
 
   const deletarNotificacao = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
     const { error } = await supabase
       .from('notificacoes')
       .delete()
+      .eq('usuario_id', user.id)
       .eq('id', id);
     if (!error) {
       setNotis(prev => prev.filter(n => n.id !== id));

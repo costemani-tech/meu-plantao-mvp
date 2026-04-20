@@ -23,6 +23,7 @@ export default function LocaisPage() {
 
   const [isPro, setIsPro] = useState(false);
   const [limiteLocaisAtingido, setLimiteLocaisAtingido] = useState(false);
+  const [forceShowForm, setForceShowForm] = useState(false);
 
   useEffect(() => {
     const checkUser = async () => {
@@ -142,187 +143,218 @@ export default function LocaisPage() {
         <p>Gerencie os hospitais, clínicas e atendimentos Home Care</p>
       </div>
 
-      <div className="mobile-stack" style={{ display: 'grid', gridTemplateColumns: '1fr 1.4fr', gap: 24 }}>
-        <div className="card" style={{ height: 'fit-content', position: 'relative', overflow: 'hidden' }}>
-          {(!isPro && limiteLocaisAtingido) ? (
-            <div style={{ 
-              padding: '24px', 
-              textAlign: 'center', 
-              background: 'linear-gradient(135deg, #1a202c 0%, #2d3748 100%)',
-              borderRadius: 'var(--radius-md)',
-              border: '1px solid rgba(245, 158, 11, 0.3)',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: '16px'
-            }}>
-              <div style={{ fontSize: '40px' }}>🔒</div>
-              <h2 style={{ fontSize: '16px', fontWeight: 800, color: '#fff', margin: 0 }}>
-                Limite do Plano Gratuito atingido (2 locais)
-              </h2>
-              <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.8)', lineHeight: '1.6', margin: 0 }}>
-                Para adicionar mais hospitais e gerenciar seus ganhos sem limites, assine o <strong>Plano PRO</strong>.
-              </p>
-              <a 
-                href="https://wa.me/5521991847945?text=Ol%C3%A1%21%20Estou%20gostando%20muito%20do%20Meu%20Plant%C3%A3o%20e%20cheguei%20no%20limite%20do%20plano%20free.%20Quero%20assinar%20o%20Plano%20PRO%20para%20liberar%20os%20recursos.%20Como%20fa%C3%A7o%20para%20ativar%3F"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn btn-primary"
-                style={{ 
-                  background: '#22c55e', 
-                  border: 'none', 
-                  color: '#fff', 
-                  width: '100%', 
-                  justifyContent: 'center',
-                  padding: '12px',
-                  fontWeight: 700
-                }}
-              >
-                🚀 Assinar Plano PRO
-              </a>
-            </div>
-          ) : (
-            <>
-              <h2 style={{ fontWeight: 700, marginBottom: 20, fontSize: 16 }}>Novo Local</h2>
-
-              <div className="form-group">
-                <label className="form-label">Nome do Local</label>
-                <input
-                  type="text"
-                  className="form-input"
-                  placeholder="Ex: Hospital das Clínicas"
-                  value={nome}
-                  onChange={e => setNome(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && adicionarLocal()}
-                />
+      {locais.length === 0 && !forceShowForm ? (
+        <div className="card" style={{ 
+          display: 'flex', 
+          flexDirection: 'column', 
+          alignItems: 'center', 
+          textAlign: 'center', 
+          padding: '80px 24px',
+          background: 'var(--bg-secondary)',
+          border: '1px solid var(--border-subtle)',
+          borderRadius: 'var(--radius-lg)',
+          boxShadow: 'var(--shadow-sm)'
+        }}>
+          <div style={{ fontSize: 64, marginBottom: 24 }}>👋</div>
+          <h2 style={{ fontSize: 24, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 12 }}>
+            Bem-vindo ao Meu Plantão!
+          </h2>
+          <p style={{ fontSize: 16, color: 'var(--text-secondary)', maxWidth: 480, lineHeight: 1.6, marginBottom: 32 }}>
+            Cadastre os hospitais, clínicas ou pacientes de home care para organizar os seus plantões.
+          </p>
+          <button 
+            className="btn btn-primary" 
+            style={{ padding: '14px 40px', fontSize: 16, borderRadius: 12 }}
+            onClick={() => setForceShowForm(true)}
+          >
+            ➕ Adicionar Local
+          </button>
+        </div>
+      ) : (
+        <div className="mobile-stack" style={{ display: 'grid', gridTemplateColumns: '1fr 1.4fr', gap: 24 }}>
+          {/* ... resto do conteúdo existente ... */}
+          <div className="card" style={{ height: 'fit-content', position: 'relative', overflow: 'hidden' }}>
+            {/* bloco de add local original */}
+            {(!isPro && limiteLocaisAtingido) ? (
+              <div style={{ 
+                padding: '24px', 
+                textAlign: 'center', 
+                background: 'linear-gradient(135deg, #1a202c 0%, #2d3748 100%)',
+                borderRadius: 'var(--radius-md)',
+                border: '1px solid rgba(245, 158, 11, 0.3)',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '16px'
+              }}>
+                <div style={{ fontSize: '40px' }}>🔒</div>
+                <h2 style={{ fontSize: '16px', fontWeight: 800, color: '#fff', margin: 0 }}>
+                  Limite do Plano Gratuito atingido (2 locais)
+                </h2>
+                <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.8)', lineHeight: '1.6', margin: 0 }}>
+                  Para adicionar mais hospitais e gerenciar seus ganhos sem limites, assine o <strong>Plano PRO</strong>.
+                </p>
+                <a 
+                  href="https://wa.me/5521991847945?text=Ol%C3%A1%21%20Estou%20gostando%20muito%20do%20Meu%20Plant%C3%A3o%20e%20cheguei%20no%20limite%20do%20plano%20free.%20Quero%20assinar%20o%20Plano%20PRO%20para%20liberar%20os%20recursos.%20Como%20fa%C3%A7o%20para%20ativar%3F"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn-primary"
+                  style={{ 
+                    background: '#22c55e', 
+                    border: 'none', 
+                    color: '#fff', 
+                    width: '100%', 
+                    justifyContent: 'center',
+                    padding: '12px',
+                    fontWeight: 700
+                  }}
+                >
+                  🚀 Assinar Plano PRO
+                </a>
               </div>
+            ) : (
+              <>
+                <h2 style={{ fontWeight: 700, marginBottom: 20, fontSize: 16 }}>Novo Local</h2>
 
-              <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 16, marginBottom: 16 }}>
-                <input 
-                  type="checkbox" 
-                  id="homecareCheckbox" 
-                  checked={isHomeCare} 
-                  onChange={e => setIsHomeCare(e.target.checked)} 
-                  style={{ width: 16, height: 16, accentColor: 'var(--accent-teal)' }}
-                />
-                <label htmlFor="homecareCheckbox" style={{ fontSize: 13, color: 'var(--text-secondary)', cursor: 'pointer' }}>
-                  Este local é de atendimento <strong>Home Care</strong> 🏠
-                </label>
-              </div>
-
-              {!isHomeCare && (
                 <div className="form-group">
-                  <label className="form-label">Endereço (Opcional)</label>
+                  <label className="form-label">Nome do Local</label>
                   <input
                     type="text"
                     className="form-input"
-                    placeholder="Ex: Av. Paulista, 1000 - Bela Vista"
-                    value={endereco}
-                    onChange={e => setEndereco(e.target.value)}
+                    placeholder="Ex: Hospital das Clínicas"
+                    value={nome}
+                    onChange={e => setNome(e.target.value)}
                     onKeyDown={e => e.key === 'Enter' && adicionarLocal()}
                   />
                 </div>
-              )}
 
-              {isHomeCare && (
-                <div style={{ marginBottom: 16, padding: 12, background: 'rgba(34,211,181,0.06)', borderRadius: 'var(--radius-md)', fontSize: 12, color: 'var(--text-muted)' }}>
-                  Para sua segurança, endereços de pacientes Home Care são opcionais e não são exigidos no cadastro base.
-                </div>
-              )}
-
-              <div className="form-group">
-                <label className="form-label">Cor no Calendário</label>
-                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 4 }}>
-                  {CORES_PRESET.map(c => (
-                    <button
-                      key={c}
-                      onClick={() => setCor(c)}
-                      style={{
-                        width: 32,
-                        height: 32,
-                        borderRadius: '50%',
-                        background: c,
-                        border: cor === c ? '3px solid white' : '3px solid transparent',
-                        cursor: 'pointer',
-                        transition: 'transform 0.15s',
-                        transform: cor === c ? 'scale(1.2)' : 'scale(1)',
-                      }}
-                      title={c}
-                    />
-                  ))}
-                </div>
-                <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Cor personalizada:</span>
-                  <input type="color" value={cor} onChange={e => setCor(e.target.value)} style={{ width: 36, height: 28, border: 'none', background: 'none', cursor: 'pointer' }} />
-                </div>
-              </div>
-
-              <button 
-                className="btn btn-primary" 
-                style={{ width: '100%', justifyContent: 'center' }} 
-                onClick={adicionarLocal} 
-                disabled={saving}
-              >
-                {saving ? '⏳ Salvando...' : '➕ Adicionar Local'}
-              </button>
-            </>
-          )}
-        </div>
-
-        <div className="card">
-          <h2 style={{ fontWeight: 700, marginBottom: 16, fontSize: 16 }}>
-            Locais Cadastrados ({locais.length})
-          </h2>
-          {locais.length === 0 ? (
-            <div className="empty-state">
-              <div className="empty-icon">🏥</div>
-              <p>Nenhum local cadastrado ainda.</p>
-            </div>
-          ) : (
-            <div className="shift-list">
-              {locais.map(l => (
-                <div key={l.id} className="shift-item" style={{ alignItems: 'center', cursor: 'pointer' }} onClick={() => setLocalEmEdicao(l)}>
-                  <div className="shift-color-bar" style={{ backgroundColor: l.cor_calendario }} />
-                  <div className="shift-info" style={{ flex: 1 }}>
-                    <div className="shift-local" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      {l.nome}
-                      {l.is_home_care && <span style={{ fontSize: 11, background: 'rgba(34,211,181,0.1)', color: 'var(--accent-teal)', padding: '2px 6px', borderRadius: 4 }}>🏠 Home Care</span>}
-                    </div>
-                    {l.endereco && !l.is_home_care && (
-                      <div className="shift-time" style={{ marginTop: 4, display: 'flex', alignItems: 'center', gap: 4 }}>
-                        📍 <span style={{ opacity: 0.8 }}>{l.endereco}</span>
-                        <a 
-                          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(l.endereco)}`} 
-                          target="_blank" 
-                          rel="noreferrer"
-                          style={{ color: 'var(--accent-blue)', textDecoration: 'none', marginLeft: 4, fontWeight: 500 }}
-                          onClick={e => e.stopPropagation()}
-                        >
-                          Ver no Mapa ↗
-                        </a>
-                      </div>
-                    )}
-                  </div>
-                  <div
-                    style={{
-                      width: 14, height: 14, borderRadius: '50%',
-                      background: l.cor_calendario, flexShrink: 0, marginRight: 12
-                    }}
+                <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 16, marginBottom: 16 }}>
+                  <input 
+                    type="checkbox" 
+                    id="homecareCheckbox" 
+                    checked={isHomeCare} 
+                    onChange={e => setIsHomeCare(e.target.checked)} 
+                    style={{ width: 16, height: 16, accentColor: 'var(--accent-teal)' }}
                   />
-                  <button
-                    className="btn btn-danger"
-                    style={{ padding: '6px 12px', fontSize: 12 }}
-                    onClick={(e) => { e.stopPropagation(); excluirLocal(l.id, l.nome); }}
-                    title="Excluir"
-                  >
-                    🗑️
-                  </button>
+                  <label htmlFor="homecareCheckbox" style={{ fontSize: 13, color: 'var(--text-secondary)', cursor: 'pointer' }}>
+                    Este local é de atendimento <strong>Home Care</strong> 🏠
+                  </label>
                 </div>
-              ))}
-            </div>
-          )}
+
+                {!isHomeCare && (
+                  <div className="form-group">
+                    <label className="form-label">Endereço (Opcional)</label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      placeholder="Ex: Av. Paulista, 1000 - Bela Vista"
+                      value={endereco}
+                      onChange={e => setEndereco(e.target.value)}
+                      onKeyDown={e => e.key === 'Enter' && adicionarLocal()}
+                    />
+                  </div>
+                )}
+
+                {isHomeCare && (
+                  <div style={{ marginBottom: 16, padding: 12, background: 'rgba(34,211,181,0.06)', borderRadius: 'var(--radius-md)', fontSize: 12, color: 'var(--text-muted)' }}>
+                    Para sua segurança, endereços de pacientes Home Care são opcionais e não são exigidos no cadastro base.
+                  </div>
+                )}
+
+                <div className="form-group">
+                  <label className="form-label">Cor no Calendário</label>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 4 }}>
+                    {CORES_PRESET.map(c => (
+                      <button
+                        key={c}
+                        onClick={() => setCor(c)}
+                        style={{
+                          width: 32,
+                          height: 32,
+                          borderRadius: '50%',
+                          background: c,
+                          border: cor === c ? '3px solid white' : '3px solid transparent',
+                          cursor: 'pointer',
+                          transition: 'transform 0.15s',
+                          transform: cor === c ? 'scale(1.2)' : 'scale(1)',
+                        }}
+                        title={c}
+                      />
+                    ))}
+                  </div>
+                  <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Cor personalizada:</span>
+                    <input type="color" value={cor} onChange={e => setCor(e.target.value)} style={{ width: 36, height: 28, border: 'none', background: 'none', cursor: 'pointer' }} />
+                  </div>
+                </div>
+
+                <button 
+                  className="btn btn-primary" 
+                  style={{ width: '100%', justifyContent: 'center' }} 
+                  onClick={adicionarLocal} 
+                  disabled={saving}
+                >
+                  {saving ? '⏳ Salvando...' : '➕ Adicionar Local'}
+                </button>
+              </>
+            )}
+          </div>
+
+          <div className="card">
+            <h2 style={{ fontWeight: 700, marginBottom: 16, fontSize: 16 }}>
+              Locais Cadastrados ({locais.length})
+            </h2>
+            {locais.length === 0 ? (
+              <div className="empty-state">
+                <div className="empty-icon">🏥</div>
+                <p>Nenhum local cadastrado ainda.</p>
+              </div>
+            ) : (
+              <div className="shift-list">
+                {locais.map(l => (
+                  <div key={l.id} className="shift-item" style={{ alignItems: 'center', cursor: 'pointer' }} onClick={() => setLocalEmEdicao(l)}>
+                    <div className="shift-color-bar" style={{ backgroundColor: l.cor_calendario }} />
+                    <div className="shift-info" style={{ flex: 1 }}>
+                      <div className="shift-local" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        {l.nome}
+                        {l.is_home_care && <span style={{ fontSize: 11, background: 'rgba(34,211,181,0.1)', color: 'var(--accent-teal)', padding: '2px 6px', borderRadius: 4 }}>🏠 Home Care</span>}
+                      </div>
+                      {l.endereco && !l.is_home_care && (
+                        <div className="shift-time" style={{ marginTop: 4, display: 'flex', alignItems: 'center', gap: 4 }}>
+                          📍 <span style={{ opacity: 0.8 }}>{l.endereco}</span>
+                          <a 
+                            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(l.endereco)}`} 
+                            target="_blank" 
+                            rel="noreferrer"
+                            style={{ color: 'var(--accent-blue)', textDecoration: 'none', marginLeft: 4, fontWeight: 500 }}
+                            onClick={e => e.stopPropagation()}
+                          >
+                            Ver no Mapa ↗
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                    <div
+                      style={{
+                        width: 14, height: 14, borderRadius: '50%',
+                        background: l.cor_calendario, flexShrink: 0, marginRight: 12
+                      }}
+                    />
+                    <button
+                      className="btn btn-danger"
+                      style={{ padding: '6px 12px', fontSize: 12 }}
+                      onClick={(e) => { e.stopPropagation(); excluirLocal(l.id, l.nome); }}
+                      title="Excluir"
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {toast && <div className={`toast ${toast.type}`}>{toast.msg}</div>}
 
