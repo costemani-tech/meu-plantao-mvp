@@ -35,30 +35,54 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       window.matchMedia('(display-mode: standalone)').matches ||
       (navigator as any).standalone === true;
 
-    if (!isStandalone) {
-      const dismissed = sessionStorage.getItem('pwa-banner-dismissed');
-      if (!dismissed) {
-        const ua = navigator.userAgent.toLowerCase();
-        const isMobile = /android|iphone|ipad|ipod/.test(ua);
-        if (isMobile) {
-          const isIos = /iphone|ipad|ipod/.test(ua);
-          setPwaPlatform(isIos ? 'ios' : 'android');
-          setShowPwaBanner(true);
-        }
+    if (isStandalone) return;
+
+    const ua = navigator.userAgent.toLowerCase();
+    const isMobile = /android|iphone|ipad|ipod/.test(ua);
+    if (!isMobile) return;
+
+    const isIos = /iphone|ipad|ipod/.test(ua);
+    const platform = isIos ? 'ios' : 'android';
+    setPwaPlatform(platform);
+
+    const dismissed = sessionStorage.getItem('pwa-banner-dismissed');
+
+    const handlePrompt = (e: any) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setHasPrompt(true);
+      (window as any).deferredPrompt = e;
+      
+      // No Android, só mostramos o banner quando o prompt estiver REALMENTE pronto
+      if (platform === 'android' && !dismissed) {
+        setShowPwaBanner(true);
       }
+    };
+
+    window.addEventListener('beforeinstallprompt', handlePrompt);
+    
+    // Esconder banner se o app for instalado com sucesso
+    const handleInstalled = () => {
+      setShowPwaBanner(false);
+      setHasPrompt(false);
+      setDeferredPrompt(null);
+    };
+    window.addEventListener('appinstalled', handleInstalled);
+
+    // Checa se o layout.tsx já capturou o prompt
+    if (typeof window !== 'undefined' && (window as any).deferredPrompt) {
+      handlePrompt((window as any).deferredPrompt);
     }
 
-    // Monitora o estado do prompt global para habilitar o botão de instalação
-    const interval = setInterval(() => {
-      const prompt = (window as any).deferredPrompt;
-      if (prompt) {
-        setHasPrompt(true);
-        setDeferredPrompt(prompt);
-        clearInterval(interval);
-      }
-    }, 1000);
+    // No iOS, como não existe beforeinstallprompt, mostramos o banner (guia manual) imediatamente
+    if (isIos && !dismissed) {
+      setShowPwaBanner(true);
+    }
 
-    return () => clearInterval(interval);
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handlePrompt);
+      window.removeEventListener('appinstalled', handleInstalled);
+    };
   }, []);
 
   useEffect(() => {
@@ -377,9 +401,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                       (window as any).deferredPrompt = null;
                       setShowPwaBanner(false);
                     }
-                  } else {
-                    // Fallback para quando o evento ainda não foi capturado no Android
-                    alert("O navegador ainda está preparando o instalador. Tente novamente em alguns segundos ou use o menu do Chrome.");
                   }
                 }
               }}
