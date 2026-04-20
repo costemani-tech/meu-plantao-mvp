@@ -8,6 +8,7 @@ import jsPDF from 'jspdf';
 
 interface PlantaoComLocal extends Plantao {
   local?: LocalTrabalho;
+  escala?: { regra: string };
   status_conflito?: boolean;
 }
 
@@ -24,7 +25,7 @@ export default function CalendarioPage() {
   const [excluindo, setExcluindo] = useState(false);
   const [showProModal, setShowProModal] = useState(false);
   const [menuAberto, setMenuAberto] = useState(false);
-  const [edicaoCiclo, setEdicaoCiclo] = useState<{p: PlantaoComLocal, regra: string, dataInicio: string} | null>(null);
+  const [edicaoCiclo, setEdicaoCiclo] = useState<{p: PlantaoComLocal, regra: string, dataInicio: string, horaFim: string} | null>(null);
   const [salvandoCiclo, setSalvandoCiclo] = useState(false);
   const [isCustomCicloRule, setIsCustomCicloRule] = useState(false);
   const [cicloHorasTrabalho, setCicloHorasTrabalho] = useState('');
@@ -72,7 +73,7 @@ export default function CalendarioPage() {
       if (!user) return;
       const { data } = await supabase
         .from('plantoes')
-        .select('*, local:locais_trabalho(*)')
+        .select('*, local:locais_trabalho(*), escala:escalas(regra)')
         .eq('usuario_id', user.id)
         .gte('data_hora_inicio', inicioMes)
         .lte('data_hora_inicio', fimMes)
@@ -224,7 +225,7 @@ export default function CalendarioPage() {
       if (!user) return;
       const { data } = await supabase
         .from('plantoes')
-        .select('*, local:locais_trabalho(*)')
+        .select('*, local:locais_trabalho(*), escala:escalas(regra)')
         .eq('usuario_id', user.id)
         .gte('data_hora_inicio', inicioMes)
         .lte('data_hora_inicio', fimMes)
@@ -474,7 +475,25 @@ export default function CalendarioPage() {
                           <>
                             {p.escala_id && (
                               <button 
-                                onClick={() => isPro ? setEdicaoCiclo({p, regra: '12x36', dataInicio: p.data_hora_inicio.substring(0, 10)}) : setShowProModal(true)}
+                                onClick={() => {
+                                  if (!isPro) { setShowProModal(true); return; }
+                                  const r = p.escala?.regra || '12x36';
+                                  const standardRules = ['12x36', '24x48', '24x72', '5x2', '6x1'];
+                                  const isCustom = !standardRules.includes(r);
+                                  
+                                  setEdicaoCiclo({
+                                    p, 
+                                    regra: r, 
+                                    dataInicio: p.data_hora_inicio.substring(0, 10),
+                                    horaFim: new Date(p.data_hora_fim).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+                                  });
+                                  setIsCustomCicloRule(isCustom);
+                                  if (isCustom) {
+                                    const parts = r.split('x');
+                                    setCicloHorasTrabalho(parts[0] || '');
+                                    setCicloHorasDescanso(parts[1] || '');
+                                  }
+                                }}
                                 title="Editar Ciclo da Escala"
                                 style={{ padding: '6px 12px', fontSize: 12, background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)', borderRadius: 6, color: 'var(--text-primary)', fontWeight: 600, cursor: 'pointer' }}
                               >
@@ -518,7 +537,7 @@ export default function CalendarioPage() {
       {modalExclusao && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(2px)', zIndex: 999999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }} onClick={() => setModalExclusao(null)}>
           <div className="card" style={{ maxWidth: 380, width: '100%', boxShadow: '0 20px 40px rgba(0,0,0,0.2)' }} onClick={e => e.stopPropagation()}>
-            <h2 style={{ fontSize: 15, fontWeight: 800, marginBottom: 6 }}>Remover Plantão </h2>
+            <h2 style={{ fontSize: 15, fontWeight: 800, marginBottom: 6 }}>Remover Plantão  </h2>
             <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 20, lineHeight: 1.5 }}>
               <strong>{modalExclusao.local?.nome}</strong><br />
               {new Date(modalExclusao.data_hora_inicio).toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })} · {new Date(modalExclusao.data_hora_inicio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
@@ -530,7 +549,7 @@ export default function CalendarioPage() {
                 onClick={removerSomenteEste}
                 disabled={excluindo}
               >
-                 {modalExclusao.is_extra ? 'Remover Plantão' : 'Remover só este plantão'}
+                  {modalExclusao.is_extra ? 'Remover Plantão' : 'Remover só este plantão'}
               </button>
               {!modalExclusao.is_extra && modalExclusao.escala_id && (
                 <button
@@ -539,7 +558,7 @@ export default function CalendarioPage() {
                   onClick={removerEstEFuturos}
                   disabled={excluindo}
                 >
-                   Remover este e todos os futuros desta escala
+                    Remover este e todos os futuros desta escala
                 </button>
               )}
               <button
@@ -583,22 +602,38 @@ export default function CalendarioPage() {
                    if (v !== 'Outro') { setCicloHorasTrabalho(''); setCicloHorasDescanso(''); }
                  }}
                  className="input-field"
-                 style={{ width: '100%', marginBottom: isCustomCicloRule ? 12 : 24, padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-subtle)', background: 'var(--bg-primary)', color: 'var(--text-primary)' }}
+                 style={{ width: '100%', marginBottom: 24, padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-subtle)', background: 'var(--bg-primary)', color: 'var(--text-primary)' }}
               >
-                   <option value="12x36">12h Trabalhadas / 36h Descanso</option>
-                   <option value="24x48">24h Trabalhadas / 48h Descanso</option>
-                   <option value="24x72">24h Trabalhadas / 72h Descanso</option>
+                   <option value="12x36">12h Trabalhadas / 36h Descanso (Plantonista)</option>
+                   <option value="24x48">24h Trabalhadas / 48h Descanso (Plantonista)</option>
+                   <option value="24x72">24h Trabalhadas / 72h Descanso (Plantonista)</option>
+                   <option value="5x2">Diarista (Segunda a Sexta)</option>
+                   <option value="6x1">Diarista (6x1)</option>
                    <option value="Outro">Outro (Personalizado)</option>
               </select>
+
+              {(edicaoCiclo!.regra === '5x2' || edicaoCiclo!.regra === '6x1' || isCustomCicloRule) && (
+                 <div style={{ marginBottom: 20 }}>
+                   <label style={{ fontSize: 13, fontWeight: 700, marginBottom: 6, display: 'block' }}>Hora de Término (Saída):</label>
+                   <input 
+                     type="time"
+                     value={edicaoCiclo!.horaFim}
+                     onChange={e => setEdicaoCiclo({...edicaoCiclo!, horaFim: e.target.value})}
+                     className="input-field"
+                     style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-subtle)', background: 'var(--bg-primary)', color: 'var(--text-primary)' }}
+                   />
+                 </div>
+               )}
+
               {isCustomCicloRule && (
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 24, padding: 14, background: 'var(--bg-secondary)', borderRadius: 10, border: '1px solid var(--border-subtle)', animation: 'fadeInDown 0.2s ease' }}>
                   <div>
                     <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 4 }}>Horas Trabalhadas</label>
-                    <input type="number" min="1" value={cicloHorasTrabalho} onChange={e => { setCicloHorasTrabalho(e.target.value); setEdicaoCiclo({...edicaoCiclo, regra: `${e.target.value}x${cicloHorasDescanso}`}); }} placeholder="Ex: 12" style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1px solid var(--border-subtle)', background: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: 14, boxSizing: 'border-box' }} />
+                    <input type="number" min="1" value={cicloHorasTrabalho} onChange={e => { setCicloHorasTrabalho(e.target.value); setEdicaoCiclo({...edicaoCiclo!, regra: `${e.target.value}x${cicloHorasDescanso}`}); }} placeholder="Ex: 12" style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1px solid var(--border-subtle)', background: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: 14, boxSizing: 'border-box' }} />
                   </div>
                   <div>
                     <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 4 }}>Horas de Descanso</label>
-                    <input type="number" min="1" value={cicloHorasDescanso} onChange={e => { setCicloHorasDescanso(e.target.value); setEdicaoCiclo({...edicaoCiclo, regra: `${cicloHorasTrabalho}x${e.target.value}`}); }} placeholder="Ex: 60" style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1px solid var(--border-subtle)', background: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: 14, boxSizing: 'border-box' }} />
+                    <input type="number" min="1" value={cicloHorasDescanso} onChange={e => { setCicloHorasDescanso(e.target.value); setEdicaoCiclo({...edicaoCiclo!, regra: `${cicloHorasTrabalho}x${e.target.value}`}); }} placeholder="Ex: 60" style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1px solid var(--border-subtle)', background: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: 14, boxSizing: 'border-box' }} />
                   </div>
                   <p style={{ gridColumn: '1 / -1', margin: 0, fontSize: 11, color: 'var(--text-muted)' }}>Ciclo: {(parseInt(cicloHorasTrabalho,10)||0)+(parseInt(cicloHorasDescanso,10)||0)}h</p>
                 </div>
@@ -618,11 +653,26 @@ export default function CalendarioPage() {
                           body: JSON.stringify({ modo: 'encerrar_em', data_encerramento: dataNovaFormatada }) 
                         });
                         
-                        // 2. Cria a nova escala a partir dessa data escolhida
+                        // 2. Determinar o tipo de jornada
+                        let tipo_jornada = 'Plantonista';
+                        const regraFinal = isCustomCicloRule ? `${cicloHorasTrabalho}x${cicloHorasDescanso}` : edicaoCiclo!.regra;
+                        
+                        if (regraFinal === '5x2' || regraFinal === '6x1') {
+                          tipo_jornada = 'Diarista-Corridos';
+                        }
+                        
+                        // 3. Cria a nova escala a partir dessa data escolhida
                         await fetch('/api/escalas', { 
                           method: 'POST', 
                           headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ local_id: edicaoCiclo.p.local_id, regra: edicaoCiclo.regra, data_inicio: dataNovaFormatada, forcar_conflito: false })
+                          body: JSON.stringify({ 
+                            local_id: edicaoCiclo!.p.local_id, 
+                            regra: regraFinal, 
+                            data_inicio: dataNovaFormatada, 
+                            forcar_conflito: false,
+                            tipo_jornada: tipo_jornada,
+                            hora_fim: edicaoCiclo!.horaFim
+                          })
                         });
                         
                         localStorage.removeItem(`calendario_cache_${ano}_${mes}`);

@@ -313,7 +313,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                   </span>
                 )}
               </div>
-            </Link>
+            </button>
           </div>
         )}
 

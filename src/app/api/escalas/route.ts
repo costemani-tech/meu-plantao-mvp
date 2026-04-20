@@ -14,29 +14,62 @@ interface PlantaoSlot {
 // ─────────────────────────────────────────────
 // Motor matemático de geração de plantões
 // ─────────────────────────────────────────────
-function parseRegra(regra: Regra): { trabalho: number; ciclo: number } {
-  const parts = regra.split('x');
-  const trabalho = parseInt(parts[0], 10);
-  const descanso = parseInt(parts[1], 10);
-  return { trabalho, ciclo: trabalho + descanso };
-}
-
 function gerarPlantoesAte(
   dataInicio: Date,
   regra: Regra,
-  dataFim: Date
+  dataFim: Date,
+  tipoJornada: string = 'Plantonista',
+  horaFim: string = '18:00'
 ): PlantaoSlot[] {
-  const { trabalho, ciclo } = parseRegra(regra);
   const slots: PlantaoSlot[] = [];
-  let cursor = new Date(dataInicio);
+  const cursor = new Date(dataInicio);
 
-  while (cursor < dataFim) {
-    const inicio = new Date(cursor);
-    const fim = new Date(cursor);
-    fim.setHours(fim.getHours() + trabalho);
-    if (inicio < dataFim) slots.push({ inicio, fim });
-    cursor = new Date(cursor);
-    cursor.setHours(cursor.getHours() + ciclo);
+  if (tipoJornada === 'Plantonista') {
+    const parts = regra.split('x');
+    const trabalho = parseInt(parts[0], 10) || 12;
+    const descanso = parseInt(parts[1], 10) || 36;
+    const ciclo = trabalho + descanso;
+
+    while (cursor < dataFim) {
+      const inicio = new Date(cursor);
+      const fim = new Date(cursor);
+      fim.setHours(fim.getHours() + trabalho);
+      if (inicio < dataFim) slots.push({ inicio, fim });
+      cursor.setHours(cursor.getHours() + ciclo);
+    }
+  } else if (tipoJornada === 'Diarista-Corridos') {
+    const parts = regra.split('x');
+    const dTrabalho = parseInt(parts[0], 10) || 5;
+    const dDescanso = parseInt(parts[1], 10) || 2;
+    const cicloDias = dTrabalho + dDescanso;
+    const [hFim, mFim] = horaFim.split(':').map(Number);
+    let idx = 0;
+
+    while (cursor < dataFim) {
+      if (idx < dTrabalho) {
+        const inicio = new Date(cursor);
+        const fim = new Date(cursor);
+        fim.setHours(hFim, mFim, 0, 0);
+        if (fim <= inicio) fim.setDate(fim.getDate() + 1);
+        if (inicio < dataFim) slots.push({ inicio, fim });
+      }
+      cursor.setDate(cursor.getDate() + 1);
+      idx = (idx + 1) % cicloDias;
+    }
+  } else if (tipoJornada === 'Diarista-Semanal') {
+    const diasPermitidos = regra.split(',').map(Number);
+    const [hFim, mFim] = horaFim.split(':').map(Number);
+
+    while (cursor < dataFim) {
+      if (diasPermitidos.includes(cursor.getDay())) {
+        const inicio = new Date(cursor);
+        const fim = new Date(cursor);
+        fim.setHours(hFim, mFim, 0, 0);
+        if (fim <= inicio) fim.setDate(fim.getDate() + 1);
+        if (inicio < dataFim) slots.push({ inicio, fim });
+      }
+      cursor.setDate(cursor.getDate() + 1);
+    }
   }
 
   return slots;
@@ -67,7 +100,14 @@ export async function POST(req: NextRequest) {
     const usuario_id = user.id;
 
     // ── 2. Validação do corpo da requisição ──────────────────────────────────
-    let body: { data_inicio?: string; regra?: string; local_id?: string; forcar_conflito?: boolean };
+    let body: { 
+      data_inicio?: string; 
+      regra?: string; 
+      local_id?: string; 
+      forcar_conflito?: boolean;
+      tipo_jornada?: string;
+      hora_fim?: string;
+    };
     try {
       body = await req.json();
     } catch {
@@ -77,7 +117,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { data_inicio, regra, local_id, forcar_conflito } = body;
+    const { data_inicio, regra, local_id, forcar_conflito, tipo_jornada, hora_fim } = body;
 
     if (!data_inicio || !regra || !local_id) {
       return NextResponse.json(
@@ -86,7 +126,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (!/^\d+x\d+$/.test(regra)) {
+    // Validação flexível: pode ser XxY ou X,Y,Z (dias da semana)
+    if (!/^\d+x\d+$/.test(regra) && !/^(\d+,)*\d+$/.test(regra)) {
       return NextResponse.json(
         { error: true, message: 'Regra de escala inválida. Selecione uma opção válida.' },
         { status: 400 }
@@ -118,7 +159,7 @@ export async function POST(req: NextRequest) {
     // ── 5. Geração dos slots ─────────────────────────────────────────────────
     const anoAtual = new Date().getFullYear();
     const dataFim = new Date(anoAtual, 11, 31, 23, 59, 59);
-    const slots = gerarPlantoesAte(new Date(data_inicio), regra as Regra, dataFim);
+    const slots = gerarPlantoesAte(new Date(data_inicio), regra as Regra, dataFim, tipo_jornada, hora_fim);
 
     if (slots.length === 0) {
       return NextResponse.json(
