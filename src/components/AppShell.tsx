@@ -98,10 +98,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         const win = window as any;
         if (win.OneSignalDeferred) {
           win.OneSignalDeferred.push(async (OneSignal: any) => {
-            await OneSignal.login(user.id);
+            const userId = (await supabase.auth.getUser()).data.user?.id;
+            if (userId) await OneSignal.login(userId);
           });
-        } else if (win.OneSignal?.login) {
-          await win.OneSignal.login(user.id);
         }
       } catch (e) {
         console.log('OneSignal login error:', e);
@@ -281,12 +280,25 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
             </button>
 
-            <Link href="/notificacoes" style={{
-              background: 'var(--bg-secondary)', padding: 10, borderRadius: '50%',
-              boxShadow: 'var(--shadow-sm)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: 'var(--text-primary)', border: '1px solid var(--border-subtle)', transition: 'all 0.2s',
-              cursor: 'pointer', width: 44, height: 44
-            }}
+            <button 
+              onClick={async () => {
+                const win = window as any;
+                if (win.OneSignalDeferred) {
+                  win.OneSignalDeferred.push(async (OneSignal: any) => {
+                    await OneSignal.Notifications.requestPermission();
+                    const user = (await supabase.auth.getUser()).data.user;
+                    if (user) await OneSignal.login(user.id);
+                  });
+                }
+                router.push('/notificacoes');
+              }}
+              style={{
+                background: 'var(--bg-secondary)', padding: 10, borderRadius: '50%',
+                boxShadow: 'var(--shadow-sm)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: 'var(--text-primary)', border: '1px solid var(--border-subtle)', transition: 'all 0.2s',
+                cursor: 'pointer', width: 44, height: 44
+              }}
+              title="Notificações e Alertas"
             >
               <div style={{ position: 'relative', display: 'flex' }}>
                 <Bell size={20} />

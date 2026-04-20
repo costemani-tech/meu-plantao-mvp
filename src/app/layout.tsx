@@ -37,13 +37,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   notifyButton: { enable: false },
                   allowLocalhostAsSecureOrigin: true
                 });
-                
-                // Solicita permissão de notificação nativa no primeiro acesso
-                if (typeof OneSignal.Slidedown !== 'undefined') {
-                   OneSignal.Slidedown.promptPush();
-                } else if (typeof OneSignal.promptForPushNotificationsWithUserResponse !== 'undefined') {
-                   OneSignal.promptForPushNotificationsWithUserResponse();
-                }
               });
             `
           }}

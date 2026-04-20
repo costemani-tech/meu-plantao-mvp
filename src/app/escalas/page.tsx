@@ -728,7 +728,25 @@ export default function EscalasPage() {
             borderRadius: 12, 
             border: '1px solid var(--border-subtle)' 
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }} onClick={() => setReceberAlerta(!receberAlerta)}>
+            <div 
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }} 
+              onClick={async () => {
+                const novoEstado = !receberAlerta;
+                setReceberAlerta(novoEstado);
+                
+                // Gatilho de Permissão OneSignal
+                if (novoEstado) {
+                  const win = window as any;
+                  if (win.OneSignalDeferred) {
+                    win.OneSignalDeferred.push(async (OneSignal: any) => {
+                      await OneSignal.Notifications.requestPermission();
+                      const user = (await supabase.auth.getUser()).data.user;
+                      if (user) await OneSignal.login(user.id);
+                    });
+                  }
+                }
+              }}
+            >
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <span style={{ fontSize: 18 }}></span>
                 <div>
