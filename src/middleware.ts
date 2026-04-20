@@ -42,6 +42,7 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith('/_next') ||
     pathname.startsWith('/auth/callback') ||
     pathname === '/manifest.json' ||
+    pathname === '/sw.js' ||
     pathname.startsWith('/icons/') ||
     pathname === '/favicon.ico'
   const isLoginPage = pathname.startsWith('/login')

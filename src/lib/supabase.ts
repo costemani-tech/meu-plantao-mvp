@@ -3,7 +3,7 @@ import { createBrowserClient } from '@supabase/ssr';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://dummy.supabase.co';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'dummy';
 
-// O createBrowserClient cuida automaticamente de transformar o LocalStorage em Cookies!
+// O createBrowserClient cuida de manter a sessão sincronizada entre cliente e servidor usando Cookies
 export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey);
 
 export type Regra = '12x36' | '24x48' | '24x72' | 'Outro' | string;

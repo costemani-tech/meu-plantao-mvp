@@ -34,11 +34,20 @@ export async function GET(request: Request) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     
     if (!error) {
+      // Se deu certo, redireciona para a página desejada ou para o início
       return NextResponse.redirect(`${origin}${next}`);
     } else {
-      return new Response(`ERRO GRAVE DO SUPABASE Y: O código de autorização foi enviado, mas o Supabase rejeitou a troca por Cookie. Motivo detalhado: ${error.message}`, { status: 400 });
+      // ERRO PKCE / VERIFIER: Isso acontece muito em PWAs quando o login começa num Browser e termina em outro
+      // Tentamos redirecionar para a home para ver se o cookie de sessão "pegou" mesmo com erro de verifier
+      // ou mostramos uma mensagem instrutiva.
+      if (error.message.includes('code verifier')) {
+        console.error("PKCE Error detected. Redirecting to home to check session...");
+        return NextResponse.redirect(`${origin}/?auth_error=pkce_mismatch`);
+      }
+      return new Response(`ERRO DE AUTENTICAÇÃO: ${error.message}`, { status: 400 });
     }
   }
 
-  return new Response(`ERRO GRAVE DO SUPABASE X: O redirecionamento voltou para o Callback, mas a URL não possui a variável mágica ?code=. URL Real que chegou: ${request.url}`, { status: 400 });
+  // Fallback para quando não há código na URL
+  return NextResponse.redirect(`${origin}/login?error=no_code`);
 }

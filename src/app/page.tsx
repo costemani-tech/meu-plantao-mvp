@@ -33,6 +33,20 @@ export default function DashboardPage() {
   const [isExportingEscala, setIsExportingEscala] = useState(false);
   const router = useRouter();
 
+  // Tratamento de Erro de Autenticação PKCE (Comum em PWAs)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('auth_error') === 'pkce_mismatch') {
+        setToast({ 
+          msg: 'Sessão expirada ou iniciada em outro navegador. Por favor, tente entrar novamente diretamente por aqui.', 
+          type: 'error' 
+        });
+        window.history.replaceState({}, '', '/');
+      }
+    }
+  }, []);
+
   useEffect(() => {
     const checkPro = async () => {
       const { data: { user } } = await supabase.auth.getUser();
