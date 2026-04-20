@@ -20,12 +20,12 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const [unreadCount, setUnreadCount] = useState(0);
   const [toast, setToast] = useState<{titulo: string, mensagem: string} | null>(null);
   const [overCapacity, setOverCapacity] = useState(false);
-   const [showPwaBanner, setShowPwaBanner] = useState(false);
-   const [pwaPlatform, setPwaPlatform] = useState<'android' | 'ios' | null>(null);
-   const [showIosGuide, setShowIosGuide] = useState(false);
-   const [hasPrompt, setHasPrompt] = useState(false);
-
-  const isPro = false; // Trava Central do Freemium
+  const [isPro, setIsPro] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [showPwaBanner, setShowPwaBanner] = useState(false);
+  const [pwaPlatform, setPwaPlatform] = useState<'android' | 'ios' | null>(null);
+  const [showIosGuide, setShowIosGuide] = useState(false);
+  const [hasPrompt, setHasPrompt] = useState(false);
 
   // Detectar se deve mostrar o banner de instalação PWA
   useEffect(() => {
@@ -122,19 +122,48 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         .subscribe();
       
       const checkCapacity = async () => {
-        if (!isPro && pathname !== '/login' && pathname !== '/locais') {
-          const { count } = await supabase.from('locais_trabalho').select('*', { count: 'exact', head: true });
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        // Busca Status Pro Real
+        const { data: profile } = await supabase.from('profiles').select('is_pro').eq('id', user.id).single();
+        const proStatus = profile?.is_pro || false;
+        setIsPro(proStatus);
+
+        if (!proStatus && pathname !== '/login' && pathname !== '/locais') {
+          const { count } = await supabase
+            .from('locais_trabalho')
+            .select('*', { count: 'exact', head: true })
+            .eq('usuario_id', user.id)
+            .eq('ativo', true);
+          
           setOverCapacity(count !== null && count > 2);
         } else {
           setOverCapacity(false);
         }
+        setLoading(false);
       };
 
       checkCapacity();
 
-      return () => { supabase.removeChannel(channel); };
+      // Realtime para Reatividade Imediata do Paywall (excluir/adicionar locais)
+      const locaisChannel = supabase
+        .channel('realtime-locais')
+        .on('postgres_changes', { 
+          event: '*', 
+          schema: 'public', 
+          table: 'locais_trabalho' 
+        }, () => {
+          checkCapacity();
+        })
+        .subscribe();
+
+      return () => { 
+        supabase.removeChannel(channel); 
+        supabase.removeChannel(locaisChannel);
+      };
     }
-  }, [pathname, isPro]);
+  }, [pathname]);
 
 
   useEffect(() => {
@@ -363,7 +392,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         )}
 
         {/* Global Block Screen: Over Capacity na versão Free */}
-        {overCapacity ? (
+        {overCapacity && !loading ? (
           <div style={{ height: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <div className="card" style={{ maxWidth: 440, width: '100%', textAlign: 'center', borderColor: '#EF4444' }}>
               <span style={{ fontSize: 48, display: 'block', marginBottom: 16 }}>⚠️</span>
