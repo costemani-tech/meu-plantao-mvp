@@ -386,6 +386,7 @@ export default function EscalasPage() {
                 app_id: process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID || "SUA_CHAVE_ONESIGNAL",
                 include_aliases: { external_id: [user.id] },
                 target_channel: 'push',
+                collapse_id: `shift_${escalaCriada.id}_${plantao.data_hora_inicio}`,
                 headings: { "en": "Alerta de Plantão", "pt": "Alerta de Plantão" },
                 contents: { 
                   "en": `Plantão em ${nomeLocal} às ${horaStr} (${diaStr}). Bom trabalho!`,
@@ -1165,6 +1166,7 @@ export default function EscalasPage() {
                         
                         pushNotifs.push({
                           include_aliases: { external_id: [user.id] },
+                          collapse_id: `shift_${modalAlertas.id}_${p.data_hora_inicio}`,
                           headings: { en: 'Alerta de Plantão', pt: 'Alerta de Plantão' },
                           contents: {
                             en: `Plantão em ${localNome} às ${hora} (${dia}). Bom trabalho!`,
