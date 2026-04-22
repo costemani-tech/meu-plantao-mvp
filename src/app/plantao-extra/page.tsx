@@ -2,8 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { supabase, LocalTrabalho } from '../../lib/supabase';
-
-interface Toast { msg: string; type: 'success' | 'error' }
+import { toast } from 'sonner';
 
 export default function PlantaoExtraPage() {
   const [locais, setLocais] = useState<LocalTrabalho[]>([]);
@@ -17,7 +16,6 @@ export default function PlantaoExtraPage() {
   const [valorGanho, setValorGanho] = useState('');
 
   const [saving, setSaving] = useState(false);
-  const [toast, setToast] = useState<Toast | null>(null);
   const [conflitoPendente, setConflitoPendente] = useState<{ inicio: string; fim: string } | null>(null);
   const [payloadPendente, setPayloadPendente] = useState<{ inicioIso: string; fimIso: string } | null>(null);
 
@@ -62,20 +60,15 @@ export default function PlantaoExtraPage() {
 
   useEffect(() => { fetchLocais(); }, [fetchLocais]);
 
-  const showToast = (msg: string, type: 'success' | 'error') => {
-    setToast({ msg, type });
-    setTimeout(() => setToast(null), 5000);
-  };
-
   const salvarPlantaoExtra = async (forcarConflito = false) => {
     if (!localId || !dataPlantao || !horaInicio || !horaFim) {
-      showToast('Por favor, preencha todos os campos.', 'error');
+      toast.error('Por favor, preencha todos os campos.');
       return;
     }
 
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      showToast('Sessão expirada. Faça login novamente.', 'error');
+      toast.error('Sessão expirada. Faça login novamente.');
       return;
     }
 
@@ -102,7 +95,7 @@ export default function PlantaoExtraPage() {
           .neq('status', 'Cancelado');
 
         if (count && count >= 4) {
-          showToast('Limite de 4 plantões extras no mês atingido. Assine o plano Pro para registros ilimitados.', 'error');
+          toast.error('Limite de 4 plantões extras no mês atingido. Assine o plano Pro para registros ilimitados.');
           setSaving(false);
           return;
         }
@@ -147,13 +140,13 @@ export default function PlantaoExtraPage() {
       // ↓ Notifica o calendário para limpar cache e refazer fetch com is_extra correto
       window.dispatchEvent(new CustomEvent('plantoes-atualizados'));
 
-      showToast(' Plantão Extra salvo com sucesso no calendário!', 'success');
+      toast.success('✅ Plantão registrado com sucesso!');
       setDataPlantao('');
       setConflitoPendente(null);
       setPayloadPendente(null);
 
     } catch (err: unknown) {
-      showToast('❌ Erro ao salvar: ' + (err as Error).message, 'error');
+      toast.error('❌ Erro ao salvar: ' + (err as Error).message);
     } finally {
       setSaving(false);
     }
@@ -161,13 +154,11 @@ export default function PlantaoExtraPage() {
 
   return (
     <>
-      {/* div.page-header removida para centralizar tudo no card a pedido do usuário */}
-
       <div className="mobile-stack" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 500px)', justifyContent: 'start' }}>
         <div className="card">
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
             <div style={{ background: 'rgba(34,211,181,0.1)', color: 'var(--accent-teal)', width: 48, height: 48, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}>
-              
+              🚑
             </div>
             <div>
               <h2 style={{ fontWeight: 700, fontSize: 18, margin: 0 }}>Cadastrar Plantão Extra</h2>
@@ -251,10 +242,17 @@ export default function PlantaoExtraPage() {
                     onChange={e => {
                       let v = e.target.value.replace(/\D/g, '');
                       if (!v) { setValorGanho(''); return; }
-                      v = (parseInt(v) / 100).toFixed(2) + '';
-                      v = v.replace(".", ",");
-                      v = v.replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1.");
-                      setValorGanho(v === '0,00' ? '' : 'R$ ' + v);
+                      
+                      // Mantém apenas o valor numérico para o cálculo
+                      const value = parseInt(v) / 100;
+                      
+                      // Formata como BRL
+                      const formatter = new Intl.NumberFormat('pt-BR', {
+                        style: 'currency',
+                        currency: 'BRL',
+                      });
+                      
+                      setValorGanho(formatter.format(value));
                     }}
                   />
                 </div>
@@ -263,7 +261,7 @@ export default function PlantaoExtraPage() {
           ) : (
             <div className="form-group" style={{ marginTop: 20 }}>
               <div style={{ background: 'rgba(245,158,11,0.1)', border: '1px dashed #f59e0b', padding: 14, borderRadius: 8, display: 'flex', alignItems: 'center', gap: 10 }}>
-                <span style={{ fontSize: 24 }}></span>
+                <span style={{ fontSize: 24 }}>⭐</span>
                 <div>
                   <h4 style={{ margin: 0, fontSize: 14, color: '#92400e', fontWeight: 800 }}>Recurso Pro</h4>
                   <p style={{ margin: 0, fontSize: 12, color: '#b45309' }}>Cadastrar valores financeiros e trocas/folgas é exclusivo para assinantes.</p>
@@ -277,7 +275,7 @@ export default function PlantaoExtraPage() {
             style={{ width: '100%', justifyContent: 'center', marginTop: 16, padding: '14px', background: 'var(--accent-blue)', opacity: (!isPro && limiteExtrasAtingido) ? 0.6 : 1 }}
             onClick={() => {
               if (!isPro && limiteExtrasAtingido) {
-                showToast('Limite de 4 plantões extras no mês atingido. Assine o plano Pro para registros ilimitados.', 'error');
+                toast.error('Limite de 4 plantões extras no mês atingido. Assine o plano Pro para registros ilimitados.');
               } else {
                 salvarPlantaoExtra();
               }
@@ -294,7 +292,7 @@ export default function PlantaoExtraPage() {
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(2px)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
           <div className="card" style={{ maxWidth: 400, width: '100%', border: '2px solid #f59e0b', boxShadow: '0 20px 40px rgba(245,158,11,0.2)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-              <span style={{ fontSize: 22 }}></span>
+              <span style={{ fontSize: 22 }}>⚠️</span>
               <h2 style={{ fontSize: 15, fontWeight: 800, color: '#92400e' }}>Conflito de Horário</h2>
             </div>
             <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 16, lineHeight: 1.6 }}>
@@ -313,8 +311,6 @@ export default function PlantaoExtraPage() {
           </div>
         </div>
       )}
-
-      {toast && <div className={`toast ${toast.type}`}>{toast.msg}</div>}
     </>
   );
 }

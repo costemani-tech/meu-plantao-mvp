@@ -8,6 +8,8 @@ export const metadata: Metadata = {
   manifest: '/manifest.json',
 };
 
+import { Toaster } from 'sonner';
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-BR">
@@ -45,6 +47,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body>
         <AppShell>{children}</AppShell>
+        <Toaster position="top-center" richColors />
       </body>
     </html>
   );
