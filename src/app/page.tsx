@@ -27,7 +27,8 @@ export default function DashboardPage() {
   const [totalMes, setTotalMes] = useState(0);
   const [totalGanhos, setTotalGanhos] = useState(0);
   const [locaisAtivos, setLocaisAtivos] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const [loadingStats, setLoadingStats] = useState(true);
+  const [loadingShifts, setLoadingShifts] = useState(true);
   const [isPro, setIsPro] = useState(false);
   const [showProModal, setShowProModal] = useState('');
   const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' } | null>(null);
@@ -56,7 +57,8 @@ export default function DashboardPage() {
 
   // 2. Busca de Dados com Loading State Rigoroso
   const fetchData = useCallback(async () => {
-    setLoading(true);
+    setLoadingStats(true);
+    setLoadingShifts(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
@@ -66,16 +68,18 @@ export default function DashboardPage() {
       const fimMes = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0, 23, 59, 59).toISOString();
 
       // Busca próximos 2 plantões
-      const { data: proximos } = await supabase
+      supabase
         .from('plantoes')
         .select('*, local:locais_trabalho(*)')
         .eq('usuario_id', user.id)
         .gte('data_hora_inicio', hoje)
         .neq('status', 'Cancelado')
         .order('data_hora_inicio', { ascending: true })
-        .limit(2);
-      
-      setPlantoesMaisProximos((proximos as PlantaoComLocal[]) || []);
+        .limit(2)
+        .then(({ data: proximos }) => {
+          setPlantoesMaisProximos((proximos as PlantaoComLocal[]) || []);
+          setTimeout(() => setLoadingShifts(false), 300);
+        });
 
       // Contagem de plantões no mês
       const { count: countMes } = await supabase
@@ -88,19 +92,18 @@ export default function DashboardPage() {
       
       setTotalMes(countMes || 0);
 
-      // Cálculo de Ganhos (via Notas Regex)
-      const { data: plantoesExtras } = await supabase
+      // Cálculo de Ganhos (via Notas Regex - abrange extras e normais)
+      const { data: plantoesComValor } = await supabase
         .from('plantoes')
         .select('notas')
         .eq('usuario_id', user.id)
-        .eq('is_extra', true)
         .neq('status', 'Cancelado')
         .gte('data_hora_inicio', inicioMes)
         .lte('data_hora_inicio', fimMes);
 
-      if (plantoesExtras) {
+      if (plantoesComValor) {
         let sum = 0;
-        plantoesExtras.forEach(p => {
+        plantoesComValor.forEach(p => {
           if (p.notas) {
             const match = p.notas.match(/R\$\s*([\d.]+)/);
             if (match && match[1]) {
@@ -123,8 +126,7 @@ export default function DashboardPage() {
     } catch (err) {
       console.error("Erro ao carregar dashboard:", err);
     } finally {
-      // Pequeno delay para evitar flickering visual
-      setTimeout(() => setLoading(false), 300);
+      setTimeout(() => setLoadingStats(false), 300);
     }
   }, []);
 
@@ -137,30 +139,7 @@ export default function DashboardPage() {
     setTimeout(() => setToast(null), 3500);
   };
 
-  // 3. Renderização Condicional (Loading -> Empty -> Dashboard)
-  if (loading) {
-    return (
-      <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-        <div>
-          <div className="skeleton" style={{ height: 28, width: '150px', marginBottom: '8px' }} />
-          <div className="skeleton" style={{ height: 16, width: '220px' }} />
-        </div>
-        
-        <div className="skeleton" style={{ height: 160, borderRadius: '24px' }} />
-        <div className="skeleton" style={{ height: 60, borderRadius: '16px' }} />
-        <div className="skeleton" style={{ height: 200, borderRadius: '24px' }} />
-        
-        <div style={{ textAlign: 'center', marginTop: '20px' }}>
-          <div className="spinner" style={{ margin: '0 auto 12px auto' }} />
-          <p style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 500, animate: 'pulse 2s infinite' }}>
-            Carregando sua agenda organizada...
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  if (locaisAtivos === 0) {
+  if (!loadingStats && locaisAtivos === 0) {
     return (
       <div style={{ 
         display: 'flex', 
@@ -221,12 +200,18 @@ export default function DashboardPage() {
             Resumo do Mês
           </div>
           
-          <div style={{ fontSize: 32, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 20 }}>
-            📅 {totalMes} <span style={{ fontSize: 18, color: 'var(--text-secondary)', fontWeight: 600 }}>plantões este mês</span>
-          </div>
+          {loadingStats ? (
+            <div className="skeleton" style={{ height: 40, width: '80%', borderRadius: 8, marginBottom: 20 }} />
+          ) : (
+            <div style={{ fontSize: 32, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 20 }}>
+              📅 {totalMes} <span style={{ fontSize: 18, color: 'var(--text-secondary)', fontWeight: 600 }}>plantões este mês</span>
+            </div>
+          )}
 
           <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: 20, marginBottom: 20 }}>
-            {isPro ? (
+            {loadingStats ? (
+               <div className="skeleton" style={{ height: 60, width: '100%', borderRadius: 8 }} />
+            ) : isPro ? (
               <div onClick={() => router.push('/relatorio')} style={{ cursor: 'pointer' }}>
                 <div style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 600, marginBottom: 4 }}>Extras do mês</div>
                 {totalGanhos > 0 ? (
@@ -342,7 +327,12 @@ export default function DashboardPage() {
           </button>
         </div>
 
-        {plantoesMaisProximos.length === 0 ? (
+        {loadingShifts ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div className="skeleton" style={{ height: 72, borderRadius: 16 }} />
+            <div className="skeleton" style={{ height: 72, borderRadius: 16 }} />
+          </div>
+        ) : plantoesMaisProximos.length === 0 ? (
           <div style={{ padding: '32px', textAlign: 'center', background: 'var(--bg-primary)', borderRadius: '16px', border: '1px dashed var(--border-subtle)' }}>
             <p style={{ fontSize: 14, color: 'var(--text-muted)', margin: 0 }}>Nenhum plantão agendado. Aproveite o descanso ou adicione novos plantões.</p>
           </div>
