@@ -24,14 +24,14 @@ export default function LoginPage() {
     const { error } = await supabase.auth.signInWithOtp({ 
       email,
       options: {
-        emailRedirectTo: typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : undefined,
+        emailRedirectTo: 'https://meu-plantao-mvp.vercel.app',
       }
     });
 
     if (error) {
       showToast(error.message, 'error');
     } else {
-      showToast('Enviamos um Link Mágico para o seu e-mail. Basta clicar nele para entrar!', 'success');
+      showToast('Link enviado! Verifique seu e-mail e clique no botão para entrar.', 'success');
       setEmail('');
     }
     setLoading(false);
@@ -41,7 +41,7 @@ export default function LoginPage() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : undefined
+        redirectTo: 'https://meu-plantao-mvp.vercel.app'
       }
     });
     if (error) showToast(error.message, 'error');
