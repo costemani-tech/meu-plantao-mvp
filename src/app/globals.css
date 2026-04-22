@@ -597,12 +597,52 @@ body {
   100% { transform: translate(-50%, 0); opacity: 1; }
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
+
+@keyframes skeleton-loading {
+  0% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 
-@keyframes cardEntrance {
-  0% { opacity: 0; transform: translateY(-20px) scale(0.95); }
-  60% { transform: translateY(5px) scale(1.02); }
-  100% { opacity: 1; transform: translateY(0) scale(1); }
+.skeleton {
+  background: linear-gradient(90deg, var(--bg-primary) 25%, var(--border-subtle) 50%, var(--bg-primary) 75%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s infinite linear;
+  border-radius: var(--radius-sm);
+}
+
+.fab {
+  position: fixed;
+  bottom: 90px;
+  right: 24px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--accent-blue);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.4);
+  cursor: pointer;
+  z-index: 998;
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  border: none;
+  outline: none;
+}
+
+.fab:hover {
+  transform: scale(1.1) translateY(-4px);
+  box-shadow: 0 12px 30px rgba(37, 99, 235, 0.5);
+  background: var(--accent-blue-hover);
+}
+
+.fab:active {
+  transform: scale(0.95);
+}
+
+@media (max-width: 768px) {
+  .fab {
+    bottom: 88px;
+    right: 20px;
+  }
 }

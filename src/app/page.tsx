@@ -1,7 +1,19 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { CalendarDays, Building2, Activity, Calendar, Clock, Lock } from 'lucide-react';
+import { 
+  CalendarDays, 
+  Activity, 
+  Calendar, 
+  Clock, 
+  Lock, 
+  TrendingUp, 
+  MapPin, 
+  ChevronRight, 
+  Star, 
+  Plus,
+  Bell
+} from 'lucide-react';
 import { supabase, Plantao, LocalTrabalho } from '../lib/supabase';
 import { useRouter } from 'next/navigation';
 import jsPDF from 'jspdf';
@@ -11,105 +23,61 @@ interface PlantaoComLocal extends Plantao {
 }
 
 export default function DashboardPage() {
-  const [plantoesMaisProximosPorLocal, setPlantoes] = useState<PlantaoComLocal[]>([]);
+  const [plantoesMaisProximos, setPlantoesMaisProximos] = useState<PlantaoComLocal[]>([]);
   const [totalMes, setTotalMes] = useState(0);
   const [totalGanhos, setTotalGanhos] = useState(0);
   const [locaisAtivos, setLocaisAtivos] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [isPro, setIsPro] = useState(false);
   const [showProModal, setShowProModal] = useState('');
-  const [isPro, setIsPro] = useState(true);
-  const [localEmEdicao, setLocalEmEdicao] = useState<LocalTrabalho | null>(null);
-  const [savingLocal, setSavingLocal] = useState(false);
   const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' } | null>(null);
-  const [showRelatorioModal, setShowRelatorioModal] = useState(false);
-  const [relatorioMes, setRelatorioMes] = useState(new Date().getMonth() + 1);
-  const [relatorioAno, setRelatorioAno] = useState(new Date().getFullYear());
-  const [isCalculating, setIsCalculating] = useState(false);
-  // ── Estados do Modal de Exportação de Escala
-  const [showEscalaExportModal, setShowEscalaExportModal] = useState(false);
-  const [escalaExportMes, setEscalaExportMes] = useState<number | null>(null);
-  const [escalaExportAno, setEscalaExportAno] = useState(new Date().getFullYear());
-  const [escalaExportLoading, setEscalaExportLoading] = useState(false);
-  const [escalaExportPreview, setEscalaExportPreview] = useState<PlantaoComLocal[]>([]);
-  const [isExportingEscala, setIsExportingEscala] = useState(false);
+  
   const router = useRouter();
 
-  // Tratamento de Erro de Autenticação PKCE (Comum em PWAs)
+  // 1. Verificação de Status PRO e Inicialização
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      if (params.get('auth_error') === 'pkce_mismatch') {
-        setToast({ 
-          msg: 'Sessão expirada ou iniciada em outro navegador. Por favor, tente entrar novamente diretamente por aqui.', 
-          type: 'error' 
-        });
-        window.history.replaceState({}, '', '/');
-      }
-    }
-  }, []);
-
-  useEffect(() => {
-    const checkPro = async () => {
+    const checkUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        router.push('/login');
+        return;
+      }
+
       const { data } = await supabase
         .from('profiles')
         .select('is_pro')
         .eq('id', user.id)
         .single();
+      
       if (data != null) setIsPro(data.is_pro);
     };
-    checkPro();
-  }, []);
+    checkUser();
+  }, [router]);
 
-  const fetchPlantoes = useCallback(async () => {
-    // 1. OFFLINE FIRST: Carrega o cache armazenado no disco local
-    const cachedData = localStorage.getItem('plantoes_cache');
-    if (cachedData) {
-      setPlantoes(JSON.parse(cachedData));
-      setLoading(false);
-    } else {
-      setLoading(true);
-    }
-
+  // 2. Busca de Dados com Loading State Rigoroso
+  const fetchData = useCallback(async () => {
+    setLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return; // Middleware lidará na raiz, mas para evitar erros silenciamos aqui
+      if (!user) return;
 
       const hoje = new Date().toISOString();
-      
-      const plantoesQuery = supabase
-        .from('plantoes')
-        .select(`
-          *,
-          local:locais_trabalho(*)
-        `)
-        .eq('usuario_id', user.id)
-        .gte('data_hora_inicio', hoje)
-        .order('data_hora_inicio', { ascending: true })
-        .limit(20);
-
-      const { data: plantoesData } = await plantoesQuery;
-
-      if (plantoesData) {
-        // Agrupar por local (apenas o mais próximo de cada)
-        const porLocal = new Map<string, PlantaoComLocal>();
-        plantoesData.forEach(p => {
-          if (p.local?.id && !porLocal.has(p.local.id)) {
-            porLocal.set(p.local.id, p);
-          }
-        });
-        
-        const freshData = Array.from(porLocal.values());
-        
-        // 2. OFFLINE FIRST: Salva dado fresco no disco
-        setPlantoes(freshData);
-        localStorage.setItem('plantoes_cache', JSON.stringify(freshData));
-      }
-      
       const inicioMes = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
       const fimMes = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0, 23, 59, 59).toISOString();
+
+      // Busca próximos 2 plantões
+      const { data: proximos } = await supabase
+        .from('plantoes')
+        .select('*, local:locais_trabalho(*)')
+        .eq('usuario_id', user.id)
+        .gte('data_hora_inicio', hoje)
+        .neq('status', 'Cancelado')
+        .order('data_hora_inicio', { ascending: true })
+        .limit(2);
       
+      setPlantoesMaisProximos((proximos as PlantaoComLocal[]) || []);
+
+      // Contagem de plantões no mês
       const { count: countMes } = await supabase
         .from('plantoes')
         .select('*', { count: 'exact', head: true })
@@ -117,22 +85,22 @@ export default function DashboardPage() {
         .gte('data_hora_inicio', inicioMes)
         .lte('data_hora_inicio', fimMes)
         .neq('status', 'Cancelado');
-        
+      
       setTotalMes(countMes || 0);
 
-      // 3. Ganhos do Mês (Apenas para PRO ou para instigar FREE)
-      const { data: plantoesMes } = await supabase
+      // Cálculo de Ganhos (via Notas Regex)
+      const { data: plantoesExtras } = await supabase
         .from('plantoes')
-        .select('notas, is_extra')
+        .select('notas')
         .eq('usuario_id', user.id)
         .eq('is_extra', true)
         .neq('status', 'Cancelado')
         .gte('data_hora_inicio', inicioMes)
         .lte('data_hora_inicio', fimMes);
 
-      if (plantoesMes) {
+      if (plantoesExtras) {
         let sum = 0;
-        plantoesMes.forEach(p => {
+        plantoesExtras.forEach(p => {
           if (p.notas) {
             const match = p.notas.match(/R\$\s*([\d.]+)/);
             if (match && match[1]) {
@@ -142,676 +110,290 @@ export default function DashboardPage() {
         });
         setTotalGanhos(sum);
       }
-  
-      // 4. Locais Ativos
+
+      // Locais Ativos
       const { count: countLocais } = await supabase
         .from('locais_trabalho')
         .select('*', { count: 'exact', head: true })
         .eq('usuario_id', user.id)
         .eq('ativo', true);
-        
+      
       setLocaisAtivos(countLocais || 0);
+
     } catch (err) {
-      console.warn("Retornando dados do Cache (Modo Offline / Sem Conexão).", err);
+      console.error("Erro ao carregar dashboard:", err);
     } finally {
-      setLoading(false);
+      // Pequeno delay para evitar flickering visual
+      setTimeout(() => setLoading(false), 300);
     }
   }, []);
 
   useEffect(() => {
-    fetchPlantoes();
-  }, [fetchPlantoes]);
+    fetchData();
+  }, [fetchData]);
 
   const showToast = (msg: string, type: 'success' | 'error') => {
     setToast({ msg, type });
     setTimeout(() => setToast(null), 3500);
   };
 
-  const gerarRelatorioFinanceiro = async () => {
-    setIsCalculating(true);
-    router.push(`/relatorio?mes=${relatorioMes}&ano=${relatorioAno}`);
-    setShowRelatorioModal(false);
-    setIsCalculating(false);
-  };
-
-  const MESES_EXPORT = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-
-  const fetchEscalaPreview = async (mesNum: number, anoNum: number) => {
-    setEscalaExportLoading(true);
-    setEscalaExportPreview([]);
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      
-      const inicioMes = new Date(anoNum, mesNum - 1, 1).toISOString();
-      const fimMes = new Date(anoNum, mesNum, 0, 23, 59, 59).toISOString();
-      const { data } = await supabase
-        .from('plantoes')
-        .select('*, local:locais_trabalho(*)')
-        .eq('usuario_id', user.id)
-        .gte('data_hora_inicio', inicioMes)
-        .lte('data_hora_inicio', fimMes)
-        .neq('status', 'Cancelado')
-        .order('data_hora_inicio', { ascending: true });
-      setEscalaExportPreview((data as PlantaoComLocal[]) || []);
-    } catch (err) {
-      console.error('[EscalaPreview] Erro:', (err as Error)?.message);
-    } finally {
-      setEscalaExportLoading(false);
-    }
-  };
-
-  const generateEscalaPDF = () => {
-    if (!escalaExportMes || escalaExportPreview.length === 0) return;
-    setIsExportingEscala(true);
-    try {
-      const doc = new jsPDF('portrait', 'mm', 'a4');
-      const pageW = doc.internal.pageSize.getWidth();
-      const pageH = doc.internal.pageSize.getHeight();
-      const margin = 15;
-      const contentW = pageW - margin * 2;
-      const mesNome = MESES_EXPORT[escalaExportMes - 1];
-
-      // Cabeçalho
-      doc.setFillColor(15, 23, 42);
-      doc.rect(0, 0, pageW, 28, 'F');
-      doc.setFontSize(16); doc.setFont('helvetica', 'bold'); doc.setTextColor(255, 255, 255);
-      doc.text('Relatório de Escala Médica', margin, 12);
-      doc.setFontSize(10); doc.setFont('helvetica', 'normal'); doc.setTextColor(148, 163, 184);
-      doc.text(`${mesNome} ${escalaExportAno}  •  Gerado em ${new Date().toLocaleDateString('pt-BR')}`, margin, 21);
-
-      // Cabeçalho tabela
-      let y = 36;
-      const colW = [8, contentW * 0.28, contentW * 0.28, contentW * 0.16, contentW * 0.16];
-      const cols = ['', 'Local', 'Data', 'Início', 'Término'];
-      doc.setFillColor(241, 245, 249);
-      doc.rect(margin, y, contentW, 8, 'F');
-      doc.setFontSize(9); doc.setFont('helvetica', 'bold'); doc.setTextColor(51, 65, 85);
-      let cx = margin + 2;
-      cols.forEach((col, i) => { doc.text(col, cx, y + 5.5); cx += colW[i]; });
-      y += 8;
-
-      // Linhas
-      doc.setFont('helvetica', 'normal');
-      escalaExportPreview.forEach((p, idx) => {
-        if (y > pageH - 30) { doc.addPage(); y = 20; }
-        if (idx % 2 === 0) { doc.setFillColor(248, 250, 252); doc.rect(margin, y, contentW, 8, 'F'); }
-        const cor = p.local?.cor_calendario ?? '#4f8ef7';
-        doc.setFillColor(parseInt(cor.slice(1,3),16), parseInt(cor.slice(3,5),16), parseInt(cor.slice(5,7),16));
-        doc.circle(margin + 3.5, y + 4, 2, 'F');
-        doc.setFontSize(8.5); doc.setTextColor(30, 41, 59);
-        cx = margin + colW[0] + 2;
-        [
-          (p.local?.nome ?? 'N/A') + (p.is_extra ? ' (Extra)' : ''),
-          new Date(p.data_hora_inicio).toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' }),
-          new Date(p.data_hora_inicio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-          new Date(p.data_hora_fim).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-        ].forEach((val, i) => { doc.text(val, cx, y + 5.5, { maxWidth: colW[i+1] - 3 }); cx += colW[i+1]; });
-        doc.setDrawColor(226, 232, 240); doc.line(margin, y + 8, margin + contentW, y + 8);
-        y += 8;
-      });
-
-      // Rodapé
-      const footerY = pageH - 12;
-      doc.setDrawColor(203, 213, 225); doc.line(margin, footerY, pageW - margin, footerY);
-      doc.setFontSize(8); doc.setTextColor(148, 163, 184);
-      doc.text('Gerado via Meu Plantão App  •  meu-plantao-mvp.vercel.app', margin, footerY + 5);
-      doc.text(`Total: ${escalaExportPreview.length} plantão(oes)`, pageW - margin, footerY + 5, { align: 'right' });
-
-      doc.save(`Escala_${mesNome}_${escalaExportAno}.pdf`);
-      setShowEscalaExportModal(false);
-    } catch (err) {
-      console.error('[GenerateEscalaPDF] Erro:', (err as Error)?.message);
-      alert('Erro ao gerar o PDF. Tente novamente.');
-    } finally {
-      setIsExportingEscala(false);
-    }
-  };
-
-  const salvarEdicao = async () => {
-    if (!localEmEdicao) return;
-    if (!localEmEdicao.nome.trim()) { showToast('Informe o nome do local.', 'error'); return; }
-
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    setSavingLocal(true);
-    const { error } = await supabase.from('locais_trabalho').update({
-      nome: localEmEdicao.nome.trim(),
-      endereco: localEmEdicao.is_home_care ? null : (localEmEdicao.endereco?.trim() || null)
-    }).eq('usuario_id', user.id).eq('id', localEmEdicao.id);
-
-    if (error) {
-      showToast('Erro ao atualizar: ' + error.message, 'error');
-    } else {
-      showToast('✅ Local atualizado com sucesso!', 'success');
-      setLocalEmEdicao(null);
-      await fetchPlantoes();
-    }
-    setSavingLocal(false);
-  };
-
-  const excluirLocal = async (id: string, nomeLocal: string) => {
-    const { count } = await supabase.from('plantoes').select('*', { count: 'exact', head: true })
-      .eq('local_id', id).gt('data_hora_inicio', new Date().toISOString());
-    const numPlantoesFuturos = count || 0;
-
-    if (!confirm(`Atenção: Ao arquivar '${nomeLocal}', todos os ${numPlantoesFuturos} plantões FUTUROS agendados nele serão cancelados. Os antigos continuarão no relatório. Deseja arquivá-lo?`)) return;
-    
-    setSavingLocal(true);
-    const hojeISO = new Date().toISOString();
-    
-    // Plantões futuros apagados
-    await supabase.from('plantoes').delete().eq('local_id', id).gt('data_hora_inicio', hojeISO);
-    
-    // Soft Delete
-    const { error } = await supabase.from('locais_trabalho').update({ ativo: false }).eq('id', id);
-    
-    if (error) { 
-      showToast('Erro ao excluir: ' + error.message, 'error');
-    } else { 
-      showToast('Local e todos os plantões removidos', 'success'); 
-      setLocalEmEdicao(null);
-      await fetchPlantoes(); 
-    }
-    setSavingLocal(false);
-  };
-
-
-
-  return (
-    <>
-      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-        <div>
-          <h1 style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <Activity size={32} color="var(--accent-blue)" /> 
-            Central de Plantões
-          </h1>
-          <p>Visão estratégica das suas escalas — {loading && <span style={{ color: 'var(--accent-blue)', fontSize: 13 }}>⟳ Atualizando...</span>}</p>
+  // 3. Renderização Condicional (Loading -> Empty -> Dashboard)
+  if (loading) {
+    return (
+      <div style={{ padding: '24px' }}>
+        <div className="skeleton" style={{ height: 40, width: '200px', marginBottom: '24px' }} />
+        <div className="skeleton" style={{ height: 160, borderRadius: '24px', marginBottom: '20px' }} />
+        <div className="skeleton" style={{ height: 60, borderRadius: '16px', marginBottom: '20px' }} />
+        <div className="skeleton" style={{ height: 200, borderRadius: '24px', marginBottom: '20px' }} />
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <div className="skeleton" style={{ height: 100, flex: 1, borderRadius: '16px' }} />
+          <div className="skeleton" style={{ height: 100, flex: 1, borderRadius: '16px' }} />
         </div>
       </div>
+    );
+  }
 
-      {loading ? (
-        <div className="stats-grid mobile-stack" style={{ gridTemplateColumns: '1fr 1fr' }}>
-          {[1, 2].map(i => (
-            <div key={i} className="skeleton" style={{ height: 84, borderRadius: 'var(--radius-lg)' }} />
-          ))}
-        </div>
-      ) : locaisAtivos === 0 ? (
-        <div className="card" style={{ 
-          display: 'flex', 
-          flexDirection: 'column', 
-          alignItems: 'center', 
-          textAlign: 'center', 
-          padding: '80px 24px',
-          background: 'var(--bg-secondary)',
-          border: '1px solid var(--border-subtle)',
-          borderRadius: 'var(--radius-lg)',
-          boxShadow: 'var(--shadow-sm)'
-        }}>
-          <div style={{ fontSize: 64, marginBottom: 24 }}>👋</div>
-          <h2 style={{ fontSize: 24, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 12 }}>
-            Bem-vindo ao Meu Plantão!
-          </h2>
-          <p style={{ fontSize: 16, color: 'var(--text-secondary)', maxWidth: 480, lineHeight: 1.6, marginBottom: 32 }}>
-            Cadastre os hospitais, clínicas ou pacientes de home care para organizar os seus plantões.
+  if (locaisAtivos === 0) {
+    return (
+      <div style={{ 
+        display: 'flex', 
+        flexDirection: 'column', 
+        alignItems: 'center', 
+        textAlign: 'center', 
+        padding: '80px 24px',
+        minHeight: '80vh',
+        justifyContent: 'center'
+      }}>
+        <div style={{ fontSize: 64, marginBottom: 24, animation: 'cardEntrance 0.8s ease' }}>👋</div>
+        <h2 style={{ fontSize: 28, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 12 }}>
+          Seja bem-vindo!
+        </h2>
+        <p style={{ fontSize: 16, color: 'var(--text-secondary)', maxWidth: 420, lineHeight: 1.6, marginBottom: 32 }}>
+          Sua agenda está pronta para ser organizada. Comece cadastrando onde você trabalha.
+        </p>
+        <button 
+          className="btn btn-primary" 
+          style={{ padding: '16px 40px', fontSize: 16, borderRadius: 16, background: 'var(--accent-blue)' }}
+          onClick={() => router.push('/locais')}
+        >
+          ➕ Adicionar Primeiro Local
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ padding: '24px 16px 100px 16px', maxWidth: '600px', margin: '0 auto' }}>
+      
+      {/* HEADER */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+        <div>
+          <h1 style={{ fontSize: 24, fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
+            Meu Plantão 👋
+          </h1>
+          <p style={{ fontSize: 14, color: 'var(--text-secondary)', margin: '4px 0 0 0' }}>
+            Sua agenda organizada e produtiva.
           </p>
-          <button 
-            className="btn btn-primary" 
-            style={{ padding: '14px 40px', fontSize: 16, borderRadius: 12 }}
-            onClick={() => router.push('/locais')}
-          >
-            ➕ Adicionar Local
-          </button>
         </div>
-      ) : (
-        <>
-          <div className="stats-grid" style={{ gridTemplateColumns: '1fr' }}>
-            <div className="stat-card" style={{ cursor: 'default', padding: '24px', position: 'relative', overflow: 'hidden' }}>
-              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-                <div className="stat-content" style={{ flex: 1 }}>
-                  <div className="stat-label" style={{ fontSize: 14, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <CalendarDays size={18} className="text-blue-500" />
-                    Seu Plantão no Mês
-                  </div>
-                  <div className="stat-value" style={{ fontSize: 32, fontWeight: 800, marginBottom: 16 }}>
-                    📅 {totalMes} plantões
-                  </div>
-                  
-                  <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: 16, marginTop: 4 }}>
-                    {isPro ? (
-                      <div onClick={() => setShowRelatorioModal(true)} style={{ cursor: 'pointer' }}>
-                        <div className="stat-label" style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 4 }}>Total em Extras</div>
-                        <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--accent-teal)', display: 'flex', alignItems: 'center', gap: 8 }}>
-                          💰 {totalGanhos.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                        </div>
-                      </div>
-                    ) : (
-                      <div>
-                        <div style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 12, fontWeight: 600 }}>
-                          💰 Ver meus ganhos
-                        </div>
-                        <button 
-                          className="btn btn-primary" 
-                          onClick={() => setShowProModal('Ganhos')}
-                          style={{ 
-                            background: 'linear-gradient(135deg, #f59e0b, #d97706)', 
-                            border: 'none', 
-                            padding: '10px 20px', 
-                            fontSize: 14,
-                            fontWeight: 700,
-                            borderRadius: 10,
-                            boxShadow: '0 4px 12px rgba(245, 158, 11, 0.3)'
-                          }}
-                        >
-                          [ Desbloquear ganhos 💰 ]
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                
-                {/* Badge de Locais - Ação Direta */}
-                <div style={{ position: 'absolute', bottom: 16, right: 24 }}>
-                  <button 
-                    onClick={() => router.push('/locais')}
-                    style={{ 
-                      background: 'var(--bg-secondary)', 
-                      border: '1px solid var(--border-subtle)', 
-                      padding: '6px 12px', 
-                      borderRadius: 20,
-                      fontSize: 12,
-                      color: 'var(--text-secondary)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 6,
-                      cursor: 'pointer',
-                      transition: 'all 0.2s'
-                    }}
-                    onMouseOver={e => (e.currentTarget.style.background = 'var(--bg-primary)')}
-                    onMouseOut={e => (e.currentTarget.style.background = 'var(--bg-secondary)')}
-                  >
-                    🏥 {locaisAtivos} locais • ver todos
-                  </button>
-                </div>
-              </div>
-            </div>
+        <button 
+          onClick={() => router.push('/notificacoes')}
+          style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)', padding: 10, borderRadius: '50%', cursor: 'pointer', position: 'relative' }}
+        >
+          <Bell size={20} color="var(--text-secondary)" />
+        </button>
+      </div>
+
+      {/* CARD PRINCIPAL - GANHOS E PLANTÕES */}
+      <div className="card" style={{ 
+        padding: '24px', 
+        borderRadius: '24px', 
+        background: 'var(--bg-secondary)', 
+        border: '1px solid var(--border-subtle)',
+        boxShadow: 'var(--shadow-md)',
+        marginBottom: 16,
+        position: 'relative',
+        overflow: 'hidden'
+      }}>
+        <div style={{ position: 'absolute', top: 0, right: 0, width: '100px', height: '100px', background: 'radial-gradient(circle, var(--accent-blue-light) 0%, transparent 70%)', opacity: 0.5, zIndex: 0 }} />
+        
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-muted)', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 12 }}>
+            <TrendingUp size={14} color="var(--accent-blue)" />
+            Resumo do Mês
+          </div>
+          
+          <div style={{ fontSize: 32, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 20 }}>
+            📅 {totalMes} <span style={{ fontSize: 18, color: 'var(--text-secondary)', fontWeight: 600 }}>plantões agendados</span>
           </div>
 
-          {/* CENTRAL PRO */}
-          <div className="card" style={{ marginTop: 24, padding: 20 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-              <h2 style={{ fontWeight: 800, fontSize: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ color: '#f59e0b' }}>⭐</span> Central Pro
-              </h2>
-              <span style={{ fontSize: 11, background: 'rgba(245,158,11,0.1)', color: '#f59e0b', padding: '4px 8px', borderRadius: 12, fontWeight: 700 }}>
-                RECURSOS PREMIUM
-              </span>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
-              
-              <div 
-                style={{ 
-                  background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: 12, padding: 16, 
-                  cursor: 'pointer', opacity: !isPro ? 0.7 : 1, position: 'relative',
-                  display: 'flex', flexDirection: 'column'
-                }} 
-                onClick={() => isPro ? setShowRelatorioModal(true) : showToast("Recurso exclusivo para assinantes.", "error")}
-              >
-                {!isPro && <Lock size={16} color="var(--text-muted)" style={{ position: 'absolute', top: 12, right: 12 }} />}
-                <div style={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, fontSize: 14 }}>
-                  📊 Ganhos 💰
+          <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: 20 }}>
+            {isPro ? (
+              <div onClick={() => router.push('/relatorio')} style={{ cursor: 'pointer' }}>
+                <div style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 600, marginBottom: 4 }}>Total Estimado em Extras</div>
+                <div style={{ fontSize: 28, fontWeight: 800, color: 'var(--accent-teal)', display: 'flex', alignItems: 'center', gap: 10 }}>
+                  💰 {totalGanhos.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                  <ChevronRight size={20} />
                 </div>
-                <div className="text-sm text-gray-500" style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.4 }}>
-                  Tenha controle dos seus plantões e saiba quanto irá receber de extra no mês.
-                </div>
-              </div>
-
-              <div 
-                style={{ 
-                  background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: 12, padding: 16, 
-                  cursor: 'pointer', opacity: !isPro ? 0.7 : 1, position: 'relative',
-                  display: 'flex', flexDirection: 'column'
-                }} 
-                onClick={() => isPro ? setShowEscalaExportModal(true) : showToast("Recurso exclusivo para assinantes.", "error")}
-              >
-                {!isPro && <Lock size={16} color="var(--text-muted)" style={{ position: 'absolute', top: 12, right: 12 }} />}
-                <div style={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, fontSize: 14 }}>
-                   Compartilhar Escala Pro
-                </div>
-                <div className="text-sm text-gray-500" style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.4 }}>
-                  Tenha o controle dos seus plantões e compartilhe com quem você quiser.
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="card" style={{ marginTop: 24 }}>
-            <h2 style={{ fontWeight: 700, marginBottom: 16, fontSize: 16 }}>
-              Próximos Plantões por Local
-            </h2>
-            <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 20 }}>
-              O plantão mais próximo agendado em cada local de trabalho. Para a agenda completa, consulte o Calendário.
-            </p>
-            {plantoesMaisProximosPorLocal.length === 0 ? (
-              <div className="empty-state">
-                <div className="empty-icon">🗓️</div>
-                <p>Nenhum plantão agendado.</p>
               </div>
             ) : (
-              <div className="shift-list">
-                {plantoesMaisProximosPorLocal.map(p => (
-                  <div key={p.id} className="shift-item" style={{ alignItems: 'center', cursor: 'pointer' }} onClick={() => p.local && setLocalEmEdicao(p.local)}>
-                    <div
-                      className="shift-color-bar"
-                      style={{ backgroundColor: p.local?.cor_calendario ?? '#4f8ef7' }}
-                    />
-                    <div className="shift-info" style={{ flex: 1, padding: '4px 0' }}>
-                      <div className="shift-local" style={{ fontWeight: 700, fontSize: 13, color: 'var(--text-primary)', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
-                        {p.local?.nome ?? 'Local não informado'}
-                        {p.local?.is_home_care && (
-                          <span style={{ fontSize: 10, background: 'rgba(34,211,181,0.1)', color: 'var(--accent-teal)', padding: '2px 6px', borderRadius: 4 }}>🏠 Home Care</span>
-                        )}
-                      </div>
-                      <div className="shift-time" style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--text-secondary)', marginBottom: 8 }}>
-                        <Calendar size={13} /> 
-                        <span style={{ textTransform: 'capitalize' }}>
-                          {new Date(p.data_hora_inicio).toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' }).replace('.', '')}
-                        </span>
-                        <Clock size={13} style={{ marginLeft: 6 }} /> 
-                        {new Date(p.data_hora_inicio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} às {new Date(p.data_hora_fim).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-                      </div>
-                    </div>
-                    <a 
-                      href={`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(`Plantão - ${p.local?.nome || 'Médico'}`)}&dates=${new Date(p.data_hora_inicio).toISOString().replace(/-|:|\.\d\d\d/g, "")}/${new Date(p.data_hora_fim).toISOString().replace(/-|:|\.\d\d\d/g, "")}&details=${encodeURIComponent('Plantão gerado via Meu Plantão App')}&location=${encodeURIComponent(p.local?.endereco || p.local?.nome || '')}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="btn btn-secondary"
-                      style={{ padding: '6px 12px', fontSize: 12, marginRight: 12, backgroundColor: 'rgba(245, 158, 11, 0.1)', color: 'var(--accent-orange, #f59e0b)', border: 'none' }}
-                      onClick={e => e.stopPropagation()}
-                    >
-                      📆 Salvar na Agenda
-                    </a>
-
-                  </div>
-                ))}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)' }}>
+                  💰 Ver meus ganhos reais
+                </div>
+                <button 
+                  className="btn btn-primary" 
+                  onClick={() => setShowProModal('Ganhos')}
+                  style={{ 
+                    background: 'linear-gradient(135deg, #f59e0b, #d97706)', 
+                    border: 'none', 
+                    padding: '12px 24px', 
+                    fontSize: 14,
+                    fontWeight: 800,
+                    borderRadius: 14,
+                    boxShadow: '0 8px 20px rgba(245, 158, 11, 0.25)',
+                    width: 'fit-content'
+                  }}
+                >
+                  [ Desbloquear ganhos 💰 ]
+                </button>
               </div>
             )}
           </div>
-        </>
-      )}
+        </div>
+      </div>
 
-      {/* MODAL RELATÓRIO FINANCEIRO */}
-      {showRelatorioModal && (
-        <div
-          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
-          onClick={() => !isCalculating && setShowRelatorioModal(false)}
-        >
-          <div className="card" style={{ maxWidth: 420, width: '100%', boxShadow: '0 24px 48px rgba(0,0,0,0.25)' }} onClick={e => e.stopPropagation()}>
-            {/* Header */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{ width: 40, height: 40, borderRadius: 10, background: 'linear-gradient(135deg, #7c3aed, #8b5cf6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, boxShadow: '0 4px 12px rgba(124,58,237,0.3)' }}>📊</div>
-                <div>
-                  <h2 style={{ fontSize: 16, fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>Resumo dos Ganhos 💰</h2>
-                  <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Somatório financeiro de extras por local</span>
-                </div>
-              </div>
-              <button onClick={() => setShowRelatorioModal(false)} disabled={isCalculating} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: 18, lineHeight: 1, padding: 4 }}>✕</button>
-            </div>
-
-            {/* Seletores */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 24 }}>
-              <div className="form-group" style={{ margin: 0 }}>
-                <label className="form-label">Mês</label>
-                <select
-                  className="form-select"
-                  value={relatorioMes}
-                  onChange={e => setRelatorioMes(Number(e.target.value))}
-                  disabled={isCalculating}
-                >
-                  {['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'].map((m, i) => (
-                    <option key={i} value={i + 1}>{m}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="form-group" style={{ margin: 0 }}>
-                <label className="form-label">Ano</label>
-                <select
-                  className="form-select"
-                  value={relatorioAno}
-                  onChange={e => setRelatorioAno(Number(e.target.value))}
-                  disabled={isCalculating}
-                >
-                  {[2024, 2025, 2026, 2027].map(a => (
-                    <option key={a} value={a}>{a}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {/* Ações */}
-            <div style={{ display: 'flex', gap: 12 }}>
-              <button
-                className="btn btn-secondary"
-                style={{ flex: 1, justifyContent: 'center' }}
-                onClick={() => setShowRelatorioModal(false)}
-                disabled={isCalculating}
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={gerarRelatorioFinanceiro}
-                disabled={isCalculating}
-                style={{
-                  flex: 1,
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 8,
-                  padding: '11px 20px',
-                  fontSize: 14,
-                  fontWeight: 700,
-                  background: isCalculating ? 'rgba(124,58,237,0.15)' : 'linear-gradient(135deg, #7c3aed, #8b5cf6)',
-                  color: isCalculating ? 'var(--accent-violet)' : '#fff',
-                  border: '1px solid rgba(124,58,237,0.4)',
-                  borderRadius: 10,
-                  cursor: isCalculating ? 'not-allowed' : 'pointer',
-                  boxShadow: isCalculating ? 'none' : '0 4px 14px rgba(124,58,237,0.3)',
-                  transition: 'all 0.2s',
-                }}
-              >
-                {isCalculating ? (
-                  <>
-                    <span style={{ display: 'inline-block', width: 14, height: 14, border: '2px solid rgba(124,58,237,0.4)', borderTopColor: 'var(--accent-violet)', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
-                    Calculando...
-                  </>
-                ) : '📄 Ver Relatório'}
-              </button>
-            </div>
+      {/* CARD DE LOCAIS - ACESSO RÁPIDO */}
+      <div onClick={() => router.push('/locais')} style={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'space-between', 
+        padding: '16px 20px', 
+        background: 'var(--bg-secondary)', 
+        border: '1px solid var(--border-subtle)', 
+        borderRadius: '16px', 
+        marginBottom: 24, 
+        cursor: 'pointer',
+        boxShadow: 'var(--shadow-sm)'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{ width: 40, height: 40, background: 'var(--accent-blue-light)', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <MapPin size={20} color="var(--accent-blue)" />
+          </div>
+          <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--text-primary)' }}>
+            🏥 {locaisAtivos} locais ativos
           </div>
         </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, color: 'var(--accent-blue)', fontWeight: 700 }}>
+          ver todos <ChevronRight size={16} />
+        </div>
+      </div>
+
+      {/* SEÇÃO PRO - DESTAQUES (Paywall PLG) */}
+      {!isPro && (
+        <div className="card" style={{ 
+          background: 'linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%)', 
+          border: '1px solid #FDE68A', 
+          borderRadius: '24px', 
+          padding: '24px',
+          marginBottom: 32
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+            <Star size={20} fill="#f59e0b" color="#f59e0b" />
+            <h3 style={{ fontSize: 16, fontWeight: 800, color: '#92400e', margin: 0 }}>Vantagens do Plano Pro</h3>
+          </div>
+          <ul style={{ list-style: 'none', padding: 0, margin: '0 0 20px 0', display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <li style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#b45309', fontWeight: 600 }}>
+              ✅ Relatórios financeiros detalhados
+            </li>
+            <li style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#b45309', fontWeight: 600 }}>
+              ✅ Exportação de escala em PDF oficial
+            </li>
+            <li style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#b45309', fontWeight: 600 }}>
+              ✅ Edição ilimitada de ciclos customizados
+            </li>
+          </ul>
+          <button 
+            className="btn btn-primary" 
+            style={{ width: '100%', justifyContent: 'center', background: '#d97706', border: 'none', padding: '14px', borderRadius: '12px', fontWeight: 800 }}
+            onClick={() => setShowProModal('Assinatura')}
+          >
+            Assinar Pro ⭐
+          </button>
+        </div>
       )}
+
+      {/* PRÓXIMOS PLANTÕES */}
+      <div style={{ marginBottom: 24 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+          <h3 style={{ fontSize: 16, fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
+            Próximos Plantões
+          </h3>
+          <button 
+            onClick={() => router.push('/calendario')}
+            style={{ background: 'none', border: 'none', color: 'var(--accent-blue)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
+          >
+            Ver agenda completa
+          </button>
+        </div>
+
+        {plantoesMaisProximos.length === 0 ? (
+          <div style={{ padding: '32px', textAlign: 'center', background: 'var(--bg-primary)', borderRadius: '16px', border: '1px dashed var(--border-subtle)' }}>
+            <p style={{ fontSize: 14, color: 'var(--text-muted)', margin: 0 }}>Nenhum plantão agendado para os próximos dias.</p>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {plantoesMaisProximos.map(p => (
+              <div key={p.id} className="shift-item" style={{ border: '1px solid var(--border-subtle)', borderRadius: '16px' }}>
+                <div className="shift-color-bar" style={{ backgroundColor: p.local?.cor_calendario || 'var(--accent-blue)' }} />
+                <div className="shift-info" style={{ padding: '16px' }}>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 4 }}>
+                    {p.local?.nome || 'Local de Trabalho'}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--text-secondary)' }}>
+                    <Calendar size={13} />
+                    <span style={{ textTransform: 'capitalize' }}>
+                      {new Date(p.data_hora_inicio).toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' })}
+                    </span>
+                    <Clock size={13} style={{ marginLeft: 6 }} />
+                    {new Date(p.data_hora_inicio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                  </div>
+                </div>
+                <div style={{ padding: '0 16px', display: 'flex', alignItems: 'center' }}>
+                  <ChevronRight size={18} color="var(--text-muted)" />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* FAB - FLOATING ACTION BUTTON */}
+      <button 
+        className="fab"
+        onClick={() => router.push('/plantao-extra')}
+        title="Adicionar Plantão"
+      >
+        <Plus size={28} />
+      </button>
 
       {/* MODAL PRO PAYWALL */}
       {showProModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-          <div className="card" style={{ maxWidth: 400, width: '100%', textAlign: 'center' }}>
+          <div className="card" style={{ maxWidth: 400, width: '100%', textAlign: 'center', borderRadius: '24px' }}>
             <span style={{ fontSize: 48, display: 'block', marginBottom: 16 }}>⭐</span>
             <h2 style={{ fontSize: 20, fontWeight: 800, marginBottom: 8, color: 'var(--text-primary)' }}>Upgrade para o Pro</h2>
             <p style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 24, lineHeight: 1.5 }}>
-              O recurso de <strong>{showProModal}</strong> é exclusivo para assinantes do Meu Plantão Pro.<br/>
-              Desbloqueie todo o poder da sua carreira médica agora!
+              Desbloqueie recursos exclusivos como controle financeiro, exportação de escala em PDF e locais ilimitados.
             </p>
             <div style={{ display: 'flex', gap: 12 }}>
-              <button className="btn btn-secondary" style={{ flex: 1, justifyContent: 'center' }} onClick={() => setShowProModal('')}>Voltar</button>
-              <button className="btn btn-primary" style={{ flex: 1, justifyContent: 'center', background: 'linear-gradient(to right, #f59e0b, #d97706)', border: 'none' }} onClick={() => setShowProModal('')}>Assinar Pro</button>
+              <button className="btn btn-secondary" style={{ flex: 1, justifyContent: 'center', borderRadius: '12px' }} onClick={() => setShowProModal('')}>Voltar</button>
+              <button className="btn btn-primary" style={{ flex: 1, justifyContent: 'center', background: 'linear-gradient(to right, #f59e0b, #d97706)', border: 'none', borderRadius: '12px', fontWeight: 700 }} onClick={() => setShowProModal('')}>Assinar Pro</button>
             </div>
           </div>
         </div>
       )}
 
       {toast && <div className={`toast ${toast.type}`}>{toast.msg}</div>}
-
-      {/* MODAL EDICAO DE LOCAL */}
-      {localEmEdicao && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }} onClick={() => setLocalEmEdicao(null)}>
-          <div className="card" style={{ maxWidth: 400, width: '100%' }} onClick={e => e.stopPropagation()}>
-            <h2 style={{ fontSize: 20, fontWeight: 800, marginBottom: 16, color: 'var(--text-primary)' }}>Editar Local</h2>
-            
-            <div className="form-group">
-              <label className="form-label">Nome do Local</label>
-              <input
-                type="text"
-                className="form-input"
-                value={localEmEdicao.nome}
-                onChange={e => setLocalEmEdicao({ ...localEmEdicao, nome: e.target.value })}
-              />
-            </div>
-
-            {!localEmEdicao.is_home_care && (
-              <div className="form-group" style={{ marginTop: 16 }}>
-                <label className="form-label">Endereço</label>
-                <input
-                  type="text"
-                  className="form-input"
-                  value={localEmEdicao.endereco || ''}
-                  onChange={e => setLocalEmEdicao({ ...localEmEdicao, endereco: e.target.value })}
-                />
-              </div>
-            )}
-
-            <div style={{ display: 'flex', gap: 12, marginTop: 24 }}>
-              <button className="btn btn-secondary" style={{ flex: 1, justifyContent: 'center' }} onClick={() => setLocalEmEdicao(null)} disabled={savingLocal}>Cancelar</button>
-              <button className="btn btn-primary" style={{ flex: 1, justifyContent: 'center', background: 'var(--accent-teal)' }} onClick={salvarEdicao} disabled={savingLocal}>{savingLocal ? '⏳ Salvando...' : 'Salvar'}</button>
-            </div>
-            
-            <button 
-              className="btn btn-secondary" 
-              style={{ width: '100%', justifyContent: 'center', marginTop: 12, color: '#ef4444', borderColor: 'rgba(239,68,68,0.3)' }} 
-              onClick={() => excluirLocal(localEmEdicao.id, localEmEdicao.nome)}
-              disabled={savingLocal}
-            >
-              Excluir (Arquivar) Local e Cancelar Futuros
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL EXPORTAÇÃO DE ESCALA PRO */}
-      {showEscalaExportModal && (
-        <div
-          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(6px)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
-          onClick={() => !isExportingEscala && setShowEscalaExportModal(false)}
-        >
-          <div className="card" style={{ maxWidth: 520, width: '100%', maxHeight: '90vh', display: 'flex', flexDirection: 'column', boxShadow: '0 32px 64px rgba(0,0,0,0.3)', overflow: 'hidden' }} onClick={e => e.stopPropagation()}>
-            {/* Header */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 24px', borderBottom: '1px solid var(--border-subtle)', flexShrink: 0 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{ width: 42, height: 42, borderRadius: 12, background: 'linear-gradient(135deg, #0f172a, #1e3a5f)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, boxShadow: '0 4px 12px rgba(15,23,42,0.3)' }}>📄</div>
-                <div>
-                  <h2 style={{ fontSize: 16, fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>Exportar Escala em PDF</h2>
-                  <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Relatório formal com tabela e cabeçalho</span>
-                </div>
-              </div>
-              <button onClick={() => setShowEscalaExportModal(false)} disabled={isExportingEscala} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: 20, lineHeight: 1, padding: 4 }}>✕</button>
-            </div>
-
-            {/* Seletores */}
-            <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-subtle)', flexShrink: 0 }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                <div className="form-group" style={{ margin: 0 }}>
-                  <label className="form-label">Mês</label>
-                  <select
-                    className="form-select"
-                    value={escalaExportMes ?? ''}
-                    onChange={e => { const v = Number(e.target.value); setEscalaExportMes(v); fetchEscalaPreview(v, escalaExportAno); }}
-                    disabled={isExportingEscala}
-                  >
-                    <option value="">Selecione o mês...</option>
-                    {MESES_EXPORT.map((m, i) => <option key={i} value={i + 1}>{m}</option>)}
-                  </select>
-                </div>
-                <div className="form-group" style={{ margin: 0 }}>
-                  <label className="form-label">Ano</label>
-                  <select
-                    className="form-select"
-                    value={escalaExportAno}
-                    onChange={e => { const v = Number(e.target.value); setEscalaExportAno(v); if (escalaExportMes) fetchEscalaPreview(escalaExportMes, v); }}
-                    disabled={isExportingEscala}
-                  >
-                    {[2024, 2025, 2026, 2027].map(a => <option key={a} value={a}>{a}</option>)}
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            {/* Prévia */}
-            <div style={{ flex: 1, overflowY: 'auto', padding: '16px 24px' }}>
-              {!escalaExportMes ? (
-                <div style={{ textAlign: 'center', padding: '32px 0', color: 'var(--text-muted)', fontSize: 14 }}>Selecione o mês para visualizar a prévia</div>
-              ) : escalaExportLoading ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {[1,2,3,4].map(i => <div key={i} className="skeleton" style={{ height: 36, borderRadius: 8 }} />)}
-                </div>
-              ) : escalaExportPreview.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '32px 0', color: 'var(--text-muted)', fontSize: 14 }}>Nenhum plantão encontrado neste mês.</div>
-              ) : (
-                <div>
-                  <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 12, fontWeight: 600 }}>PRÉVIA — {escalaExportPreview.length} plantão(ões)</div>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
-                    <thead>
-                      <tr style={{ background: 'rgba(241,245,249,0.5)' }}>
-                        {['Local', 'Data', 'Início', 'Término'].map(h => (
-                          <th key={h} style={{ padding: '8px 10px', textAlign: 'left', fontWeight: 700, color: 'var(--text-secondary)', fontSize: 11, letterSpacing: '0.04em', textTransform: 'uppercase' }}>{h}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {escalaExportPreview.map((p, i) => (
-                        <tr key={p.id} style={{ borderBottom: '1px solid var(--border-subtle)', background: i % 2 === 0 ? 'transparent' : 'rgba(248,250,252,0.4)' }}>
-                          <td style={{ padding: '9px 10px' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                              <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: p.local?.cor_calendario ?? '#4f8ef7', flexShrink: 0 }} />
-                              <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{p.local?.nome ?? 'N/A'}{p.is_extra ? ' ★' : ''}</span>
-                            </div>
-                          </td>
-                          <td style={{ padding: '9px 10px', color: 'var(--text-secondary)' }}>{new Date(p.data_hora_inicio).toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' })}</td>
-                          <td style={{ padding: '9px 10px', color: 'var(--text-secondary)' }}>{new Date(p.data_hora_inicio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</td>
-                          <td style={{ padding: '9px 10px', color: 'var(--text-secondary)' }}>{new Date(p.data_hora_fim).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-
-            {/* Botões */}
-            <div style={{ padding: '16px 24px', borderTop: '1px solid var(--border-subtle)', display: 'flex', gap: 12, flexShrink: 0 }}>
-              <button className="btn btn-secondary" style={{ flex: 1, justifyContent: 'center' }} onClick={() => setShowEscalaExportModal(false)} disabled={isExportingEscala}>Cancelar</button>
-              <button
-                onClick={generateEscalaPDF}
-                disabled={!escalaExportMes || escalaExportPreview.length === 0 || escalaExportLoading || isExportingEscala}
-                style={{
-                  flex: 1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                  padding: '11px 20px', fontSize: 14, fontWeight: 700,
-                  background: (!escalaExportMes || escalaExportPreview.length === 0 || escalaExportLoading) ? 'var(--bg-secondary)' : 'linear-gradient(135deg, #0f172a, #1e3a5f)',
-                  color: (!escalaExportMes || escalaExportPreview.length === 0 || escalaExportLoading) ? 'var(--text-muted)' : '#fff',
-                  border: '1px solid var(--border-subtle)', borderRadius: 10,
-                  cursor: (!escalaExportMes || escalaExportPreview.length === 0 || escalaExportLoading || isExportingEscala) ? 'not-allowed' : 'pointer',
-                  transition: 'all 0.2s',
-                }}
-              >
-                {isExportingEscala ? (
-                  <><span style={{ display: 'inline-block', width: 14, height: 14, border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} /> Gerando PDF...</>
-                ) : 'Baixar PDF'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-    </>
+    </div>
   );
 }

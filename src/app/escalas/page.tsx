@@ -356,6 +356,8 @@ export default function EscalasPage() {
 
               dbNotificacoes.push({
                 usuario_id: user.id,
+                escala_id: escalaCriada.id,
+                data_hora_inicio: plantao.data_hora_inicio,
                 titulo: `🏥 Plantão em ${antecedencia}h — ${nomeLocal}`,
                 mensagem: `Você tem plantão em ${nomeLocal} às ${horaStr} (${diaStr}). Bom trabalho!`,
                 lida: false
@@ -372,7 +374,9 @@ export default function EscalasPage() {
           }
 
           if (dbNotificacoes.length > 0) {
-            await supabase.from('notificacoes').insert(dbNotificacoes).catch(() => {});
+            await supabase.from('notificacoes').upsert(dbNotificacoes, { 
+              onConflict: 'usuario_id,escala_id,data_hora_inicio' 
+            }).catch(() => {});
           }
         }
       }
@@ -1033,6 +1037,8 @@ export default function EscalasPage() {
                         });
                         dbNotifs.push({
                           usuario_id: user.id,
+                          escala_id: modalAlertas.id,
+                          data_hora_inicio: p.data_hora_inicio,
                           titulo: `🏥 Plantão em ${antecedencia}h — ${localNome}`,
                           mensagem: `Você tem plantão em ${localNome} às ${hora} (${dia}). Bom trabalho!`,
                           lida: false
@@ -1044,7 +1050,9 @@ export default function EscalasPage() {
                       await fetch('/api/onesignal', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ notifications: pushNotifs }) }).catch(() => {});
                     }
                     if (dbNotifs.length > 0) {
-                      await supabase.from('notificacoes').insert(dbNotifs).catch(() => {});
+                      await supabase.from('notificacoes').upsert(dbNotifs, {
+                        onConflict: 'usuario_id,escala_id,data_hora_inicio'
+                      }).catch(() => {});
                     }
                     showToast(`✅ ${pushNotifs.length} alertas agendados!`, 'success');
                     setModalAlertas(null);
