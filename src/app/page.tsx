@@ -92,25 +92,28 @@ export default function DashboardPage() {
       
       setTotalMes(countMes || 0);
 
-      // Cálculo de Ganhos (via Notas Regex - abrange extras e normais)
+      // Cálculo de Ganhos (via valor_ganho e fallback para Notas Regex)
       const { data: plantoesComValor } = await supabase
         .from('plantoes')
-        .select('notas')
+        .select('valor_ganho, notas')
         .eq('usuario_id', user.id)
         .neq('status', 'Cancelado')
         .gte('data_hora_inicio', inicioMes)
         .lte('data_hora_inicio', fimMes);
 
       if (plantoesComValor) {
-        let sum = 0;
-        plantoesComValor.forEach(p => {
-          if (p.notas) {
+        const sum = plantoesComValor.reduce((acc, p) => {
+          let valor = 0;
+          if (p.valor_ganho && !isNaN(Number(p.valor_ganho))) {
+            valor = Number(p.valor_ganho);
+          } else if (p.notas) {
             const match = p.notas.match(/R\$\s*([\d.]+)/);
             if (match && match[1]) {
-              sum += parseFloat(match[1]);
+              valor = parseFloat(match[1]);
             }
           }
-        });
+          return acc + valor;
+        }, 0);
         setTotalGanhos(sum);
       }
 

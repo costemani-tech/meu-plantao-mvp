@@ -131,8 +131,9 @@ export default function PlantaoExtraPage() {
         data_hora_inicio: payload.inicioIso,
         data_hora_fim: payload.fimIso,
         is_extra: true,
+        valor_ganho: valorNumerico,
         status: tipoExtra === 'Troca' ? 'Trocado' : 'Agendado',
-        notas: valorNumerico > 0 ? `R$ ${valorNumerico.toFixed(2)} [${tipoExtra}]` : tipoExtra,
+        notas: tipoExtra,
       });
 
       if (error) throw error;
