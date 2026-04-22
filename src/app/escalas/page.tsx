@@ -36,6 +36,8 @@ interface ConflitoDados {
 interface EscalaAtiva {
   id: string;
   regra: string;
+  tipo_jornada?: string;
+  modo_jornada?: string;
   data_inicio: string;
   local?: { nome: string; cor_calendario: string };
   plantoes?: { data_hora_inicio: string; data_hora_fim: string }[];
@@ -119,7 +121,7 @@ export default function EscalasPage() {
     try {
       const { data, error } = await supabase
         .from('escalas')
-        .select('id, regra, data_inicio, local_id, local:locais_trabalho(nome, cor_calendario), plantoes(data_hora_inicio, data_hora_fim)')
+        .select('id, regra, tipo_jornada, modo_jornada, data_inicio, local_id, local:locais_trabalho(nome, cor_calendario), plantoes(data_hora_inicio, data_hora_fim)')
         .eq('usuario_id', user.id)
         .order('created_at', { ascending: false })
         .limit(1, { foreignTable: 'plantoes' });
@@ -241,13 +243,29 @@ export default function EscalasPage() {
 
       const anoAtual = new Date().getFullYear();
       const dataFinal = new Date(anoAtual, 11, 31, 23, 59, 59);
+      // Determina regra correta para cada tipo de jornada
+      let regraParaSalvar = regraFinal;
+      let modoJornada: string | null = null;
+      if (tipoJornada === 'Diarista') {
+        if (tipoDiarista === 'corridos') {
+          regraParaSalvar = regraDiarista === 'Outro' ? `${diasTrabalhoOutro}x${diasDescansoOutro}` : regraDiarista;
+          modoJornada = 'corridos';
+        } else {
+          const diasSel = Object.entries(diasDiarista).filter(([, v]) => v).map(([d]) => d.replace('d', '')).join(',');
+          regraParaSalvar = diasSel || '1,2,3,4,5';
+          modoJornada = 'semana';
+        }
+      }
+
       const { data: escalaCriada, error: erroEscala } = await supabase
         .from('escalas')
         .insert({
           usuario_id: user.id,
           local_id: localId,
           data_inicio: dataInicioSo,
-          regra: regraFinal
+          regra: regraParaSalvar,
+          tipo_jornada: tipoJornada,
+          modo_jornada: modoJornada
         })
         .select()
         .single();
@@ -975,11 +993,9 @@ export default function EscalasPage() {
                             <div style={{ fontWeight: 800, fontSize: 15, color: 'var(--text-primary)' }}>{e.local?.nome ?? 'Local desconhecido'}</div>
                             <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 2, display: 'flex', alignItems: 'center', gap: 6 }}>
                               <span style={{ fontWeight: 600 }}>
-                                {e.regra.includes(',') 
-                                  ? 'Diarista (Dias Fixos)' 
-                                  : (e.regra.includes('x') && parseInt(e.regra.split('x')[0]) < 12 
-                                    ? `Diarista (${e.regra})` 
-                                    : e.regra)}
+                                {e.tipo_jornada === 'Diarista'
+                                  ? (e.modo_jornada === 'semana' ? 'Diarista (Dias Fixos)' : `Diarista (${e.regra})`)
+                                  : e.regra}
                               </span>
                               <span style={{ opacity: 0.5 }}>|</span>
                               <span>{horaInicialFormatada} → {horaFinalFormatada}</span>
