@@ -123,8 +123,11 @@ export default function PlantaoExtraPage() {
         ? { inicioIso: payloadPendente.inicioIso, fimIso: payloadPendente.fimIso }
         : { inicioIso: new Date(`${dataPlantao}T${horaInicio}:00`).toISOString(), fimIso: (() => { const d = new Date(`${dataPlantao}T${horaFim}:00`); if (horaFim < horaInicio) d.setDate(d.getDate()+1); return d.toISOString(); })() };
 
-      const valorLimpo = valorGanho.replace(/[^\d,]/g, '').replace(',', '.');
-      const valorNumerico = tipoExtra === 'Remunerado' ? (parseFloat(valorLimpo) || 0) : 0;
+      // ── Enforce Free Tier na persistência (Segurança) ──
+      const safeTipoExtra = isPro ? tipoExtra : 'Remunerado';
+      const valorLimpo = isPro ? valorGanho.replace(/[^\d,]/g, '').replace(',', '.') : '0';
+      const valorNumerico = safeTipoExtra === 'Remunerado' ? (parseFloat(valorLimpo) || 0) : 0;
+      
       const { error } = await supabase.from('plantoes').insert({
         usuario_id: user.id,
         local_id: localId,
@@ -132,8 +135,8 @@ export default function PlantaoExtraPage() {
         data_hora_inicio: payload.inicioIso,
         data_hora_fim: payload.fimIso,
         is_extra: true,
-        status: tipoExtra === 'Troca' ? 'Trocado' : 'Agendado',
-        notas: valorNumerico > 0 ? `R$ ${valorNumerico.toFixed(2)} [${tipoExtra}]` : tipoExtra,
+        status: safeTipoExtra === 'Troca' ? 'Trocado' : 'Agendado',
+        notas: (isPro && valorNumerico > 0) ? `R$ ${valorNumerico.toFixed(2)} [${safeTipoExtra}]` : (isPro ? safeTipoExtra : 'Plantão Extra (Free)'),
       });
 
       if (error) throw error;
@@ -215,60 +218,53 @@ export default function PlantaoExtraPage() {
             </div>
           </div>
 
-          {/* Novos Campos de Valor e Tipo (Apenas Pro) */}
-          {isPro ? (
-            <>
-              <div className="form-group" style={{ marginTop: 20 }}>
-                <label className="form-label">Tipo de Plantão Extra</label>
-                <div style={{ display: 'flex', gap: 12, marginTop: 8 }}>
-                  <label style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8, padding: 12, border: '1px solid var(--border-subtle)', borderRadius: 8, cursor: 'pointer', background: tipoExtra === 'Remunerado' ? 'var(--bg-secondary)' : 'transparent' }}>
-                    <input type="radio" name="tipoExtra" value="Remunerado" checked={tipoExtra === 'Remunerado'} onChange={() => setTipoExtra('Remunerado')} />
-                    <span>Remunerado</span>
-                  </label>
-                  <label style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8, padding: 12, border: '1px solid var(--border-subtle)', borderRadius: 8, cursor: 'pointer', background: tipoExtra === 'Troca' ? 'var(--bg-secondary)' : 'transparent' }}>
-                    <input type="radio" name="tipoExtra" value="Troca" checked={tipoExtra === 'Troca'} onChange={() => setTipoExtra('Troca')} />
-                    <span>Troca</span>
-                  </label>
-                </div>
-              </div>
+          {/* Campos de Valor e Tipo */}
+          <div className="form-group" style={{ marginTop: 20 }}>
+            <label className="form-label">Tipo de Plantão Extra</label>
+            <div style={{ display: 'flex', gap: 12, marginTop: 8 }}>
+              <label style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8, padding: 12, border: '1px solid var(--border-subtle)', borderRadius: 8, cursor: isPro ? 'pointer' : 'not-allowed', background: tipoExtra === 'Remunerado' ? 'var(--bg-secondary)' : 'transparent', opacity: isPro ? 1 : 0.6 }}>
+                <input type="radio" name="tipoExtra" value="Remunerado" checked={tipoExtra === 'Remunerado'} onChange={() => setTipoExtra('Remunerado')} disabled={!isPro} />
+                <span>Remunerado</span>
+              </label>
+              <label style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8, padding: 12, border: '1px solid var(--border-subtle)', borderRadius: 8, cursor: isPro ? 'pointer' : 'not-allowed', background: tipoExtra === 'Troca' ? 'var(--bg-secondary)' : 'transparent', opacity: isPro ? 1 : 0.6 }}>
+                <input type="radio" name="tipoExtra" value="Troca" checked={tipoExtra === 'Troca'} onChange={() => setTipoExtra('Troca')} disabled={!isPro} />
+                <span>Troca</span>
+              </label>
+            </div>
+          </div>
 
-              {tipoExtra === 'Remunerado' && (
-                <div className="form-group" style={{ marginTop: 20 }}>
-                  <label className="form-label">Valor do Plantão (R$)</label>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    className="form-input"
-                    placeholder="Ex: R$ 1.200,00"
-                    value={valorGanho}
-                    onChange={e => {
-                      let v = e.target.value.replace(/\D/g, '');
-                      if (!v) { setValorGanho(''); return; }
-                      
-                      // Mantém apenas o valor numérico para o cálculo
-                      const value = parseInt(v) / 100;
-                      
-                      // Formata como BRL
-                      const formatter = new Intl.NumberFormat('pt-BR', {
-                        style: 'currency',
-                        currency: 'BRL',
-                      });
-                      
-                      setValorGanho(formatter.format(value));
-                    }}
-                  />
-                </div>
-              )}
-            </>
-          ) : (
-            <div className="form-group" style={{ marginTop: 20 }}>
-              <div style={{ background: 'rgba(245,158,11,0.1)', border: '1px dashed #f59e0b', padding: 14, borderRadius: 8, display: 'flex', alignItems: 'center', gap: 10 }}>
-                <span style={{ fontSize: 24 }}>⭐</span>
-                <div>
-                  <h4 style={{ margin: 0, fontSize: 14, color: '#92400e', fontWeight: 800 }}>Recurso Pro</h4>
-                  <p style={{ margin: 0, fontSize: 12, color: '#b45309' }}>Cadastrar valores financeiros e trocas/folgas é exclusivo para assinantes.</p>
-                </div>
-              </div>
+          <div className="form-group" style={{ marginTop: 20 }}>
+            <label className="form-label">Valor do Plantão (R$)</label>
+            <input
+              type="text"
+              inputMode="numeric"
+              className="form-input"
+              placeholder={isPro ? "Ex: R$ 1.200,00" : "🔒 Bloqueado (Pro)"}
+              value={isPro ? valorGanho : ""}
+              onChange={e => {
+                let v = e.target.value.replace(/\D/g, '');
+                if (!v) { setValorGanho(''); return; }
+                
+                const value = parseInt(v) / 100;
+                const formatter = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+                setValorGanho(formatter.format(value));
+              }}
+              disabled={!isPro || tipoExtra === 'Troca'}
+              style={{ opacity: (!isPro || tipoExtra === 'Troca') ? 0.6 : 1, cursor: (!isPro || tipoExtra === 'Troca') ? 'not-allowed' : 'text' }}
+            />
+          </div>
+
+          {!isPro && (
+            <div style={{ marginTop: 12, fontSize: 13, color: '#d97706', background: 'rgba(245,158,11,0.1)', padding: '10px 12px', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span>💰 Desbloqueie ganhos com o Plano Pro.</span>
+              <a 
+                href="https://wa.me/5521991847945?text=Ol%C3%A1%21%20Quero%20assinar%20o%20Plano%20PRO%20para%20liberar%20o%20controle%20financeiro." 
+                target="_blank" 
+                rel="noreferrer"
+                style={{ fontWeight: 800, color: '#b45309', textDecoration: 'none' }}
+              >
+                Assinar Agora
+              </a>
             </div>
           )}
 

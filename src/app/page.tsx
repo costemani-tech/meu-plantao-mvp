@@ -275,6 +275,14 @@ export default async function DashboardPage() {
   
   const isPro = (profile?.is_pro ?? false) || isUserPro(user.email);
 
+  const { count: locaisCount } = await supabase
+    .from('locais_trabalho')
+    .select('*', { count: 'exact', head: true })
+    .eq('usuario_id', user.id)
+    .eq('ativo', true);
+
+  const hasLocations = (locaisCount || 0) > 0;
+
   return (
     <div style={{ padding: '24px 16px 100px 16px', maxWidth: '600px', margin: '0 auto' }}>
       
@@ -299,7 +307,7 @@ export default async function DashboardPage() {
       </Suspense>
 
       {/* INTERATIVIDADE DO CLIENTE (FAB + Paywall) */}
-      <DashboardInteractive isPro={isPro} />
+      <DashboardInteractive isPro={isPro} hasLocations={hasLocations} />
     </div>
   );
 }

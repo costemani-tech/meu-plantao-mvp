@@ -4,16 +4,24 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Plus, Star } from 'lucide-react';
 
-export function DashboardInteractive({ isPro }: { isPro: boolean }) {
+export function DashboardInteractive({ isPro, hasLocations = true }: { isPro: boolean, hasLocations?: boolean }) {
   const [showProModal, setShowProModal] = useState('');
   const router = useRouter();
+
+  const handleFabClick = () => {
+    if (!hasLocations) {
+      alert("Ops! Primeiro você precisa cadastrar um Hospital ou Clínica em 'Início'.");
+      return;
+    }
+    router.push('/plantao-extra');
+  };
 
   return (
     <>
       {/* FAB - FLOATING ACTION BUTTON */}
       <button 
         className="fab"
-        onClick={() => router.push('/plantao-extra')}
+        onClick={handleFabClick}
         title="Adicionar Plantão"
       >
         <Plus size={28} />
