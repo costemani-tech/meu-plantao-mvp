@@ -301,7 +301,7 @@ export default function DashboardPage() {
             <Star size={20} fill="#f59e0b" color="#f59e0b" />
             <h3 style={{ fontSize: 16, fontWeight: 800, color: '#92400e', margin: 0 }}>Vantagens do Plano Pro</h3>
           </div>
-          <ul style={{ list-style: 'none', padding: 0, margin: '0 0 20px 0', display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 20px 0', display: 'flex', flexDirection: 'column', gap: 10 }}>
             <li style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#b45309', fontWeight: 600 }}>
               ✅ Relatórios financeiros detalhados
             </li>
