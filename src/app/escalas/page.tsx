@@ -1132,14 +1132,8 @@ export default function EscalasPage() {
                     const { data: { user } } = await supabase.auth.getUser();
                     if (!user) throw new Error('Não autenticado');
 
-                    // Sincroniza ID com OneSignal antes de agendar
-                    const win = window as any;
-                    if (win.OneSignalDeferred) {
-                      win.OneSignalDeferred.push(async (OneSignal: any) => {
-                        await OneSignal.login(user.id);
-                      });
-                    }
-                    const { data: plantoesFuturos } = await supabase
+                    // 1. Busca plantões futuros (limite 60 para não estourar OneSignal)
+                    const { data: plantoesFuturos, error: errPlantoes } = await supabase
                       .from('plantoes')
                       .select('data_hora_inicio')
                       .eq('escala_id', modalAlertas.id)
@@ -1148,21 +1142,29 @@ export default function EscalasPage() {
                       .order('data_hora_inicio', { ascending: true })
                       .limit(60);
 
+                    if (errPlantoes) throw errPlantoes;
+
+                    if (!plantoesFuturos || plantoesFuturos.length === 0) {
+                      showToast('Nenhum plantão futuro encontrado para agendar alertas.', 'info');
+                      setModalAlertas(null);
+                      return;
+                    }
+
                     const antecedencia = parseInt(alertasHoras, 10);
                     const localNome = modalAlertas.local?.nome ?? 'seu local';
                     const pushNotifs: any[] = [];
                     const dbNotifs: any[] = [];
 
-                    (plantoesFuturos ?? []).forEach((p: any) => {
+                    plantoesFuturos.forEach((p: any) => {
                       const start = new Date(p.data_hora_inicio);
                       const sendAt = new Date(start.getTime() - antecedencia * 3600000);
+                      
                       if (sendAt > new Date()) {
                         const hora = start.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
                         const dia = start.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' });
+                        
                         pushNotifs.push({
-                          app_id: process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID || 'SUA_CHAVE_ONESIGNAL',
                           include_aliases: { external_id: [user.id] },
-                          target_channel: 'push',
                           headings: { en: 'Alerta de Plantão', pt: 'Alerta de Plantão' },
                           contents: {
                             en: `Plantão em ${localNome} às ${hora} (${dia}). Bom trabalho!`,
@@ -1170,6 +1172,7 @@ export default function EscalasPage() {
                           },
                           send_after: sendAt.toISOString()
                         });
+
                         dbNotifs.push({
                           usuario_id: user.id,
                           escala_id: modalAlertas.id,
@@ -1181,21 +1184,36 @@ export default function EscalasPage() {
                       }
                     });
 
-                    if (pushNotifs.length > 0) {
-                      await fetch('/api/onesignal', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ notifications: pushNotifs }) }).catch(() => {});
+                    if (pushNotifs.length === 0) {
+                      showToast(`Os próximos plantões são em menos de ${antecedencia}h. Alertas não agendados.`, 'info');
+                      setModalAlertas(null);
+                      return;
                     }
-                    if (dbNotifs.length > 0) {
-                      await supabase.from('notificacoes').upsert(dbNotifs, {
-                        onConflict: 'usuario_id,escala_id,data_hora_inicio'
-                      }).catch(() => {});
-                    }
+
+                    // 2. Envia para o OneSignal via nossa API
+                    const osRes = await fetch('/api/onesignal', { 
+                      method: 'POST', 
+                      headers: { 'Content-Type': 'application/json' }, 
+                      body: JSON.stringify({ notifications: pushNotifs }) 
+                    });
+
+                    if (!osRes.ok) console.warn('Falha parcial ao enviar para OneSignal');
+
+                    // 3. Salva no banco para histórico interno
+                    const { error: errDb } = await supabase.from('notificacoes').upsert(dbNotifs, {
+                      onConflict: 'usuario_id,escala_id,data_hora_inicio'
+                    });
+
+                    if (errDb) throw errDb;
+
                     showToast(`✅ ${pushNotifs.length} alertas agendados!`, 'success');
                     setModalAlertas(null);
                   } catch (err: any) {
                     console.error('Erro detalhado ao agendar alertas:', err);
-                    showToast('Erro ao agendar alertas. Verifique o console ou o banco de dados.', 'error');
+                    showToast('Erro ao agendar alertas: ' + (err.message || 'Erro desconhecido'), 'error');
+                  } finally {
+                    setEnviandoAlertas(false);
                   }
-                  setEnviandoAlertas(false);
                 }}
               >{enviandoAlertas ? 'Agendando...' : 'Salvar Alertas'}</button>
             </div>
