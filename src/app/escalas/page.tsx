@@ -387,10 +387,10 @@ export default function EscalasPage() {
                 include_aliases: { external_id: [user.id] },
                 target_channel: 'push',
                 collapse_id: `shift_${escalaCriada.id}_${plantao.data_hora_inicio}`,
-                headings: { "en": "Alerta de Plantão", "pt": "Alerta de Plantão" },
+                headings: { "en": `🩺 Plantão hoje às ${horaStr}`, "pt": `🩺 Plantão hoje às ${horaStr}` },
                 contents: { 
-                  "en": `Plantão em ${nomeLocal} às ${horaStr} (${diaStr}). Bom trabalho!`,
-                  "pt": `Plantão em ${nomeLocal} às ${horaStr} (${diaStr}). Bom trabalho!`
+                  "en": `${nomeLocal} • ${diaStr}\nPrepare-se com antecedência. Bom plantão!`,
+                  "pt": `${nomeLocal} • ${diaStr}\nPrepare-se com antecedência. Bom plantão!`
                 },
                 send_after: sendAfter.toISOString()
               });
@@ -1167,10 +1167,10 @@ export default function EscalasPage() {
                         pushNotifs.push({
                           include_aliases: { external_id: [user.id] },
                           collapse_id: `shift_${modalAlertas.id}_${p.data_hora_inicio}`,
-                          headings: { en: 'Alerta de Plantão', pt: 'Alerta de Plantão' },
+                          headings: { en: `🩺 Plantão hoje às ${hora}`, pt: `🩺 Plantão hoje às ${hora}` },
                           contents: {
-                            en: `Plantão em ${localNome} às ${hora} (${dia}). Bom trabalho!`,
-                            pt: `Plantão em ${localNome} às ${hora} (${dia}). Bom trabalho!`
+                            en: `${localNome} • ${dia}\nPrepare-se com antecedência. Bom plantão!`,
+                            pt: `${localNome} • ${dia}\nPrepare-se com antecedência. Bom plantão!`
                           },
                           send_after: sendAt.toISOString()
                         });
