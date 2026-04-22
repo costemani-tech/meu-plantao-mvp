@@ -1191,8 +1191,9 @@ export default function EscalasPage() {
                     }
                     showToast(`✅ ${pushNotifs.length} alertas agendados!`, 'success');
                     setModalAlertas(null);
-                  } catch {
-                    showToast('Erro ao agendar alertas.', 'error');
+                  } catch (err: any) {
+                    console.error('Erro detalhado ao agendar alertas:', err);
+                    showToast('Erro ao agendar alertas. Verifique o console ou o banco de dados.', 'error');
                   }
                   setEnviandoAlertas(false);
                 }}
