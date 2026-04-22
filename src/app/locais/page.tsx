@@ -21,6 +21,7 @@ export default function LocaisPage() {
   const [showProModal, setShowProModal] = useState(false);
   const [localEmEdicao, setLocalEmEdicao] = useState<LocalTrabalho | null>(null);
 
+  const [loading, setLoading] = useState(true);
   const [isPro, setIsPro] = useState(false);
   const [limiteLocaisAtingido, setLimiteLocaisAtingido] = useState(false);
   const [forceShowForm, setForceShowForm] = useState(false);
@@ -40,12 +41,14 @@ export default function LocaisPage() {
   };
 
   const fetchLocais = useCallback(async () => {
+    setLoading(true);
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    if (!user) { setLoading(false); return; }
     const { data } = await supabase.from('locais_trabalho').select('*').eq('usuario_id', user.id).eq('ativo', true).order('nome');
     const locaisBuscados = (data as LocalTrabalho[]) ?? [];
     setLocais(locaisBuscados);
     setLimiteLocaisAtingido(locaisBuscados.length >= 2);
+    setLoading(false);
   }, []);
 
   // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -135,6 +138,19 @@ export default function LocaisPage() {
     }
     setSaving(false);
   };
+
+  if (loading) {
+    return (
+      <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <div className="skeleton" style={{ height: 40, width: '250px', marginBottom: '8px' }} />
+        <div className="skeleton" style={{ height: 16, width: '350px', marginBottom: '24px' }} />
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.4fr', gap: 24 }}>
+           <div className="skeleton" style={{ height: 400, borderRadius: '24px' }} />
+           <div className="skeleton" style={{ height: 400, borderRadius: '24px' }} />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>

@@ -604,45 +604,30 @@ body {
 }
 
 .skeleton {
-  background: linear-gradient(90deg, var(--bg-primary) 25%, var(--border-subtle) 50%, var(--bg-primary) 75%);
+  background: linear-gradient(90deg, var(--bg-secondary) 25%, var(--border-subtle) 50%, var(--bg-secondary) 75%);
   background-size: 200% 100%;
-  animation: skeleton-loading 1.5s infinite linear;
+  animation: skeleton-loading 2s infinite ease-in-out;
   border-radius: var(--radius-sm);
+  opacity: 0.6;
 }
 
-.fab {
-  position: fixed;
-  bottom: 90px;
-  right: 24px;
-  width: 56px;
-  height: 56px;
+.spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid var(--border-subtle);
+  border-top-color: var(--accent-blue);
   border-radius: 50%;
-  background: var(--accent-blue);
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.4);
-  cursor: pointer;
-  z-index: 998;
-  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  border: none;
-  outline: none;
+  animation: spin 1s linear infinite;
 }
 
-.fab:hover {
-  transform: scale(1.1) translateY(-4px);
-  box-shadow: 0 12px 30px rgba(37, 99, 235, 0.5);
-  background: var(--accent-blue-hover);
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
-.fab:active {
-  transform: scale(0.95);
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
 }
 
 @media (max-width: 768px) {
-  .fab {
-    bottom: 88px;
-    right: 20px;
-  }
 }

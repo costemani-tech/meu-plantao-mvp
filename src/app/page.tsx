@@ -140,14 +140,21 @@ export default function DashboardPage() {
   // 3. Renderização Condicional (Loading -> Empty -> Dashboard)
   if (loading) {
     return (
-      <div style={{ padding: '24px' }}>
-        <div className="skeleton" style={{ height: 40, width: '200px', marginBottom: '24px' }} />
-        <div className="skeleton" style={{ height: 160, borderRadius: '24px', marginBottom: '20px' }} />
-        <div className="skeleton" style={{ height: 60, borderRadius: '16px', marginBottom: '20px' }} />
-        <div className="skeleton" style={{ height: 200, borderRadius: '24px', marginBottom: '20px' }} />
-        <div style={{ display: 'flex', gap: '12px' }}>
-          <div className="skeleton" style={{ height: 100, flex: 1, borderRadius: '16px' }} />
-          <div className="skeleton" style={{ height: 100, flex: 1, borderRadius: '16px' }} />
+      <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <div>
+          <div className="skeleton" style={{ height: 28, width: '150px', marginBottom: '8px' }} />
+          <div className="skeleton" style={{ height: 16, width: '220px' }} />
+        </div>
+        
+        <div className="skeleton" style={{ height: 160, borderRadius: '24px' }} />
+        <div className="skeleton" style={{ height: 60, borderRadius: '16px' }} />
+        <div className="skeleton" style={{ height: 200, borderRadius: '24px' }} />
+        
+        <div style={{ textAlign: 'center', marginTop: '20px' }}>
+          <div className="spinner" style={{ margin: '0 auto 12px auto' }} />
+          <p style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 500, animate: 'pulse 2s infinite' }}>
+            Carregando sua agenda organizada...
+          </p>
         </div>
       </div>
     );
@@ -367,14 +374,6 @@ export default function DashboardPage() {
         )}
       </div>
 
-      {/* FAB - FLOATING ACTION BUTTON */}
-      <button 
-        className="fab"
-        onClick={() => router.push('/plantao-extra')}
-        title="Adicionar Plantão"
-      >
-        <Plus size={28} />
-      </button>
 
       {/* MODAL PRO PAYWALL */}
       {showProModal && (
