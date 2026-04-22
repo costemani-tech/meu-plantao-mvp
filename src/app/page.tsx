@@ -193,21 +193,13 @@ export default function DashboardPage() {
     <div style={{ padding: '24px 16px 100px 16px', maxWidth: '600px', margin: '0 auto' }}>
       
       {/* HEADER */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-        <div>
-          <h1 style={{ fontSize: 24, fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
-            Meu Plantão 👋
-          </h1>
-          <p style={{ fontSize: 14, color: 'var(--text-secondary)', margin: '4px 0 0 0' }}>
-            Sua agenda organizada e produtiva.
-          </p>
-        </div>
-        <button 
-          onClick={() => router.push('/notificacoes')}
-          style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)', padding: 10, borderRadius: '50%', cursor: 'pointer', position: 'relative' }}
-        >
-          <Bell size={20} color="var(--text-secondary)" />
-        </button>
+      <div style={{ marginBottom: 24 }}>
+        <h1 style={{ fontSize: 24, fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
+          Meu Plantão 👋
+        </h1>
+        <p style={{ fontSize: 14, color: 'var(--text-secondary)', margin: '4px 0 0 0' }}>
+          Sua agenda organizada e produtiva.
+        </p>
       </div>
 
       {/* CARD PRINCIPAL - GANHOS E PLANTÕES */}
