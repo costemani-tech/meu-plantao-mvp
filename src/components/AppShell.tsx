@@ -18,6 +18,43 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [unreadCount, setUnreadCount] = useState(0);
+  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>('default');
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      setNotificationPermission(Notification.permission);
+    }
+  }, []);
+
+  const handleBellClick = async () => {
+    // 1. Solicita permissão nativa do navegador
+    if ('Notification' in window) {
+      const permission = await Notification.requestPermission();
+      setNotificationPermission(permission);
+      
+      if (permission === 'denied') {
+        alert('As notificações estão bloqueadas no seu navegador. Ative-as nas configurações para receber alertas de plantão.');
+      }
+    }
+
+    // 2. Integração OneSignal
+    const win = window as any;
+    if (win.OneSignalDeferred) {
+      win.OneSignalDeferred.push(async (OneSignal: any) => {
+        try {
+          await OneSignal.Notifications.requestPermission();
+          const user = (await supabase.auth.getUser()).data.user;
+          if (user) await OneSignal.login(user.id);
+        } catch (e) {
+          console.error("OneSignal permission error:", e);
+        }
+      });
+    }
+
+    // 3. Navega para notificações
+    router.push('/notificacoes');
+  };
+
   const [toast, setToast] = useState<{titulo: string, mensagem: string} | null>(null);
   const [overCapacity, setOverCapacity] = useState(false);
   const [isPro, setIsPro] = useState(false);
@@ -281,33 +318,36 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             </button>
 
             <button 
-              onClick={async () => {
-                const win = window as any;
-                if (win.OneSignalDeferred) {
-                  win.OneSignalDeferred.push(async (OneSignal: any) => {
-                    await OneSignal.Notifications.requestPermission();
-                    const user = (await supabase.auth.getUser()).data.user;
-                    if (user) await OneSignal.login(user.id);
-                  });
-                }
-                router.push('/notificacoes');
-              }}
+              onClick={handleBellClick}
               style={{
                 background: 'var(--bg-secondary)', padding: 10, borderRadius: '50%',
                 boxShadow: 'var(--shadow-sm)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                color: 'var(--text-primary)', border: '1px solid var(--border-subtle)', transition: 'all 0.2s',
-                cursor: 'pointer', width: 44, height: 44
+                color: notificationPermission === 'granted' ? 'var(--accent-blue)' : 'var(--text-primary)', 
+                border: '1px solid var(--border-subtle)', transition: 'all 0.2s',
+                cursor: 'pointer', width: 44, height: 44, position: 'relative'
               }}
               title="Notificações e Alertas"
             >
               <div style={{ position: 'relative', display: 'flex' }}>
-                <Bell size={20} />
+                <Bell size={20} fill={notificationPermission === 'granted' ? 'currentColor' : 'none'} style={{ opacity: notificationPermission === 'granted' ? 0.2 : 1 }} />
+                <Bell size={20} style={{ position: 'absolute', top: 0, left: 0 }} />
+                
+                {notificationPermission === 'granted' && (
+                  <div style={{
+                    position: 'absolute', bottom: -2, right: -2,
+                    width: 10, height: 10, borderRadius: '50%',
+                    background: '#22C55E', border: '2px solid var(--bg-secondary)',
+                    zIndex: 2
+                  }} />
+                )}
+
                 {unreadCount > 0 && (
                   <span className="bell-badge" style={{ 
                     position: 'absolute', top: -4, right: -4, 
                     background: '#EF4444', color: 'white', fontSize: 10, fontWeight: 800, 
                     borderRadius: '50%', width: 16, height: 16, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    border: '2px solid var(--bg-secondary)', transition: 'transform 0.2s'
+                    border: '2px solid var(--bg-secondary)', transition: 'transform 0.2s',
+                    zIndex: 3
                   }}>
                     {unreadCount > 9 ? '9+' : unreadCount}
                   </span>
