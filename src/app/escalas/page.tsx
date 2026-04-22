@@ -11,9 +11,9 @@ const CORES_PRESET = [
 ];
 
 const REGRAS_PADRAO = [
-  { value: '12x36', label: '12h Trabalhadas / 36h Descanso' },
-  { value: '24x48', label: '24h Trabalhadas / 48h Descanso' },
-  { value: '24x72', label: '24h Trabalhadas / 72h Descanso' },
+  { value: '12x36', label: '12x36 (trabalha 12h, folga 36h)' },
+  { value: '24x48', label: '24x48 (trabalha 24h, folga 48h)' },
+  { value: '24x72', label: '24x72 (trabalha 24h, folga 72h)' },
   { value: 'Outro', label: 'Outro (Personalizado)' },
 ] as const;
 type Regra = string;
@@ -442,15 +442,7 @@ export default function EscalasPage() {
 
           <div className="form-group">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-              <label className="form-label" style={{ margin: 0 }}>Local de Trabalho</label>
-              <button
-                type="button"
-                onClick={() => setIsCreatingLocal(!isCreatingLocal)}
-                style={{ background: 'none', border: 'none', color: 'var(--accent-blue)', fontSize: 13, fontWeight: 600, cursor: 'pointer', padding: 0 }}
-              >
-                {isCreatingLocal ? 'Cancelar' : ' Criar Novo'}
-              </button>
-            </div>
+              <label className="form-label" style={{ margin: 0 }}>Local de Trabalho</label></div>
 
             {isCreatingLocal ? (
               <div style={{ padding: 12, border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-md)', background: 'var(--bg-secondary)', marginBottom: 8 }}>
@@ -527,6 +519,7 @@ export default function EscalasPage() {
                   <option value="">Selecione um local...</option>
                   {locais.map(l => <option key={l.id} value={l.id}>{l.nome}</option>)}
                 </select>
+                <button type="button" onClick={() => setIsCreatingLocal(true)} style={{ background: "none", border: "none", color: "var(--accent-blue)", fontSize: 13, fontWeight: 600, cursor: "pointer", padding: "8px 0 0 0", display: "flex", alignItems: "center", gap: 4 }}>+ Novo local</button>
                 {locais.length === 0 && (
                   <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6 }}>
                     Ainda não há locais. Clique em &quot;Criar Novo&quot; acima.
@@ -536,32 +529,7 @@ export default function EscalasPage() {
             )}
           </div>
 
-          <div className="form-group mobile-stack" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-            <div>
-              <label className="form-label" style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                Dia do 1º Plantão
-              </label>
-              <input
-                type="date"
-                className="form-input"
-                style={{ cursor: 'pointer' }}
-                value={dataInicioSo}
-                onChange={e => setDataInicioSo(e.target.value)}
-              />
-            </div>
-            <div>
-              <label className="form-label" style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                Horário de Início
-              </label>
-              <input
-                type="time"
-                className="form-input"
-                style={{ cursor: 'pointer' }}
-                value={horaInicio}
-                onChange={e => setHoraInicio(e.target.value)}
-              />
-            </div>
-          </div>
+          
 
           <div className="form-group" style={{ marginBottom: 20 }}>
             <label className="form-label">Tipo de Jornada</label>
@@ -712,6 +680,33 @@ export default function EscalasPage() {
           )}
 
 
+          <div className="form-group mobile-stack" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div>
+              <label className="form-label" style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                Dia do 1º Plantão
+              </label>
+              <input
+                type="date"
+                className="form-input"
+                style={{ cursor: 'pointer' }}
+                value={dataInicioSo}
+                onChange={e => setDataInicioSo(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="form-label" style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                Horário de Início
+              </label>
+              <input
+                type="time"
+                className="form-input"
+                style={{ cursor: 'pointer' }}
+                value={horaInicio}
+                onChange={e => setHoraInicio(e.target.value)}
+              />
+            </div>
+          </div>
+
           <div style={{ display: 'grid', gridTemplateColumns: tipoJornada === 'Diarista' ? '1fr 1fr' : '1fr', gap: 12, marginTop: 8, alignItems: 'start' }}>
             <div className="form-group" style={{ marginBottom: 0 }}>
               <label className="form-label" style={{ whiteSpace: 'nowrap' }}>Escala até</label>
@@ -796,7 +791,7 @@ export default function EscalasPage() {
             onClick={() => salvarEscala()}
             disabled={saving || (isCustomRule && (!(parseInt(horasTrabalhoOutro,10) > 0) || !(parseInt(horasDescansoOutro,10) > 0)))}
           >
-            {saving ? ' Processando no servidor...' : ' Criar Escala e Gerar Plantões'}
+            {saving ? ' Criando...' : ' Criar Escala'}
           </button>
 
           {/* Resultado da última geração */}
@@ -831,7 +826,7 @@ export default function EscalasPage() {
               As 5 primeiras datas projetadas — calculadas em tempo real
             </p>
 
-            {preview.length > 0 ? (
+            {(dataInicioSo && regraFinal && preview.length > 0) ? (
               <div className="dates-preview">
                 <div className="dates-preview-title">
                   📆 Próximas {preview.length} ocorrências — {tipoJornada === 'Diarista' ? 'Diarista (dias selecionados)' : (regraFinal === 'Outro' ? `${horasTrabalhoOutro}x${horasDescansoOutro}` : regraFinal)}

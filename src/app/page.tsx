@@ -367,6 +367,15 @@ export default function DashboardPage() {
       </div>
 
 
+      {/* FAB - FLOATING ACTION BUTTON */}
+      <button 
+        className="fab"
+        onClick={() => router.push('/plantao-extra')}
+        title="Adicionar Plantão"
+      >
+        <Plus size={28} />
+      </button>
+
       {/* MODAL PRO PAYWALL */}
       {showProModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
