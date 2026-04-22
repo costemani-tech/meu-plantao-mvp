@@ -228,14 +228,20 @@ export default function DashboardPage() {
           <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: 20, marginBottom: 20 }}>
             {isPro ? (
               <div onClick={() => router.push('/relatorio')} style={{ cursor: 'pointer' }}>
-                <div style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 600, marginBottom: 4 }}>Total Estimado em Extras</div>
-                <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--accent-teal)', display: 'flex', alignItems: 'center', gap: 10 }}>
-                  💰 {totalGanhos.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} em extras até agora
-                  <ChevronRight size={18} />
-                </div>
-                {totalGanhos === 0 && (
-                  <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4, fontStyle: 'italic' }}>
-                    (adicione plantões extras para acompanhar seus ganhos)
+                <div style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 600, marginBottom: 4 }}>Extras do mês</div>
+                {totalGanhos > 0 ? (
+                  <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--accent-teal)', display: 'flex', alignItems: 'center', gap: 10 }}>
+                    💰 {totalGanhos.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} para receber extra
+                    <ChevronRight size={18} />
+                  </div>
+                ) : (
+                  <div>
+                    <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: 10 }}>
+                      💰 Nenhum extra registrado
+                    </div>
+                    <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 4 }}>
+                      Adicione plantões extras para acompanhar seus ganhos.
+                    </div>
                   </div>
                 )}
               </div>
@@ -265,8 +271,8 @@ export default function DashboardPage() {
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid var(--border-subtle)', paddingTop: 20 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700, fontSize: 14, color: 'var(--text-primary)' }}>
-              <MapPin size={16} color="var(--accent-blue)" />
+            <div onClick={() => router.push('/locais')} style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700, fontSize: 14, color: 'var(--text-primary)', cursor: 'pointer' }}>
+              <span style={{ fontSize: 16 }}>🏥</span>
               {locaisAtivos} locais ativos
             </div>
             <button 
