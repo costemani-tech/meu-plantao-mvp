@@ -117,12 +117,13 @@ export default function EscalasPage() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { setIsLoadingEscalas(false); return; }
     try {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('escalas')
-        .select('id, regra, tipo_jornada, modo_jornada, data_inicio, local_id, local:locais_trabalho(nome, cor_calendario), plantoes(data_hora_inicio, data_hora_fim)')
+        .select('id, regra, data_inicio, local_id, local:locais_trabalho(nome, cor_calendario), plantoes(data_hora_inicio, data_hora_fim)')
         .eq('usuario_id', user.id)
         .order('created_at', { ascending: false })
         .limit(1, { foreignTable: 'plantoes' });
+      if (error) console.error('fetchEscalas error:', error);
 
       // Agrupar: manter apenas a escala mais recente por local_id
       const todas = (data as unknown as (EscalaAtiva & { local_id: string })[]) ?? [];
@@ -974,9 +975,11 @@ export default function EscalasPage() {
                             <div style={{ fontWeight: 800, fontSize: 15, color: 'var(--text-primary)' }}>{e.local?.nome ?? 'Local desconhecido'}</div>
                             <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 2, display: 'flex', alignItems: 'center', gap: 6 }}>
                               <span style={{ fontWeight: 600 }}>
-                                {e.tipo_jornada === 'Diarista' 
-                                  ? (e.modo_jornada === 'Dias da Semana' || e.modo_jornada === 'semana' ? 'Diarista (Dias Fixos)' : `Diarista (${e.regra})`) 
-                                  : (e.regra.includes('x') && !e.regra.includes(',') && e.tipo_jornada !== 'Plantonista' ? (parseInt(e.regra.split('x')[0]) < 12 ? `Diarista (${e.regra})` : e.regra) : (e.regra.includes(',') ? 'Diarista (Dias Fixos)' : e.regra))}
+                                {e.regra.includes(',') 
+                                  ? 'Diarista (Dias Fixos)' 
+                                  : (e.regra.includes('x') && parseInt(e.regra.split('x')[0]) < 12 
+                                    ? `Diarista (${e.regra})` 
+                                    : e.regra)}
                               </span>
                               <span style={{ opacity: 0.5 }}>|</span>
                               <span>{horaInicialFormatada} → {horaFinalFormatada}</span>
