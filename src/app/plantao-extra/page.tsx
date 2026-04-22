@@ -19,18 +19,16 @@ export default function PlantaoExtraPage() {
   const [conflitoPendente, setConflitoPendente] = useState<{ inicio: string; fim: string } | null>(null);
   const [payloadPendente, setPayloadPendente] = useState<{ inicioIso: string; fimIso: string } | null>(null);
 
-  const [isPro, setIsPro] = useState(false);
-  const [isLoadingPro, setIsLoadingPro] = useState(true);
+  const [isPro, setIsPro] = useState<boolean | null>(null);
   const [limiteExtrasAtingido, setLimiteExtrasAtingido] = useState(false);
 
   useEffect(() => {
     const checkPro = async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { setIsLoadingPro(false); return; }
+      if (!user) { setIsPro(false); return; }
       const { data } = await supabase.from('profiles').select('is_pro').eq('id', user.id).single();
       const userIsPro = (data?.is_pro ?? false) || isUserPro(user.email);
       setIsPro(userIsPro);
-      setIsLoadingPro(false);
 
       if (!userIsPro) {
         const dataStart = new Date();
@@ -158,7 +156,7 @@ export default function PlantaoExtraPage() {
     }
   };
 
-  if (isLoadingPro) {
+  if (isPro === null) {
     return (
       <div style={{ padding: 24, display: 'flex', justifyContent: 'center' }}>
         <div className="skeleton" style={{ width: 40, height: 40, borderRadius: '50%' }} />

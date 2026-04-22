@@ -22,14 +22,14 @@ export default function LocaisPage() {
   const [localEmEdicao, setLocalEmEdicao] = useState<LocalTrabalho | null>(null);
 
   const [loading, setLoading] = useState(true);
-  const [isPro, setIsPro] = useState(false);
+  const [isPro, setIsPro] = useState<boolean | null>(null);
   const [limiteLocaisAtingido, setLimiteLocaisAtingido] = useState(false);
   const [forceShowForm, setForceShowForm] = useState(false);
 
   useEffect(() => {
     const checkUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) { setIsPro(false); return; }
       const { data: profile } = await supabase.from('profiles').select('is_pro').eq('id', user.id).single();
       
       const userIsPro = (profile?.is_pro ?? false) || isUserPro(user.email);
@@ -59,6 +59,7 @@ export default function LocaisPage() {
   const adicionarLocal = async () => {
     if (!nome.trim()) { showToast('Informe o nome do local.', 'error'); return; }
 
+    if (isPro === null) { showToast('Aguarde, verificando seu plano...', 'error'); return; }
     if (!isPro && limiteLocaisAtingido) {
       showToast('Limite de 2 locais atingido. Assine o plano Pro para hospitais ilimitados.', 'error');
       setShowProModal(true);

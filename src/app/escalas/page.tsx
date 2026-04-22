@@ -101,12 +101,12 @@ export default function EscalasPage() {
   
   const [showProModal, setShowProModal] = useState(false);
   const [showForm, setShowForm] = useState(false);
-  const [isPro, setIsPro] = useState(false);
+  const [isPro, setIsPro] = useState<boolean | null>(null);
 
   useEffect(() => {
     const checkPro = async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) { setIsPro(false); return; }
       const { data } = await supabase.from('profiles').select('is_pro').eq('id', user.id).single();
       setIsPro((data?.is_pro ?? false) || isUserPro(user.email));
     };
@@ -206,6 +206,7 @@ export default function EscalasPage() {
   const salvarNovoLocal = async () => {
     if (!novoLocalNome.trim()) { showToast('Informe o nome do local.', 'error'); return; }
     
+    if (isPro === null) return; // ainda carregando, não processar
     if (!isPro) {
       setSavingLocal(true);
       const { data: { user } } = await supabase.auth.getUser();
