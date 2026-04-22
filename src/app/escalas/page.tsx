@@ -87,6 +87,7 @@ export default function EscalasPage() {
 
   // Estados de gestão de escalas
   const [escalasAtivas, setEscalasAtivas] = useState<EscalaAtiva[]>([]);
+  const [isLoadingEscalas, setIsLoadingEscalas] = useState(true);
   const [menuEscalaId, setMenuEscalaId] = useState<string | null>(null);
   const [modalEncerrar, setModalEncerrar] = useState<{ id: string; nome: string } | null>(null);
   const [dataEncerramento, setDataEncerramento] = useState('');
@@ -114,23 +115,27 @@ export default function EscalasPage() {
 
   const fetchEscalas = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-    const { data } = await supabase
-      .from('escalas')
-      .select('id, regra, tipo_jornada, modo_jornada, data_inicio, local_id, local:locais_trabalho(nome, cor_calendario), plantoes(data_hora_inicio, data_hora_fim)')
-      .eq('usuario_id', user.id)
-      .order('created_at', { ascending: false })
-      .limit(1, { foreignTable: 'plantoes' });
+    if (!user) { setIsLoadingEscalas(false); return; }
+    try {
+      const { data } = await supabase
+        .from('escalas')
+        .select('id, regra, tipo_jornada, modo_jornada, data_inicio, local_id, local:locais_trabalho(nome, cor_calendario), plantoes(data_hora_inicio, data_hora_fim)')
+        .eq('usuario_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(1, { foreignTable: 'plantoes' });
 
-    // Agrupar: manter apenas a escala mais recente por local_id
-    const todas = (data as unknown as (EscalaAtiva & { local_id: string })[]) ?? [];
-    const vistas = new Set<string>();
-    const agrupadas = todas.filter(e => {
-      if (!e.local_id || vistas.has(e.local_id)) return false;
-      vistas.add(e.local_id);
-      return true;
-    });
-    setEscalasAtivas(agrupadas);
+      // Agrupar: manter apenas a escala mais recente por local_id
+      const todas = (data as unknown as (EscalaAtiva & { local_id: string })[]) ?? [];
+      const vistas = new Set<string>();
+      const agrupadas = todas.filter(e => {
+        if (!e.local_id || vistas.has(e.local_id)) return false;
+        vistas.add(e.local_id);
+        return true;
+      });
+      setEscalasAtivas(agrupadas);
+    } finally {
+      setIsLoadingEscalas(false);
+    }
   }, []);
 
   // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -918,7 +923,21 @@ export default function EscalasPage() {
          ══════════════════════════════════════════ */}
       {!showForm && (
         <div style={{ marginTop: 32 }}>
-          {escalasAtivas.length === 0 ? (
+          {isLoadingEscalas ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {[1, 2].map(i => (
+                <div key={i} className="card" style={{ padding: 16 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div className="skeleton" style={{ width: 14, height: 14, borderRadius: '50%' }} />
+                    <div style={{ flex: 1 }}>
+                      <div className="skeleton" style={{ height: 16, width: '60%', borderRadius: 6, marginBottom: 8 }} />
+                      <div className="skeleton" style={{ height: 12, width: '80%', borderRadius: 6 }} />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : escalasAtivas.length === 0 ? (
             <div className="empty-state" style={{ padding: 40 }}>
               <div className="empty-icon">📅</div>
               <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 8 }}>Você ainda não tem escalas</h3>
