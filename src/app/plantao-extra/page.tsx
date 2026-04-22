@@ -178,7 +178,7 @@ export default function PlantaoExtraPage() {
           </div>
 
           <div className="form-group">
-            <label className="form-label">Local de Trabalho *</label>
+            <label className="form-label">Local de Trabalho</label>
             <select className="form-select" value={localId} onChange={e => setLocalId(e.target.value)}>
               <option value="">Onde foi o plantão?</option>
               {locais.map(l => <option key={l.id} value={l.id}>{l.nome}</option>)}
@@ -186,7 +186,7 @@ export default function PlantaoExtraPage() {
           </div>
 
           <div className="form-group" style={{ marginTop: 20 }}>
-            <label className="form-label">Data do Plantão *</label>
+            <label className="form-label">Data do Plantão</label>
             <input
               type="date"
               className="form-input"
@@ -199,7 +199,7 @@ export default function PlantaoExtraPage() {
           <div className="form-group mobile-stack" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 20 }}>
             <div>
               <label className="form-label" style={{ display: 'flex', gap: 6 }}>
-                 Hora Início *
+                 Hora Início
               </label>
               <input
                 type="time"
@@ -211,7 +211,7 @@ export default function PlantaoExtraPage() {
             </div>
             <div>
               <label className="form-label" style={{ display: 'flex', gap: 6 }}>
-                 Hora Fim *
+                 Hora Fim
               </label>
               <input
                 type="time"
@@ -227,7 +227,7 @@ export default function PlantaoExtraPage() {
           {isPro ? (
             <>
               <div className="form-group" style={{ marginTop: 20 }}>
-                <label className="form-label">Tipo de Plantão Extra *</label>
+                <label className="form-label">Tipo de Plantão Extra</label>
                 <div style={{ display: 'flex', gap: 12, marginTop: 8 }}>
                   <label style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8, padding: 12, border: '1px solid var(--border-subtle)', borderRadius: 8, cursor: 'pointer', background: tipoExtra === 'Remunerado' ? 'var(--bg-secondary)' : 'transparent' }}>
                     <input type="radio" name="tipoExtra" value="Remunerado" checked={tipoExtra === 'Remunerado'} onChange={() => setTipoExtra('Remunerado')} />
