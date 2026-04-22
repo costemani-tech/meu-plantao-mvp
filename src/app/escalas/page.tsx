@@ -900,6 +900,8 @@ export default function EscalasPage() {
           </div>
         </div>
       </div>
+      </div>
+      )}
 
       {/* ══════════════════════════════════════════
           SEÇÃO: Minhas Escalas Ativas
