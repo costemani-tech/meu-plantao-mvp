@@ -189,8 +189,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
 
-        // Whitelist é a única fonte de verdade para Pro
-        const proStatus = isUserPro(user.email);
+        // Whitelist + Banco de Dados
+        const { data: profile } = await supabase.from('profiles').select('is_pro').eq('id', user.id).single();
+        const proStatus = isUserPro(user.email) || (profile?.is_pro === true);
         setIsPro(proStatus);
 
         if (!proStatus && pathname !== '/login' && pathname !== '/locais') {

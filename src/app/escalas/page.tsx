@@ -107,7 +107,8 @@ export default function EscalasPage() {
     const checkPro = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { setIsPro(false); return; }
-      setIsPro(isUserPro(user.email));
+      const { data: profile } = await supabase.from('profiles').select('is_pro').eq('id', user.id).single();
+      setIsPro(isUserPro(user.email) || (profile?.is_pro === true));
     };
     checkPro();
   }, []);
