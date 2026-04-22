@@ -123,7 +123,8 @@ export default function PlantaoExtraPage() {
         ? { inicioIso: payloadPendente.inicioIso, fimIso: payloadPendente.fimIso }
         : { inicioIso: new Date(`${dataPlantao}T${horaInicio}:00`).toISOString(), fimIso: (() => { const d = new Date(`${dataPlantao}T${horaFim}:00`); if (horaFim < horaInicio) d.setDate(d.getDate()+1); return d.toISOString(); })() };
 
-      const valorNumerico = tipoExtra === 'Remunerado' ? (parseFloat(valorGanho.replace('R$ ', '').replace(/\./g, '').replace(',', '.')) || 0) : 0;
+      const valorLimpo = valorGanho.replace(/[^\d,]/g, '').replace(',', '.');
+      const valorNumerico = tipoExtra === 'Remunerado' ? (parseFloat(valorLimpo) || 0) : 0;
       const { error } = await supabase.from('plantoes').insert({
         usuario_id: user.id,
         local_id: localId,
@@ -131,9 +132,8 @@ export default function PlantaoExtraPage() {
         data_hora_inicio: payload.inicioIso,
         data_hora_fim: payload.fimIso,
         is_extra: true,
-        valor_ganho: valorNumerico,
         status: tipoExtra === 'Troca' ? 'Trocado' : 'Agendado',
-        notas: tipoExtra,
+        notas: valorNumerico > 0 ? `R$ ${valorNumerico.toFixed(2)} [${tipoExtra}]` : tipoExtra,
       });
 
       if (error) throw error;

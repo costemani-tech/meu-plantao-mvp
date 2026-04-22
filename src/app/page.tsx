@@ -92,21 +92,23 @@ export default function DashboardPage() {
       
       setTotalMes(countMes || 0);
 
-      // Cálculo de Ganhos (via valor_ganho e fallback para Notas Regex)
-      const { data: plantoesComValor } = await supabase
+      // Cálculo de Ganhos (via Notas Regex - abrange extras e normais)
+      const { data: plantoesComValor, error: errValores } = await supabase
         .from('plantoes')
-        .select('valor_ganho, notas')
+        .select('notas')
         .eq('usuario_id', user.id)
         .neq('status', 'Cancelado')
         .gte('data_hora_inicio', inicioMes)
         .lte('data_hora_inicio', fimMes);
 
+      if (errValores) {
+        console.error("Erro ao buscar valores financeiros:", errValores);
+      }
+
       if (plantoesComValor) {
         const sum = plantoesComValor.reduce((acc, p) => {
           let valor = 0;
-          if (p.valor_ganho && !isNaN(Number(p.valor_ganho))) {
-            valor = Number(p.valor_ganho);
-          } else if (p.notas) {
+          if (p.notas) {
             const match = p.notas.match(/R\$\s*([\d.]+)/);
             if (match && match[1]) {
               valor = parseFloat(match[1]);
@@ -283,7 +285,7 @@ export default function DashboardPage() {
       </div>
 
       {/* SEÇÃO PRO - DESTAQUES (Paywall PLG) */}
-      {!isPro && (
+      {!loadingStats && !isPro && (
         <div className="card" style={{ 
           background: 'linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%)', 
           border: '1px solid #FDE68A', 
