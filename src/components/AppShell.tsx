@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { supabase } from '../lib/supabase';
+import { supabase, isUserPro } from '../lib/supabase';
 import { useEffect, useState } from 'react';
 import { LayoutDashboard, CalendarDays, Settings2, PlusCircle, LogOut, Sun, Moon, Activity, Bell, X } from 'lucide-react';
 
@@ -189,9 +189,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
 
-        // Busca Status Pro Real
-        const { data: profile } = await supabase.from('profiles').select('is_pro').eq('id', user.id).single();
-        const proStatus = profile?.is_pro || false;
+        // Whitelist é a única fonte de verdade para Pro
+        const proStatus = isUserPro(user.email);
         setIsPro(proStatus);
 
         if (!proStatus && pathname !== '/login' && pathname !== '/locais') {

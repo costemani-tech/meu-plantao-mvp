@@ -40,20 +40,13 @@ export default function CalendarioPage() {
   const [exportPreview, setExportPreview] = useState<PlantaoComLocal[]>([]);
   const router = useRouter();
   
-  const [isPro, setIsPro] = useState(true); // default true durante carregamento
+  const [isPro, setIsPro] = useState<boolean | null>(null); // null = ainda carregando
 
-  // Busca status Pro real do banco
   useEffect(() => {
     const checkPro = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
-      const { data } = await supabase
-        .from('profiles')
-        .select('is_pro')
-        .eq('id', user.id)
-        .single();
-      const userIsPro = (data?.is_pro ?? false) || isUserPro(user.email);
-      setIsPro(userIsPro);
+      setIsPro(isUserPro(user.email));
     };
     checkPro();
   }, []);

@@ -30,10 +30,7 @@ export default function LocaisPage() {
     const checkUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { setIsPro(false); return; }
-      const { data: profile } = await supabase.from('profiles').select('is_pro').eq('id', user.id).single();
-      
-      const userIsPro = (profile?.is_pro ?? false) || isUserPro(user.email);
-      setIsPro(userIsPro);
+      setIsPro(isUserPro(user.email));
     };
     checkUser();
   }, []);

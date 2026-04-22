@@ -267,13 +267,7 @@ export default async function DashboardPage() {
     redirect('/login');
   }
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('is_pro')
-    .eq('id', user.id)
-    .single();
-  
-  const isPro = (profile?.is_pro ?? false) || isUserPro(user.email);
+  const isPro = isUserPro(user.email);
 
   const { count: locaisCount } = await supabase
     .from('locais_trabalho')

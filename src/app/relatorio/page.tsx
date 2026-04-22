@@ -27,8 +27,7 @@ function RelatorioContent() {
         return;
       }
       
-      const { data: profile } = await supabase.from('profiles').select('is_pro').eq('id', user.id).single();
-      const userIsPro = (profile?.is_pro ?? false) || isUserPro(user.email);
+      const userIsPro = isUserPro(user.email);
       setIsPro(userIsPro);
 
       if (!userIsPro) {
