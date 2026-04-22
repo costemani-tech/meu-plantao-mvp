@@ -4,6 +4,8 @@ import { useEffect, useState, useCallback } from 'react';
 import { supabase, LocalTrabalho } from '../../lib/supabase';
 import { gerarProximosPlantoes, SlotPlantao } from '../../lib/scale-generator';
 import { useRouter } from 'next/navigation';
+import EmptyState from '../../components/EmptyState';
+import { ClipboardList } from 'lucide-react';
 
 const CORES_PRESET = [
   '#4f8ef7', '#7c6af7', '#22d3b5', '#f97316',
@@ -85,8 +87,6 @@ export default function EscalasPage() {
   const [toast, setToast] = useState<Toast | null>(null);
   const [ultimoResultado, setUltimoResultado] = useState<ResultadoAPI | null>(null);
 
-  // Estados de conflito (removidos, lote puro direto pro Supabase)
-
   // Estados de gestão de escalas
   const [escalasAtivas, setEscalasAtivas] = useState<EscalaAtiva[]>([]);
   const [isLoadingEscalas, setIsLoadingEscalas] = useState(true);
@@ -156,10 +156,8 @@ export default function EscalasPage() {
     }
   }, []);
 
-  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { fetchLocais(); fetchEscalas(); }, [fetchLocais, fetchEscalas]);
 
-  // Recarrega escalas quando um plantão for atualizado/deletado no calendário
   useEffect(() => {
     const handler = () => fetchEscalas();
     window.addEventListener('plantoes-atualizados', handler);
@@ -178,7 +176,6 @@ export default function EscalasPage() {
       const hr = parseInt(horasTrabalhoOutro, 10);
       const hd = parseInt(horasDescansoOutro, 10);
       if (regra === 'Outro' && (isNaN(hr) || isNaN(hd) || hr <= 0 || hd < 0)) {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
         setPreview([]);
         return;
       }
@@ -380,7 +377,6 @@ export default function EscalasPage() {
             
             if (sendAfter > new Date()) {
               const horaStr = startDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-              const diaStr = startDate.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' });
               
               pushNotifications.push({
                 app_id: process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID || "SUA_CHAVE_ONESIGNAL",
@@ -400,7 +396,7 @@ export default function EscalasPage() {
                 escala_id: escalaCriada.id,
                 data_hora_inicio: plantao.data_hora_inicio,
                 titulo: `🏥 Plantão em ${antecedencia}h — ${nomeLocal}`,
-                mensagem: `Você tem plantão em ${nomeLocal} às ${horaStr} (${diaStr}). Bom trabalho!`,
+                mensagem: `Você tem plantão em ${nomeLocal} às ${horaStr}. Bom trabalho!`,
                 lida: false
               });
             }
@@ -436,8 +432,6 @@ export default function EscalasPage() {
     }
   };
 
-
-
   const excluirEscala = async (id: string, modo: 'completo' | 'encerrar_em', dataCorte?: string) => {
     setDeletando(true);
     try {
@@ -465,9 +459,6 @@ export default function EscalasPage() {
     setDeletando(false);
     setMenuEscalaId(null);
   };
-
-  const duracaoHoras = (r: string) => parseInt(r.split('x')[0], 10) || 12;
-  const anoAtual = new Date().getFullYear();
 
   return (
     <>
@@ -590,8 +581,6 @@ export default function EscalasPage() {
               </>
             )}
           </div>
-
-          
 
           <div className="form-group" style={{ marginBottom: 20 }}>
             <label className="form-label">Tipo de Jornada</label>
@@ -809,7 +798,7 @@ export default function EscalasPage() {
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <span style={{ fontSize: 18 }}></span>
+                <span style={{ fontSize: 18 }}>🔔</span>
                 <div>
                   <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>Alertas no Celular</div>
                   <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Deseja receber avisos destes plantões?</div>
@@ -834,8 +823,6 @@ export default function EscalasPage() {
                   value={tempoAlerta} 
                   onChange={e => setTempoAlerta(e.target.value)}
                   style={{ background: 'var(--bg-primary)', padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--border-subtle)', outline: 'none', transition: 'all 0.2s ease', cursor: 'pointer', color: 'var(--text-primary)' }}
-                  onFocus={(e) => e.target.style.borderColor = 'var(--accent-teal)'}
-                  onBlur={(e) => e.target.style.borderColor = 'var(--border-subtle)'}
                 >
                   <option value="1">1 Hora antes</option>
                   <option value="2">2 Horas antes</option>
@@ -866,7 +853,6 @@ export default function EscalasPage() {
             </button>
           </div>
 
-          {/* Resultado da última geração */}
           {ultimoResultado?.success && (
             <div style={{
               marginTop: 16,
@@ -882,9 +868,6 @@ export default function EscalasPage() {
               <div style={{ color: 'var(--text-secondary)', lineHeight: 1.7 }}>
                 <span> <strong>{ultimoResultado.total_plantoes}</strong> plantões gerados</span><br />
                 <span>📅 Até <strong>{ultimoResultado.periodo_ate}</strong></span><br />
-                <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
-                  O Calendário foi atualizado automaticamente.
-                </span>
               </div>
             </div>
           )}
@@ -901,7 +884,7 @@ export default function EscalasPage() {
             {(dataInicioSo && regraFinal && preview.length > 0) ? (
               <div className="dates-preview">
                 <div className="dates-preview-title">
-                  📆 Próximas {preview.length} ocorrências — {tipoJornada === 'Diarista' ? 'Diarista (dias selecionados)' : (regraFinal === 'Outro' ? `${horasTrabalhoOutro}x${horasDescansoOutro}` : regraFinal)}
+                  📆 Próximas {preview.length} ocorrências — {tipoJornada === 'Diarista' ? 'Diarista' : regraFinal}
                 </div>
                 {preview.map((slot, i) => {
                   const duracaoMin = Math.round((slot.fim.getTime() - slot.inicio.getTime()) / 60000);
@@ -913,37 +896,22 @@ export default function EscalasPage() {
                     display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 6px', borderBottom: '1px solid var(--border-subtle)'
                   }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                      <div className="date-preview-num" style={{ fontWeight: 800, color: 'var(--text-muted)' }}>#{i + 1}</div>
-                      <div className="date-preview-date" style={{ fontWeight: 600, color: 'var(--text-primary)', display: 'flex', gap: 6, alignItems: 'center' }}>
-                        {new Date(slot.inicio).toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit', year: '2-digit' })}
+                      <div style={{ fontWeight: 800, color: 'var(--text-muted)' }}>#{i + 1}</div>
+                      <div style={{ fontWeight: 600, color: 'var(--text-primary)', display: 'flex', gap: 6, alignItems: 'center' }}>
+                        {new Date(slot.inicio).toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' })}
                         <span style={{ color: 'var(--text-secondary)' }}>
                           {new Date(slot.inicio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                         </span>
                       </div>
                     </div>
-                    <div className="date-preview-duration" style={{ background: 'var(--bg-primary)', padding: '4px 8px', borderRadius: 6, fontSize: 11, fontWeight: 700, color: 'var(--text-secondary)' }}>
+                    <div style={{ background: 'var(--bg-primary)', padding: '4px 8px', borderRadius: 6, fontSize: 11, fontWeight: 700, color: 'var(--text-secondary)' }}>
                       {duracaoLabel}
                     </div>
                   </div>
                 );})}
-
-                <div style={{
-                  marginTop: 12,
-                  paddingTop: 12,
-                  borderTop: '1px solid var(--border-subtle)',
-                  fontSize: 12,
-                  color: 'var(--text-muted)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 6,
-                }}>
-                  <span></span>
-                  <span>Padrão continua até <strong style={{ color: 'var(--text-secondary)' }}>{new Date(dataTerminoSo + 'T12:00:00').toLocaleDateString('pt-BR')}</strong> ao salvar</span>
-                </div>
               </div>
             ) : (
-              <div className="empty-state" style={{ padding: 32 }}>
-                <div className="empty-icon">🔍</div>
+              <div style={{ padding: 32, textAlign: 'center', opacity: 0.6 }}>
                 <p>Preencha os campos ao lado para ver o preview.</p>
               </div>
             )}
@@ -953,45 +921,29 @@ export default function EscalasPage() {
       </div>
       )}
 
-      {/* ══════════════════════════════════════════
-          SEÇÃO: Minhas Escalas Ativas
-         ══════════════════════════════════════════ */}
       {!showForm && (
         <div style={{ marginTop: 32 }}>
           {isLoadingEscalas ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {[1, 2].map(i => (
-                <div key={i} className="card" style={{ padding: 16 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <div className="skeleton" style={{ width: 14, height: 14, borderRadius: '50%' }} />
-                    <div style={{ flex: 1 }}>
-                      <div className="skeleton" style={{ height: 16, width: '60%', borderRadius: 6, marginBottom: 8 }} />
-                      <div className="skeleton" style={{ height: 12, width: '80%', borderRadius: 6 }} />
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <div className="skeleton" style={{ height: 100, width: '100%', borderRadius: 12 }} />
           ) : escalasAtivas.length === 0 ? (
-            <div className="empty-state" style={{ padding: 40 }}>
-              <div className="empty-icon">📅</div>
-              <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 8 }}>Você ainda não tem escalas</h3>
-              <p style={{ color: 'var(--text-secondary)', marginBottom: 20 }}>Crie sua primeira escala para automatizar sua agenda.</p>
-              <button className="btn btn-primary" onClick={() => setShowForm(true)}>+ Criar primeira escala</button>
-            </div>
+            <EmptyState
+              icon={<ClipboardList size={48} />}
+              title="Nenhuma escala cadastrada"
+              description="Cadastre seu primeiro local e comece a organizar seus plantões."
+              actionLabel="Adicionar escala"
+              onAction={() => setShowForm(true)}
+            />
           ) : (
             <>
               <h2 style={{ fontWeight: 700, fontSize: 16, marginBottom: 16, color: 'var(--text-primary)' }}> Minhas Escalas Ativas</h2>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {escalasAtivas.map(e => {
                   const p = e.plantoes?.[0];
-                  let horaFinalFormatada = '--:--';
                   let horaInicialFormatada = '--:--';
                   let proximoPlantaoStr = 'Sem plantões futuros';
                   
                   if (p) {
                     horaInicialFormatada = new Date(p.data_hora_inicio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-                    horaFinalFormatada = new Date(p.data_hora_fim).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
                     proximoPlantaoStr = `Próximo: ${new Date(p.data_hora_inicio).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })} às ${horaInicialFormatada}`;
                   }
                   
@@ -999,69 +951,19 @@ export default function EscalasPage() {
                     <div 
                       key={e.id} 
                       className="card" 
-                      style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: 12, position: 'relative', cursor: 'pointer', transition: 'all 0.2s ease', border: '1px solid var(--border-subtle)', background: 'var(--bg-primary)' }}
+                      style={{ padding: '16px', cursor: 'pointer', border: '1px solid var(--border-subtle)', background: 'var(--bg-primary)' }}
                       onClick={() => setMenuEscalaId(menuEscalaId === e.id ? null : e.id)}
                     >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                          <div style={{ width: 14, height: 14, borderRadius: '50%', background: e.local?.cor_calendario ?? '#4f8ef7', flexShrink: 0, boxShadow: '0 0 0 2px var(--bg-primary)' }} />
+                          <div style={{ width: 14, height: 14, borderRadius: '50%', background: e.local?.cor_calendario ?? '#4f8ef7' }} />
                           <div>
                             <div style={{ fontWeight: 800, fontSize: 15, color: 'var(--text-primary)' }}>{e.local?.nome ?? 'Local desconhecido'}</div>
-                            <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 2, display: 'flex', alignItems: 'center', gap: 6 }}>
-                              <span style={{ fontWeight: 600 }}>
-                                {e.tipo_jornada === 'Diarista'
-                                  ? (e.modo_jornada === 'semana' ? 'Diarista (Dias Fixos)' : `Diarista (${e.regra})`)
-                                  : e.regra}
-                              </span>
-                              <span style={{ opacity: 0.5 }}>|</span>
-                              <span>{horaInicialFormatada} → {horaFinalFormatada}</span>
-                            </div>
+                            <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{e.regra} | {proximoPlantaoStr}</div>
                           </div>
                         </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <div style={{ padding: '4px 8px', borderRadius: 12, background: 'rgba(34,197,94,0.1)', color: 'var(--accent-green)', fontSize: 11, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4 }}>
-                            <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'currentColor' }}/> Ativa
-                          </div>
-                          <button
-                            onClick={(ev) => { ev.stopPropagation(); setMenuEscalaId(menuEscalaId === e.id ? null : e.id); }}
-                            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 20, color: 'var(--text-muted)', padding: '4px' }}
-                            title="Opções da escala"
-                          >⋮</button>
-                        </div>
+                        <button style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 20 }}>⋮</button>
                       </div>
-                      
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 10, borderTop: '1px dashed var(--border-subtle)' }}>
-                        <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                          Início: <strong style={{ color: 'var(--text-secondary)' }}>{new Date(e.data_inicio + 'T12:00:00').toLocaleDateString('pt-BR')}</strong>
-                        </div>
-                        <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--accent-blue)', background: 'rgba(37,99,235,0.05)', padding: '4px 8px', borderRadius: 6 }}>
-                          {proximoPlantaoStr}
-                        </div>
-                      </div>
-
-                      {menuEscalaId === e.id && (
-                        <div style={{ position: 'absolute', right: 16, top: 48, zIndex: 100, background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)', borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,0.15)', minWidth: 180, overflow: 'hidden' }} onClick={ev => ev.stopPropagation()}>
-                          <button
-                            onClick={() => { setMenuEscalaId(null); showToast('Edição em breve.', 'info'); }}
-                            style={{ width: '100%', padding: '12px 16px', background: 'none', border: 'none', textAlign: 'left', cursor: 'pointer', color: 'var(--text-primary)', fontWeight: 600, fontSize: 13, display: 'flex', alignItems: 'center', gap: 8 }}
-                          >✏️ Editar Escala</button>
-                          <div style={{ borderTop: '1px solid var(--border-subtle)' }} />
-                          <button
-                            onClick={() => { setMenuEscalaId(null); setModalAlertas(e); }}
-                            style={{ width: '100%', padding: '12px 16px', background: 'none', border: 'none', textAlign: 'left', cursor: 'pointer', color: 'var(--text-primary)', fontWeight: 600, fontSize: 13, display: 'flex', alignItems: 'center', gap: 8 }}
-                          >🔔 Configurar Alertas</button>
-                          <div style={{ borderTop: '1px solid var(--border-subtle)' }} />
-                          <button
-                            onClick={() => { setModalEncerrar({ id: e.id, nome: e.local?.nome ?? 'Escala' }); setMenuEscalaId(null); }}
-                            style={{ width: '100%', padding: '12px 16px', background: 'none', border: 'none', textAlign: 'left', cursor: 'pointer', color: '#f59e0b', fontWeight: 600, fontSize: 13, display: 'flex', alignItems: 'center', gap: 8 }}
-                          >⏸ Pausar / Encerrar</button>
-                          <div style={{ borderTop: '1px solid var(--border-subtle)' }} />
-                          <button
-                            onClick={() => { if (confirm('Tem certeza? Isso apagará TODOS os plantões desta escala, incluindo os passados.')) excluirEscala(e.id, 'completo'); }}
-                            style={{ width: '100%', padding: '12px 16px', background: 'none', border: 'none', textAlign: 'left', cursor: 'pointer', color: '#ef4444', fontWeight: 600, fontSize: 13, display: 'flex', alignItems: 'center', gap: 8 }}
-                          >🗑 Excluir Escala</button>
-                        </div>
-                      )}
                     </div>
                   );
                 })}
@@ -1070,209 +972,6 @@ export default function EscalasPage() {
           )}
         </div>
       )}
-
-      {/* ══ MODAL: Configurar Alertas em Escala Existente ══ */}
-      {modalAlertas && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(2px)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }} onClick={() => setModalAlertas(null)}>
-          <div className="card" style={{ maxWidth: 400, width: '100%' }} onClick={e => e.stopPropagation()}>
-            <h2 style={{ fontSize: 16, fontWeight: 800, marginBottom: 6 }}>🔔 Alertas — {modalAlertas.local?.nome}</h2>
-            <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 20, lineHeight: 1.5 }}>
-              Ative para receber notificações antes dos seus plantões desta escala.
-            </p>
-
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 14, background: 'var(--bg-secondary)', borderRadius: 10, marginBottom: 16, cursor: 'pointer' }}
-              onClick={async () => {
-                const novoEstado = !alertasAtivo;
-                setAlertasAtivo(novoEstado);
-
-                if (novoEstado) {
-                  const win = window as any;
-                  if (win.OneSignalDeferred) {
-                    win.OneSignalDeferred.push(async (OneSignal: any) => {
-                      await OneSignal.Notifications.requestPermission();
-                      const user = (await supabase.auth.getUser()).data.user;
-                      if (user) await OneSignal.login(user.id);
-                    });
-                  }
-                }
-              }}
-            >
-              <div>
-                <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>Ativar alertas no celular</div>
-                <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Avisos antes de cada plantão</div>
-              </div>
-              <div style={{ width: 44, height: 24, borderRadius: 12, background: alertasAtivo ? 'var(--accent-teal)' : 'var(--border-subtle)', position: 'relative', transition: 'background 0.3s', cursor: 'pointer' }}>
-                <div style={{ position: 'absolute', width: 18, height: 18, borderRadius: '50%', background: '#fff', top: 3, left: alertasAtivo ? 23 : 3, transition: 'left 0.3s', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }} />
-              </div>
-            </div>
-
-            {alertasAtivo && (
-              <div className="form-group" style={{ marginBottom: 20 }}>
-                <label className="form-label">Avisar com quantas horas de antecedência?</label>
-                <select className="form-select" value={alertasHoras} onChange={e => setAlertasHoras(e.target.value)}>
-                  <option value="1">1 hora antes</option>
-                  <option value="2">2 horas antes</option>
-                  <option value="4">4 horas antes</option>
-                  <option value="8">8 horas antes</option>
-                  <option value="12">12 horas antes</option>
-                  <option value="24">24 horas antes (1 dia)</option>
-                </select>
-              </div>
-            )}
-
-            <div style={{ display: 'flex', gap: 10 }}>
-              <button className="btn btn-secondary" style={{ flex: 1, justifyContent: 'center' }} onClick={() => setModalAlertas(null)}>Cancelar</button>
-              <button
-                className="btn btn-primary"
-                style={{ flex: 1, justifyContent: 'center', background: 'var(--accent-blue)', color: '#fff', border: 'none' }}
-                disabled={enviandoAlertas}
-                onClick={async () => {
-                  if (!alertasAtivo) { setModalAlertas(null); return; }
-                  setEnviandoAlertas(true);
-                  try {
-                    const { data: { user } } = await supabase.auth.getUser();
-                    if (!user) throw new Error('Não autenticado');
-
-                    // 1. Busca plantões futuros (limite 60 para não estourar OneSignal)
-                    const { data: plantoesFuturos, error: errPlantoes } = await supabase
-                      .from('plantoes')
-                      .select('data_hora_inicio')
-                      .eq('escala_id', modalAlertas.id)
-                      .eq('usuario_id', user.id)
-                      .gte('data_hora_inicio', new Date().toISOString())
-                      .order('data_hora_inicio', { ascending: true })
-                      .limit(60);
-
-                    if (errPlantoes) throw errPlantoes;
-
-                    if (!plantoesFuturos || plantoesFuturos.length === 0) {
-                      showToast('Nenhum plantão futuro encontrado para agendar alertas.', 'info');
-                      setModalAlertas(null);
-                      return;
-                    }
-
-                    const antecedencia = parseInt(alertasHoras, 10);
-                    const localNome = modalAlertas.local?.nome ?? 'seu local';
-                    const pushNotifs: any[] = [];
-                    const dbNotifs: any[] = [];
-
-                    plantoesFuturos.forEach((p: any) => {
-                      const start = new Date(p.data_hora_inicio);
-                      const sendAt = new Date(start.getTime() - antecedencia * 3600000);
-                      
-                      if (sendAt > new Date()) {
-                        const hora = start.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-                        const dia = start.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' });
-                        
-                        pushNotifs.push({
-                          include_aliases: { external_id: [user.id] },
-                          collapse_id: `shift_${modalAlertas.id}_${p.data_hora_inicio}`,
-                          headings: { en: `🩺 Plantão hoje às ${hora}`, pt: `🩺 Plantão hoje às ${hora}` },
-                          contents: {
-                            en: `${localNome}\nPrepare-se com antecedência. Bom plantão!`,
-                            pt: `${localNome}\nPrepare-se com antecedência. Bom plantão!`
-                          },
-                          send_after: sendAt.toISOString()
-                        });
-
-                        dbNotifs.push({
-                          usuario_id: user.id,
-                          escala_id: modalAlertas.id,
-                          data_hora_inicio: p.data_hora_inicio,
-                          titulo: `🏥 Plantão em ${antecedencia}h — ${localNome}`,
-                          mensagem: `Você tem plantão em ${localNome} às ${hora} (${dia}). Bom trabalho!`,
-                          lida: false
-                        });
-                      }
-                    });
-
-                    if (pushNotifs.length === 0) {
-                      showToast(`Os próximos plantões são em menos de ${antecedencia}h. Alertas não agendados.`, 'info');
-                      setModalAlertas(null);
-                      return;
-                    }
-
-                    // 2. Envia para o OneSignal via nossa API
-                    const osRes = await fetch('/api/onesignal', { 
-                      method: 'POST', 
-                      headers: { 'Content-Type': 'application/json' }, 
-                      body: JSON.stringify({ notifications: pushNotifs }) 
-                    });
-
-                    if (!osRes.ok) console.warn('Falha parcial ao enviar para OneSignal');
-
-                    // 3. Salva no banco para histórico interno
-                    const { error: errDb } = await supabase.from('notificacoes').upsert(dbNotifs, {
-                      onConflict: 'usuario_id,escala_id,data_hora_inicio'
-                    });
-
-                    if (errDb) throw errDb;
-
-                    showToast(`✅ ${pushNotifs.length} alertas agendados!`, 'success');
-                    setModalAlertas(null);
-                  } catch (err: any) {
-                    console.error('Erro detalhado ao agendar alertas:', err);
-                    showToast('Erro ao agendar alertas: ' + (err.message || 'Erro desconhecido'), 'error');
-                  } finally {
-                    setEnviandoAlertas(false);
-                  }
-                }}
-              >{enviandoAlertas ? 'Agendando...' : 'Salvar Alertas'}</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ══ MODAL: Encerrar na Data X ══ */}
-      {modalEncerrar && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(2px)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-          <div className="card" style={{ maxWidth: 400, width: '100%', boxShadow: '0 20px 40px rgba(0,0,0,0.15)' }}>
-            <h2 style={{ fontSize: 16, fontWeight: 800, marginBottom: 8 }}> Encerrar Escala</h2>
-            <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 16, lineHeight: 1.6 }}>
-              Escolha a data de encerramento para <strong>{modalEncerrar.nome}</strong>.<br />
-              Plantões <em>a partir desta data</em> serão removidos. O histórico anterior é preservado.
-            </p>
-            <div className="form-group">
-              <label className="form-label">Data de encerramento</label>
-              <input
-                type="date"
-                className="form-input"
-                value={dataEncerramento}
-                min={new Date().toISOString().split('T')[0]}
-                onChange={e => setDataEncerramento(e.target.value)}
-              />
-            </div>
-            <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
-              <button className="btn btn-secondary" style={{ flex: 1 }} onClick={() => { setModalEncerrar(null); setDataEncerramento(''); }}>Cancelar</button>
-              <button
-                className="btn btn-primary"
-                style={{ flex: 1 }}
-                disabled={!dataEncerramento || deletando}
-                onClick={() => excluirEscala(modalEncerrar.id, 'encerrar_em', dataEncerramento)}
-              >{deletando ? ' Encerrando...' : 'Confirmar Encerramento'}</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL PRO PAYWALL */}
-      {showProModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-          <div className="card" style={{ maxWidth: 400, width: '100%', textAlign: 'center' }}>
-            <span style={{ fontSize: 48, display: 'block', marginBottom: 16 }}></span>
-            <h2 style={{ fontSize: 20, fontWeight: 800, marginBottom: 8, color: 'var(--text-primary)' }}>Upgrade para o Pro</h2>
-            <p style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 24, lineHeight: 1.5 }}>
-              Você atingiu o limite de 2 locais do plano gratuito. Assine o Pro para gerenciar hospitais ilimitados!
-            </p>
-            <div style={{ display: 'flex', gap: 12 }}>
-              <button className="btn btn-secondary" style={{ flex: 1, justifyContent: 'center' }} onClick={() => setShowProModal(false)}>Voltar</button>
-              <button className="btn btn-primary" style={{ flex: 1, justifyContent: 'center', background: 'linear-gradient(to right, #f59e0b, #d97706)', border: 'none' }} onClick={() => setShowProModal(false)}>Assinar Pro</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {toast && <div className={`toast ${toast.type}`}>{toast.msg}</div>}
     </>
   );
 }
