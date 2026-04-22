@@ -156,13 +156,13 @@ export default function LoginPage() {
               <input 
                 type="text" 
                 className="form-input" 
-                placeholder="Digite o código de 6 dígitos" 
+                placeholder="Digite o código recebido" 
                 value={otpCode}
-                onChange={e => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                onChange={e => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 12))}
                 required
                 autoFocus
                 inputMode="numeric"
-                style={{ textAlign: 'center', fontSize: 20, letterSpacing: 4, fontWeight: 700 }}
+                style={{ textAlign: 'center', fontSize: 20, letterSpacing: otpCode.length > 6 ? '2px' : '4px', fontWeight: 700 }}
               />
             </div>
             
