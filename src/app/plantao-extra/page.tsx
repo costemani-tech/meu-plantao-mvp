@@ -237,6 +237,7 @@ export default function PlantaoExtraPage() {
                   <label className="form-label">Valor do Plantão (R$)</label>
                   <input
                     type="text"
+                    inputMode="numeric"
                     className="form-input"
                     placeholder="Ex: R$ 1.200,00"
                     value={valorGanho}
