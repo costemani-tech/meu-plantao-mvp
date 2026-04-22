@@ -121,10 +121,9 @@ export default function EscalasPage() {
     try {
       const { data, error } = await supabase
         .from('escalas')
-        .select('id, regra, tipo_jornada, modo_jornada, data_inicio, local_id, local:locais_trabalho(nome, cor_calendario), plantoes(data_hora_inicio, data_hora_fim)')
+        .select('id, regra, tipo_jornada, modo_jornada, data_inicio, local_id, local:locais_trabalho(nome, cor_calendario)')
         .eq('usuario_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(1, { foreignTable: 'plantoes' });
+        .order('created_at', { ascending: false });
       if (error) console.error('fetchEscalas error:', error);
 
       // Agrupar: manter apenas a escala mais recente por local_id
@@ -135,7 +134,23 @@ export default function EscalasPage() {
         vistas.add(e.local_id);
         return true;
       });
-      setEscalasAtivas(agrupadas);
+
+      // Para cada escala, buscar o PRÓXIMO plantão futuro
+      const now = new Date().toISOString();
+      const escalasComPlantoes = await Promise.all(
+        agrupadas.map(async (e) => {
+          const { data: plantoes } = await supabase
+            .from('plantoes')
+            .select('data_hora_inicio, data_hora_fim')
+            .eq('escala_id', e.id)
+            .gte('data_hora_inicio', now)
+            .order('data_hora_inicio', { ascending: true })
+            .limit(1);
+          return { ...e, plantoes: plantoes ?? [] };
+        })
+      );
+
+      setEscalasAtivas(escalasComPlantoes);
     } finally {
       setIsLoadingEscalas(false);
     }
