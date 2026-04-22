@@ -141,8 +141,8 @@ function RelatorioContent() {
           color: '#334155'
         }}>
           <div style={{ borderBottom: '2px solid #e2e8f0', paddingBottom: 16, marginBottom: 24 }}>
-            <h1 style={{ fontSize: 24, fontWeight: 800, margin: 0, color: '#0f172a' }}>Relatório Financeiro</h1>
-            <p style={{ margin: 0, color: '#64748b', fontSize: 14 }}>Meu Plantão PRO</p>
+            <h1 style={{ fontSize: 24, fontWeight: 800, margin: 0, color: '#0f172a' }}>Resumo dos Ganhos 💰</h1>
+            <p style={{ margin: 0, color: '#64748b', fontSize: 14 }}>Meu Plantão Ganhos</p>
           </div>
 
           <div style={{ marginBottom: 32 }}>

@@ -371,8 +371,8 @@ export default function CalendarioPage() {
              </button>
              {menuAberto && (
                  <div style={{ position: 'absolute', top: 45, right: 0, background: 'var(--bg-primary)', border: '1px solid var(--border-subtle)', boxShadow: '0 10px 30px rgba(0,0,0,0.15)', borderRadius: 12, overflow: 'hidden', minWidth: 220, zIndex: 50 }}>
-                     <button onClick={() => { setMenuAberto(false); alert('Abrirá o modal financeiro'); }} style={{ width: '100%', padding: '14px 16px', background: 'transparent', border: 'none', borderBottom: '1px solid var(--border-subtle)', textAlign: 'left', fontWeight: 700, display:'flex', alignItems:'center', gap:10, color:'var(--text-primary)' }}>
-                         Relatórios de Plantões Pro
+                     <button onClick={() => { setMenuAberto(false); router.push('/dashboard'); }} style={{ width: '100%', padding: '14px 16px', background: 'transparent', border: 'none', borderBottom: '1px solid var(--border-subtle)', textAlign: 'left', fontWeight: 700, display:'flex', alignItems:'center', gap:10, color:'var(--text-primary)' }}>
+                         Resumo dos Ganhos 💰
                      </button>
                      <button
                        onClick={() => { setMenuAberto(false); setShowExportModal(true); }}

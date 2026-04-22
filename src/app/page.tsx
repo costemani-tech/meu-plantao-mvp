@@ -13,6 +13,7 @@ interface PlantaoComLocal extends Plantao {
 export default function DashboardPage() {
   const [plantoesMaisProximosPorLocal, setPlantoes] = useState<PlantaoComLocal[]>([]);
   const [totalMes, setTotalMes] = useState(0);
+  const [totalGanhos, setTotalGanhos] = useState(0);
   const [locaisAtivos, setLocaisAtivos] = useState(0);
   const [loading, setLoading] = useState(true);
   const [showProModal, setShowProModal] = useState('');
@@ -118,8 +119,31 @@ export default function DashboardPage() {
         .neq('status', 'Cancelado');
         
       setTotalMes(countMes || 0);
+
+      // 3. Ganhos do Mês (Apenas para PRO ou para instigar FREE)
+      const { data: plantoesMes } = await supabase
+        .from('plantoes')
+        .select('notas, is_extra')
+        .eq('usuario_id', user.id)
+        .eq('is_extra', true)
+        .neq('status', 'Cancelado')
+        .gte('data_hora_inicio', inicioMes)
+        .lte('data_hora_inicio', fimMes);
+
+      if (plantoesMes) {
+        let sum = 0;
+        plantoesMes.forEach(p => {
+          if (p.notas) {
+            const match = p.notas.match(/R\$\s*([\d.]+)/);
+            if (match && match[1]) {
+              sum += parseFloat(match[1]);
+            }
+          }
+        });
+        setTotalGanhos(sum);
+      }
   
-      // 3. Locais Ativos
+      // 4. Locais Ativos
       const { count: countLocais } = await supabase
         .from('locais_trabalho')
         .select('*', { count: 'exact', head: true })
@@ -342,21 +366,74 @@ export default function DashboardPage() {
         </div>
       ) : (
         <>
-          <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))' }}>
-            <div className="stat-card" onClick={() => router.push('/calendario')} style={{ cursor: 'pointer' }}>
-              <div className="stat-icon blue"><CalendarDays size={28} /></div>
-              <div className="stat-content">
-                <div className="stat-label">Plantões no Mês</div>
-                <div className="stat-value">{totalMes}</div>
-                <div className="stat-sub">Agendados/Realizados</div>
-              </div>
-            </div>
-            <div className="stat-card" onClick={() => router.push('/locais')} style={{ cursor: 'pointer' }}>
-              <div className="stat-icon orange"><Building2 size={28} /></div>
-              <div className="stat-content">
-                <div className="stat-label">Locais Ativos</div>
-                <div className="stat-value">{locaisAtivos}</div>
-                <div className="stat-sub">Hospitais / Home Care</div>
+          <div className="stats-grid" style={{ gridTemplateColumns: '1fr' }}>
+            <div className="stat-card" style={{ cursor: 'default', padding: '24px', position: 'relative', overflow: 'hidden' }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                <div className="stat-content" style={{ flex: 1 }}>
+                  <div className="stat-label" style={{ fontSize: 14, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <CalendarDays size={18} className="text-blue-500" />
+                    Seu Plantão no Mês
+                  </div>
+                  <div className="stat-value" style={{ fontSize: 32, fontWeight: 800, marginBottom: 16 }}>
+                    📅 {totalMes} plantões
+                  </div>
+                  
+                  <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: 16, marginTop: 4 }}>
+                    {isPro ? (
+                      <div onClick={() => setShowRelatorioModal(true)} style={{ cursor: 'pointer' }}>
+                        <div className="stat-label" style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 4 }}>Total em Extras</div>
+                        <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--accent-teal)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                          💰 {totalGanhos.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                        </div>
+                      </div>
+                    ) : (
+                      <div>
+                        <div style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 12, fontWeight: 600 }}>
+                          💰 Ver meus ganhos
+                        </div>
+                        <button 
+                          className="btn btn-primary" 
+                          onClick={() => setShowProModal('Ganhos')}
+                          style={{ 
+                            background: 'linear-gradient(135deg, #f59e0b, #d97706)', 
+                            border: 'none', 
+                            padding: '10px 20px', 
+                            fontSize: 14,
+                            fontWeight: 700,
+                            borderRadius: 10,
+                            boxShadow: '0 4px 12px rgba(245, 158, 11, 0.3)'
+                          }}
+                        >
+                          [ Desbloquear ganhos 💰 ]
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
+                {/* Badge de Locais - Ação Direta */}
+                <div style={{ position: 'absolute', bottom: 16, right: 24 }}>
+                  <button 
+                    onClick={() => router.push('/locais')}
+                    style={{ 
+                      background: 'var(--bg-secondary)', 
+                      border: '1px solid var(--border-subtle)', 
+                      padding: '6px 12px', 
+                      borderRadius: 20,
+                      fontSize: 12,
+                      color: 'var(--text-secondary)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      cursor: 'pointer',
+                      transition: 'all 0.2s'
+                    }}
+                    onMouseOver={e => (e.currentTarget.style.background = 'var(--bg-primary)')}
+                    onMouseOut={e => (e.currentTarget.style.background = 'var(--bg-secondary)')}
+                  >
+                    🏥 {locaisAtivos} locais • ver todos
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -383,7 +460,7 @@ export default function DashboardPage() {
               >
                 {!isPro && <Lock size={16} color="var(--text-muted)" style={{ position: 'absolute', top: 12, right: 12 }} />}
                 <div style={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, fontSize: 14 }}>
-                  📊 Relatórios Pro
+                  📊 Ganhos 💰
                 </div>
                 <div className="text-sm text-gray-500" style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.4 }}>
                   Tenha controle dos seus plantões e saiba quanto irá receber de extra no mês.
@@ -476,7 +553,7 @@ export default function DashboardPage() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <div style={{ width: 40, height: 40, borderRadius: 10, background: 'linear-gradient(135deg, #7c3aed, #8b5cf6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, boxShadow: '0 4px 12px rgba(124,58,237,0.3)' }}>📊</div>
                 <div>
-                  <h2 style={{ fontSize: 16, fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>Gerar Relatório de Plantões</h2>
+                  <h2 style={{ fontSize: 16, fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>Resumo dos Ganhos 💰</h2>
                   <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Somatório financeiro de extras por local</span>
                 </div>
               </div>

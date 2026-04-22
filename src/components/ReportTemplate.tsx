@@ -88,7 +88,7 @@ export const ReportTemplate = React.forwardRef<HTMLDivElement, ReportTemplatePro
             <h1 style={{ fontSize: '24px', fontWeight: 900, color: '#3b82f6', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
               <span style={{ fontSize: '28px' }}>⚡</span> Meu Plantão
             </h1>
-            <p style={{ margin: '4px 0 0 0', color: '#64748b', fontSize: '13px', fontWeight: 600 }}>Relatório Mensal de Produtividade</p>
+            <p style={{ margin: '4px 0 0 0', color: '#64748b', fontSize: '13px', fontWeight: 600 }}>Resumo de Ganhos 💰</p>
           </div>
           <div style={{ textAlign: 'left' }}>
             <h2 style={{ fontSize: '18px', fontWeight: 800, margin: 0, textTransform: 'uppercase', color: '#0f172a' }}>
