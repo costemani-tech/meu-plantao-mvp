@@ -659,4 +659,8 @@ body {
 }
 
 @media (max-width: 768px) {
+  .fab {
+    bottom: 96px; /* Ajuste para não ficar atrás da navbar mobile */
+  }
 }
+

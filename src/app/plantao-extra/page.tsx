@@ -130,7 +130,7 @@ export default function PlantaoExtraPage() {
         ? { inicioIso: payloadPendente.inicioIso, fimIso: payloadPendente.fimIso }
         : { inicioIso: new Date(`${dataPlantao}T${horaInicio}:00`).toISOString(), fimIso: (() => { const d = new Date(`${dataPlantao}T${horaFim}:00`); if (horaFim < horaInicio) d.setDate(d.getDate()+1); return d.toISOString(); })() };
 
-      const valorNumerico = tipoExtra === 'Remunerado' ? (parseFloat(valorGanho.replace(',', '.')) || 0) : 0;
+      const valorNumerico = tipoExtra === 'Remunerado' ? (parseFloat(valorGanho.replace('R$ ', '').replace(/\./g, '').replace(',', '.')) || 0) : 0;
       const { error } = await supabase.from('plantoes').insert({
         usuario_id: user.id,
         local_id: localId,
@@ -171,8 +171,8 @@ export default function PlantaoExtraPage() {
             </div>
             <div>
               <h2 style={{ fontWeight: 700, fontSize: 18, margin: 0 }}>Cadastrar Plantão Extra</h2>
-              <span style={{ fontSize: 13, color: isPro ? '#059669' : '#d97706', fontWeight: 600 }}>
-                {isPro ? 'Cadastre seus plantões para controle financeiro.' : 'Plano Free: Limite de 4 plantões extras por mês.'}
+              <span style={{ fontSize: 13, color: isPro ? 'var(--text-secondary)' : '#d97706', fontWeight: 600 }}>
+                {isPro ? 'Adicione plantões extras e acompanhe seus ganhos' : 'Plano Free: Limite de 4 plantões extras por mês.'}
               </span>
             </div>
           </div>
@@ -244,11 +244,18 @@ export default function PlantaoExtraPage() {
                 <div className="form-group" style={{ marginTop: 20 }}>
                   <label className="form-label">Valor do Plantão (R$)</label>
                   <input
-                    type="number"
+                    type="text"
                     className="form-input"
-                    placeholder="Ex: 1200.00"
+                    placeholder="Ex: R$ 1.200,00"
                     value={valorGanho}
-                    onChange={e => setValorGanho(e.target.value)}
+                    onChange={e => {
+                      let v = e.target.value.replace(/\D/g, '');
+                      if (!v) { setValorGanho(''); return; }
+                      v = (parseInt(v) / 100).toFixed(2) + '';
+                      v = v.replace(".", ",");
+                      v = v.replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1.");
+                      setValorGanho(v === '0,00' ? '' : 'R$ ' + v);
+                    }}
                   />
                 </div>
               )}
@@ -267,7 +274,7 @@ export default function PlantaoExtraPage() {
 
           <button
             className="btn btn-primary"
-            style={{ width: '100%', justifyContent: 'center', marginTop: 16, padding: '14px', background: 'var(--accent-teal)', opacity: (!isPro && limiteExtrasAtingido) ? 0.6 : 1 }}
+            style={{ width: '100%', justifyContent: 'center', marginTop: 16, padding: '14px', background: 'var(--accent-blue)', opacity: (!isPro && limiteExtrasAtingido) ? 0.6 : 1 }}
             onClick={() => {
               if (!isPro && limiteExtrasAtingido) {
                 showToast('Limite de 4 plantões extras no mês atingido. Assine o plano Pro para registros ilimitados.', 'error');
@@ -277,7 +284,7 @@ export default function PlantaoExtraPage() {
             }}
             disabled={saving}
           >
-            {saving ? ' Inserindo no calendário...' : ' Salvar Plantão Avulso'}
+            {saving ? ' Salvando...' : ' Salvar Plantão'}
           </button>
         </div>
       </div>

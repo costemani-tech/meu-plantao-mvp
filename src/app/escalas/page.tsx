@@ -97,6 +97,7 @@ export default function EscalasPage() {
   const [enviandoAlertas, setEnviandoAlertas] = useState(false);
   
   const [showProModal, setShowProModal] = useState(false);
+  const [showForm, setShowForm] = useState(false);
   const isPro = true; // Trava Freemium
 
   const regraFinal = regra === 'Outro' ? `${horasTrabalhoOutro}x${horasDescansoOutro}` : regra;
@@ -430,10 +431,31 @@ export default function EscalasPage() {
 
   return (
     <>
-      <div className="page-header">
-        <h1>Configurar Escala </h1>
-        <p>Configure a sua jornada, datas e locais de trabalho</p>
+      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <h1>Escalas</h1>
+          <p>Gerencie suas jornadas e datas de trabalho</p>
+        </div>
+        {!showForm && (
+          <button 
+            className="btn btn-primary" 
+            onClick={() => setShowForm(true)}
+            style={{ padding: '8px 16px', fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}
+          >
+            <span style={{ fontSize: 16 }}>+</span> Nova Escala
+          </button>
+        )}
       </div>
+
+      {showForm && (
+        <div style={{ marginBottom: 32, animation: 'fadeIn 0.3s ease' }}>
+          <button 
+            className="btn btn-secondary" 
+            onClick={() => setShowForm(false)}
+            style={{ marginBottom: 16, border: 'none', background: 'transparent', padding: 0, color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600 }}
+          >
+            ← Voltar para lista
+          </button>
 
       <div className="mobile-stack" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
         {/* Formulário */}
@@ -882,7 +904,7 @@ export default function EscalasPage() {
       {/* ══════════════════════════════════════════
           SEÇÃO: Minhas Escalas Ativas
          ══════════════════════════════════════════ */}
-      {escalasAtivas.length > 0 && (
+      {!showForm && escalasAtivas.length > 0 && (
         <div style={{ marginTop: 32 }}>
           <h2 style={{ fontWeight: 700, fontSize: 16, marginBottom: 16 }}> Minhas Escalas Ativas</h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
