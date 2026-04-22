@@ -198,7 +198,7 @@ export default function DashboardPage() {
           Meu Plantão 👋
         </h1>
         <p style={{ fontSize: 14, color: 'var(--text-secondary)', margin: '4px 0 0 0' }}>
-          Sua agenda organizada e produtiva.
+          Controle total dos seus plantões
         </p>
       </div>
 
@@ -209,7 +209,7 @@ export default function DashboardPage() {
         background: 'var(--bg-secondary)', 
         border: '1px solid var(--border-subtle)',
         boxShadow: 'var(--shadow-md)',
-        marginBottom: 16,
+        marginBottom: 32,
         position: 'relative',
         overflow: 'hidden'
       }}>
@@ -222,17 +222,22 @@ export default function DashboardPage() {
           </div>
           
           <div style={{ fontSize: 32, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 20 }}>
-            📅 {totalMes} <span style={{ fontSize: 18, color: 'var(--text-secondary)', fontWeight: 600 }}>plantões agendados</span>
+            📅 {totalMes} <span style={{ fontSize: 18, color: 'var(--text-secondary)', fontWeight: 600 }}>plantões este mês</span>
           </div>
 
-          <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: 20 }}>
+          <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: 20, marginBottom: 20 }}>
             {isPro ? (
               <div onClick={() => router.push('/relatorio')} style={{ cursor: 'pointer' }}>
                 <div style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 600, marginBottom: 4 }}>Total Estimado em Extras</div>
-                <div style={{ fontSize: 28, fontWeight: 800, color: 'var(--accent-teal)', display: 'flex', alignItems: 'center', gap: 10 }}>
-                  💰 {totalGanhos.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                  <ChevronRight size={20} />
+                <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--accent-teal)', display: 'flex', alignItems: 'center', gap: 10 }}>
+                  💰 {totalGanhos.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} em extras até agora
+                  <ChevronRight size={18} />
                 </div>
+                {totalGanhos === 0 && (
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4, fontStyle: 'italic' }}>
+                    (adicione plantões extras para acompanhar seus ganhos)
+                  </div>
+                )}
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -258,32 +263,28 @@ export default function DashboardPage() {
               </div>
             )}
           </div>
-        </div>
-      </div>
 
-      {/* CARD DE LOCAIS - ACESSO RÁPIDO */}
-      <div onClick={() => router.push('/locais')} style={{ 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'space-between', 
-        padding: '16px 20px', 
-        background: 'var(--bg-secondary)', 
-        border: '1px solid var(--border-subtle)', 
-        borderRadius: '16px', 
-        marginBottom: 24, 
-        cursor: 'pointer',
-        boxShadow: 'var(--shadow-sm)'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <div style={{ width: 40, height: 40, background: 'var(--accent-blue-light)', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <MapPin size={20} color="var(--accent-blue)" />
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid var(--border-subtle)', paddingTop: 20 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700, fontSize: 14, color: 'var(--text-primary)' }}>
+              <MapPin size={16} color="var(--accent-blue)" />
+              {locaisAtivos} locais ativos
+            </div>
+            <button 
+              onClick={() => router.push('/locais')}
+              style={{ 
+                background: 'var(--accent-blue-light)', 
+                color: 'var(--accent-blue)', 
+                border: 'none', 
+                padding: '8px 16px', 
+                borderRadius: '10px', 
+                fontSize: 13, 
+                fontWeight: 700, 
+                cursor: 'pointer' 
+              }}
+            >
+              [ Gerenciar locais ]
+            </button>
           </div>
-          <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--text-primary)' }}>
-            🏥 {locaisAtivos} locais ativos
-          </div>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, color: 'var(--accent-blue)', fontWeight: 700 }}>
-          ver todos <ChevronRight size={16} />
         </div>
       </div>
 
@@ -351,7 +352,22 @@ export default function DashboardPage() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--text-secondary)' }}>
                     <Calendar size={13} />
                     <span style={{ textTransform: 'capitalize' }}>
-                      {new Date(p.data_hora_inicio).toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' })}
+                      {(() => {
+                        const data = new Date(p.data_hora_inicio);
+                        const hoje = new Date();
+                        const amanha = new Date();
+                        amanha.setDate(hoje.getDate() + 1);
+                        
+                        const isMesmoDia = (d1: Date, d2: Date) => 
+                          d1.getDate() === d2.getDate() && 
+                          d1.getMonth() === d2.getMonth() && 
+                          d1.getFullYear() === d2.getFullYear();
+
+                        if (isMesmoDia(data, hoje)) return 'Hoje';
+                        if (isMesmoDia(data, amanha)) return 'Amanhã';
+
+                        return data.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' });
+                      })()}
                     </span>
                     <Clock size={13} style={{ marginLeft: 6 }} />
                     {new Date(p.data_hora_inicio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
