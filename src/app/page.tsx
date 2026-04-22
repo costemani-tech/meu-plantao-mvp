@@ -10,6 +10,7 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { DashboardInteractive, DesbloquearGanhosBtn } from './DashboardInteractive';
+import { isUserPro } from '../lib/supabase';
 
 // Utilitário para pegar o cliente Supabase Server-Side
 async function getSupabase() {
@@ -272,7 +273,7 @@ export default async function DashboardPage() {
     .eq('id', user.id)
     .single();
   
-  const isPro = profile?.is_pro ?? false;
+  const isPro = (profile?.is_pro ?? false) || isUserPro(user.email);
 
   return (
     <div style={{ padding: '24px 16px 100px 16px', maxWidth: '600px', margin: '0 auto' }}>

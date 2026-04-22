@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { supabase, LocalTrabalho } from '../../lib/supabase';
+import { supabase, LocalTrabalho, isUserPro } from '../../lib/supabase';
 import { toast } from 'sonner';
 
 export default function PlantaoExtraPage() {
@@ -27,7 +27,7 @@ export default function PlantaoExtraPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
       const { data } = await supabase.from('profiles').select('is_pro').eq('id', user.id).single();
-      const userIsPro = data?.is_pro ?? false;
+      const userIsPro = (data?.is_pro ?? false) || isUserPro(user.email);
       setIsPro(userIsPro);
 
       if (!userIsPro) {

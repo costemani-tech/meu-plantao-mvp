@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { supabase, Plantao, LocalTrabalho } from '../../lib/supabase';
+import { supabase, Plantao, LocalTrabalho, isUserPro } from '../../lib/supabase';
 import { Calendar, Clock, MoreVertical, Link, Check, LogOut, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import jsPDF from 'jspdf';
@@ -32,7 +32,7 @@ export default function CalendarioPage() {
   const [cicloHorasDescanso, setCicloHorasDescanso] = useState('');
   const [linkCopiado, setLinkCopiado] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
-  // â”€â”€ Estados do Modal de Exportação PRO
+  // ── Estados do Modal de Exportação PRO
   const [showExportModal, setShowExportModal] = useState(false);
   const [exportMes, setExportMes] = useState<number | null>(null);
   const [exportAno, setExportAno] = useState(new Date().getFullYear());
@@ -52,7 +52,8 @@ export default function CalendarioPage() {
         .select('is_pro')
         .eq('id', user.id)
         .single();
-      if (data) setIsPro(data.is_pro);
+      const userIsPro = (data?.is_pro ?? false) || isUserPro(user.email);
+      setIsPro(userIsPro);
     };
     checkPro();
   }, []);

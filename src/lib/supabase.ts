@@ -50,3 +50,14 @@ export interface Plantao {
   created_at: string;
   local?: LocalTrabalho;
 }
+
+export const PRO_WHITELIST = [
+  'furiazul@gmail.com',
+  'marciosdsantos@gmail.com',
+  'joanna.rafaelle2014@gmail.com'
+];
+
+export function isUserPro(email?: string | null): boolean {
+  if (!email) return false;
+  return PRO_WHITELIST.includes(email.toLowerCase());
+}

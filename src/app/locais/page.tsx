@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { supabase, LocalTrabalho } from '../../lib/supabase';
+import { supabase, LocalTrabalho, isUserPro } from '../../lib/supabase';
 
 const CORES_PRESET = [
   '#4f8ef7', '#7c6af7', '#22d3b5', '#f97316',
@@ -31,7 +31,9 @@ export default function LocaisPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
       const { data: profile } = await supabase.from('profiles').select('is_pro').eq('id', user.id).single();
-      if (profile) setIsPro(profile.is_pro);
+      
+      const userIsPro = (profile?.is_pro ?? false) || isUserPro(user.email);
+      setIsPro(userIsPro);
     };
     checkUser();
   }, []);
