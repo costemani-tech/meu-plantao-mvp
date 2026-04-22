@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { supabase, LocalTrabalho } from '../../lib/supabase';
+import { supabase, LocalTrabalho, isUserPro } from '../../lib/supabase';
 import { gerarProximosPlantoes, SlotPlantao } from '../../lib/scale-generator';
 import { useRouter } from 'next/navigation';
 import EmptyState from '../../components/EmptyState';
@@ -101,7 +101,17 @@ export default function EscalasPage() {
   
   const [showProModal, setShowProModal] = useState(false);
   const [showForm, setShowForm] = useState(false);
-  const isPro = true; // Trava Freemium
+  const [isPro, setIsPro] = useState(false);
+
+  useEffect(() => {
+    const checkPro = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data } = await supabase.from('profiles').select('is_pro').eq('id', user.id).single();
+      setIsPro((data?.is_pro ?? false) || isUserPro(user.email));
+    };
+    checkPro();
+  }, []);
 
   const regraFinal = regra === 'Outro' ? `${horasTrabalhoOutro}x${horasDescansoOutro}` : regra;
 
@@ -199,7 +209,7 @@ export default function EscalasPage() {
     if (!isPro) {
       setSavingLocal(true);
       const { data: { user } } = await supabase.auth.getUser();
-      const { count } = await supabase.from('locais_trabalho').select('*', { count: 'exact', head: true }).eq('usuario_id', user?.id);
+      const { count } = await supabase.from('locais_trabalho').select('*', { count: 'exact', head: true }).eq('usuario_id', user?.id).eq('ativo', true);
       if (count !== null && count >= 2) {
         setShowProModal(true);
         setSavingLocal(false);
@@ -411,9 +421,11 @@ export default function EscalasPage() {
           }
 
           if (dbNotificacoes.length > 0) {
-            await supabase.from('notificacoes').upsert(dbNotificacoes, { 
-              onConflict: 'usuario_id,escala_id,data_hora_inicio' 
-            }).catch(() => {});
+            try {
+              await supabase.from('notificacoes').upsert(dbNotificacoes, { 
+                onConflict: 'usuario_id,escala_id,data_hora_inicio' 
+              });
+            } catch { /* silently ignore notification errors */ }
           }
         }
       }
