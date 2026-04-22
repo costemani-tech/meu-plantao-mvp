@@ -389,8 +389,8 @@ export default function EscalasPage() {
                 collapse_id: `shift_${escalaCriada.id}_${plantao.data_hora_inicio}`,
                 headings: { "en": `🩺 Plantão hoje às ${horaStr}`, "pt": `🩺 Plantão hoje às ${horaStr}` },
                 contents: { 
-                  "en": `${nomeLocal} • ${diaStr}\nPrepare-se com antecedência. Bom plantão!`,
-                  "pt": `${nomeLocal} • ${diaStr}\nPrepare-se com antecedência. Bom plantão!`
+                  "en": `${nomeLocal}\nPrepare-se com antecedência. Bom plantão!`,
+                  "pt": `${nomeLocal}\nPrepare-se com antecedência. Bom plantão!`
                 },
                 send_after: sendAfter.toISOString()
               });
@@ -1169,8 +1169,8 @@ export default function EscalasPage() {
                           collapse_id: `shift_${modalAlertas.id}_${p.data_hora_inicio}`,
                           headings: { en: `🩺 Plantão hoje às ${hora}`, pt: `🩺 Plantão hoje às ${hora}` },
                           contents: {
-                            en: `${localNome} • ${dia}\nPrepare-se com antecedência. Bom plantão!`,
-                            pt: `${localNome} • ${dia}\nPrepare-se com antecedência. Bom plantão!`
+                            en: `${localNome}\nPrepare-se com antecedência. Bom plantão!`,
+                            pt: `${localNome}\nPrepare-se com antecedência. Bom plantão!`
                           },
                           send_after: sendAt.toISOString()
                         });
