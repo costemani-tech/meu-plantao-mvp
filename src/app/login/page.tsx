@@ -5,6 +5,8 @@ import { supabase } from '../../lib/supabase';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
+  const [otpCode, setOtpCode] = useState('');
+  const [isCodeSent, setIsCodeSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' } | null>(null);
 
@@ -13,10 +15,10 @@ export default function LoginPage() {
     setTimeout(() => setToast(null), 4000);
   };
 
-  const signInWithEmailOTP = async (e: React.FormEvent) => {
+  const handleSendCode = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) {
-      showToast('Preencha seu e-mail corporativo ou pessoal.', 'error');
+      showToast('Preencha seu e-mail.', 'error');
       return;
     }
 
@@ -24,15 +26,38 @@ export default function LoginPage() {
     const { error } = await supabase.auth.signInWithOtp({ 
       email,
       options: {
-        emailRedirectTo: 'https://meu-plantao-mvp.vercel.app',
+        emailRedirectTo: 'https://meu-plantao-mvp.vercel.app/auth/callback',
       }
     });
 
     if (error) {
       showToast(error.message, 'error');
     } else {
-      showToast('Link enviado! Verifique seu e-mail e clique no botão para entrar.', 'success');
-      setEmail('');
+      setIsCodeSent(true);
+      showToast('Código enviado! Verifique seu e-mail.', 'success');
+    }
+    setLoading(false);
+  };
+
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!otpCode || otpCode.length < 6) {
+      showToast('Digite o código de 6 dígitos.', 'error');
+      return;
+    }
+
+    setLoading(true);
+    const { error } = await supabase.auth.verifyOtp({
+      email,
+      token: otpCode,
+      type: 'magiclink'
+    });
+
+    if (error) {
+      showToast('Código inválido ou expirado.', 'error');
+    } else {
+      showToast('Sucesso! Entrando...', 'success');
+      window.location.href = '/';
     }
     setLoading(false);
   };
@@ -98,27 +123,70 @@ export default function LoginPage() {
           <div style={{ flex: 1, height: 1, background: 'var(--border-subtle)' }} />
         </div>
 
-        <form onSubmit={signInWithEmailOTP}>
-          <div className="form-group">
-            <input 
-              type="email" 
-              className="form-input" 
-              placeholder="Digite seu e-mail" 
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              required
-            />
-          </div>
-          
-          <button 
-            type="submit" 
-            className="btn btn-primary" 
-            style={{ width: '100%', justifyContent: 'center', marginTop: 12, padding: '12px' }}
-            disabled={loading}
-          >
-            {loading ? '⏳ Solicitando Acesso...' : 'Receber Link de Acesso'}
-          </button>
-        </form>
+        {!isCodeSent ? (
+          <form onSubmit={handleSendCode}>
+            <div className="form-group">
+              <input 
+                type="email" 
+                className="form-input" 
+                placeholder="Digite seu e-mail" 
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                required
+              />
+            </div>
+            
+            <button 
+              type="submit" 
+              className="btn btn-primary" 
+              style={{ width: '100%', justifyContent: 'center', marginTop: 12, padding: '12px' }}
+              disabled={loading}
+            >
+              {loading ? '⏳ Enviando...' : 'Receber Código de Acesso'}
+            </button>
+          </form>
+        ) : (
+          <form onSubmit={handleVerifyOtp}>
+            <div style={{ textAlign: 'center', marginBottom: 16 }}>
+              <p style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
+                Enviamos um código para <strong>{email}</strong>
+              </p>
+            </div>
+            <div className="form-group">
+              <input 
+                type="text" 
+                className="form-input" 
+                placeholder="Digite o código de 6 dígitos" 
+                value={otpCode}
+                onChange={e => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                required
+                autoFocus
+                inputMode="numeric"
+                style={{ textAlign: 'center', fontSize: 20, letterSpacing: 4, fontWeight: 700 }}
+              />
+            </div>
+            
+            <button 
+              type="submit" 
+              className="btn btn-primary" 
+              style={{ width: '100%', justifyContent: 'center', marginTop: 12, padding: '12px' }}
+              disabled={loading}
+            >
+              {loading ? '⏳ Verificando...' : 'Confirmar e Entrar'}
+            </button>
+
+            <button 
+              type="button"
+              onClick={() => setIsCodeSent(false)}
+              style={{ 
+                width: '100%', background: 'none', border: 'none', color: 'var(--text-muted)', 
+                fontSize: 13, marginTop: 16, cursor: 'pointer', textDecoration: 'underline' 
+              }}
+            >
+              Usar outro e-mail
+            </button>
+          </form>
+        )}
 
         <div style={{ textAlign: 'center', marginTop: 24, fontSize: 12, color: 'var(--text-muted)' }}>
           Esqueceu senhas? Nós também. Enviamos um passe direto para o seu e-mail aprovado.
