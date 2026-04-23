@@ -259,12 +259,10 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="app-shell">
       <aside className="sidebar">
-        <div className="sidebar-logo">
-          <div className="sidebar-logo-icon">
-            <Activity color="white" size={24} />
-          </div>
-          <div className="sidebar-logo-text">
-            Meu <span>Plantão</span>
+        <div className="sidebar-logo" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <img src="/icons/icon-192x192.png" alt="Meu Plantão" style={{ height: 38, width: 'auto', borderRadius: '8px' }} />
+          <div className="sidebar-logo-text" style={{ fontSize: '1.25rem', fontWeight: 800 }}>
+            Meu <span style={{ color: 'var(--accent-blue)' }}>Plantão</span>
           </div>
         </div>
         <nav className="nav-section" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
@@ -387,13 +385,14 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             animation: 'cardEntrance 0.6s cubic-bezier(0.16, 1, 0.3, 1)'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-              <div style={{ 
-                width: 48, height: 48, background: 'linear-gradient(135deg, var(--accent-blue), var(--accent-violet))',
-                borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                boxShadow: '0 4px 12px rgba(37, 99, 235, 0.2)'
-              }}>
-                <Activity color="white" size={24} />
-              </div>
+              <img 
+                src="/icons/icon-192x192.png" 
+                alt="Logo" 
+                style={{ 
+                  width: 48, height: 48, borderRadius: '12px', flexShrink: 0, 
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.1)', objectFit: 'cover' 
+                }} 
+              />
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 2 }}>
                   Meu Plantão no seu celular
