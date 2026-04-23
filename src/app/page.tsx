@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { DashboardInteractive, DesbloquearGanhosBtn } from './DashboardInteractive';
 import { isUserPro } from '../lib/supabase';
+import { formatRelativeShiftDate } from '../lib/date-utils';
 
 // Utilitário para pegar o cliente Supabase Server-Side
 async function getSupabase() {
@@ -100,7 +101,7 @@ async function StatsSection({ userId, isPro }: { userId: string, isPro: boolean 
                 <div style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 600, marginBottom: 4 }}>Extras do mês</div>
                 {totalGanhos > 0 ? (
                   <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--accent-teal)', display: 'flex', alignItems: 'center', gap: 10 }}>
-                    💰 {totalGanhos.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} para receber extra
+                    💰 {totalGanhos.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} a receber em extras
                     <ChevronRight size={18} />
                   </div>
                 ) : (
@@ -125,23 +126,23 @@ async function StatsSection({ userId, isPro }: { userId: string, isPro: boolean 
           )}
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid var(--border-subtle)', paddingTop: 20 }}>
-          <Link href="/locais" style={{ textDecoration: 'none', color: 'inherit' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700, fontSize: 14, color: 'var(--text-primary)', cursor: 'pointer' }}>
+        <Link href="/locais" style={{ textDecoration: 'none' }}>
+          <div style={{ 
+            display: 'flex', alignItems: 'center', justifyContent: 'center', 
+            borderTop: '1px solid var(--border-subtle)', paddingTop: 20,
+            cursor: 'pointer'
+          }}>
+            <div style={{ 
+              display: 'flex', alignItems: 'center', gap: 12, fontWeight: 700, fontSize: 14, 
+              color: 'var(--accent-blue)', background: 'var(--accent-blue-light)', 
+              padding: '12px 20px', borderRadius: '12px', width: '100%',
+              justifyContent: 'center', transition: 'all 0.2s'
+            }} className="hover-opacity">
               <span style={{ fontSize: 16 }}>🏥</span>
-              {locaisAtivos || 0} locais ativos
+              {locaisAtivos || 0} locais ativos — [ Gerenciar locais ]
             </div>
-          </Link>
-          <Link href="/locais" style={{ textDecoration: 'none' }}>
-            <button style={{ 
-              background: 'var(--accent-blue-light)', color: 'var(--accent-blue)', 
-              border: 'none', padding: '8px 16px', borderRadius: '10px', 
-              fontSize: 13, fontWeight: 700, cursor: 'pointer' 
-            }}>
-              [ Gerenciar locais ]
-            </button>
-          </Link>
-        </div>
+          </div>
+        </Link>
       </div>
     </div>
   );
@@ -150,18 +151,15 @@ async function StatsSection({ userId, isPro }: { userId: string, isPro: boolean 
 // Sub-componente: Próximos Plantões
 async function UpcomingShifts({ userId }: { userId: string }) {
   const supabase = await getSupabase();
-  const hoje = new Date().toISOString();
 
   const { data: proximos } = await supabase
     .from('plantoes')
     .select('id, data_hora_inicio, local:locais_trabalho(nome, cor_calendario)')
     .eq('usuario_id', userId)
-    .gte('data_hora_inicio', hoje)
+    .gte('data_hora_inicio', new Date().toISOString())
     .neq('status', 'Cancelado')
     .order('data_hora_inicio', { ascending: true })
-    .limit(2);
-
-  const plantoesMaisProximos = (proximos || []) as any[];
+    .limit(5);
 
   return (
     <div style={{ marginBottom: 24 }}>
@@ -171,54 +169,51 @@ async function UpcomingShifts({ userId }: { userId: string }) {
         </h3>
         <Link href="/calendario" style={{ textDecoration: 'none' }}>
           <button style={{ background: 'none', border: 'none', color: 'var(--accent-blue)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
-            Ver agenda completa
+            Ver agenda
           </button>
         </Link>
       </div>
 
-      {plantoesMaisProximos.length === 0 ? (
+      {(!proximos || proximos.length === 0) ? (
         <div style={{ padding: '32px', textAlign: 'center', background: 'var(--bg-primary)', borderRadius: '16px', border: '1px dashed var(--border-subtle)' }}>
-          <p style={{ fontSize: 14, color: 'var(--text-muted)', margin: 0 }}>Nenhum plantão agendado. Aproveite o descanso ou adicione novos plantões.</p>
+          <p style={{ fontSize: 14, color: 'var(--text-muted)', margin: 0 }}>Nenhum plantão agendado para os próximos dias.</p>
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {plantoesMaisProximos.map(p => {
+          {proximos.map(p => {
             const localObj = Array.isArray(p.local) ? p.local[0] : p.local;
             return (
-            <div key={p.id} className="shift-item" style={{ border: '1px solid var(--border-subtle)', borderRadius: '16px' }}>
-              <div className="shift-color-bar" style={{ backgroundColor: localObj?.cor_calendario || 'var(--accent-blue)' }} />
-              <div className="shift-info" style={{ padding: '16px' }}>
-                <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 4 }}>
-                  {localObj?.nome || 'Local de Trabalho'}
+            <Link href="/calendario" key={p.id} style={{ textDecoration: 'none' }}>
+              <div className="shift-item" style={{ 
+                border: '1px solid var(--border-subtle)', 
+                borderRadius: '16px', 
+                display: 'flex', 
+                alignItems: 'center',
+                background: 'var(--bg-secondary)',
+                transition: 'transform 0.1s'
+              }}>
+                <div className="shift-color-bar" style={{ 
+                  backgroundColor: localObj?.cor_calendario || 'var(--accent-blue)', 
+                  width: '6px', 
+                  height: '64px', 
+                  borderRadius: '16px 0 0 16px' 
+                }} />
+                <div className="shift-info" style={{ padding: '16px', flex: 1 }}>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 4 }}>
+                    {localObj?.nome || 'Local de Trabalho'}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--text-secondary)' }}>
+                    <Calendar size={13} />
+                    <span style={{ textTransform: 'capitalize' }}>
+                      {formatRelativeShiftDate(p.data_hora_inicio)}
+                    </span>
+                  </div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--text-secondary)' }}>
-                  <Calendar size={13} />
-                  <span style={{ textTransform: 'capitalize' }}>
-                    {(() => {
-                      const data = new Date(p.data_hora_inicio);
-                      const dtHoje = new Date();
-                      const amanha = new Date();
-                      amanha.setDate(dtHoje.getDate() + 1);
-                      
-                      const isMesmoDia = (d1: Date, d2: Date) => 
-                        d1.getDate() === d2.getDate() && 
-                        d1.getMonth() === d2.getMonth() && 
-                        d1.getFullYear() === d2.getFullYear();
-
-                      if (isMesmoDia(data, dtHoje)) return 'Hoje';
-                      if (isMesmoDia(data, amanha)) return 'Amanhã';
-
-                      return data.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' });
-                    })()}
-                  </span>
-                  <Clock size={13} style={{ marginLeft: 6 }} />
-                  {new Date(p.data_hora_inicio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                <div style={{ padding: '0 16px', display: 'flex', alignItems: 'center' }}>
+                  <ChevronRight size={18} color="var(--text-muted)" />
                 </div>
               </div>
-              <div style={{ padding: '0 16px', display: 'flex', alignItems: 'center' }}>
-                <ChevronRight size={18} color="var(--text-muted)" />
-              </div>
-            </div>
+            </Link>
             );
           })}
         </div>
@@ -292,7 +287,7 @@ export default async function DashboardPage() {
           Meu Plantão 👋
         </h1>
         <p style={{ fontSize: 14, color: 'var(--text-secondary)', margin: '4px 0 0 0' }}>
-          Controle total dos seus plantões
+          Organize seus plantões. Tenha tudo sob controle.
         </p>
       </div>
 

@@ -6,6 +6,7 @@ import { gerarProximosPlantoes, SlotPlantao } from '../../lib/scale-generator';
 import { useRouter } from 'next/navigation';
 import EmptyState from '../../components/EmptyState';
 import { ClipboardList } from 'lucide-react';
+import { formatDaysArray, formatBRTTime } from '../../lib/date-utils';
 
 const CORES_PRESET = [
   '#4f8ef7', '#7c6af7', '#22d3b5', '#f97316',
@@ -972,7 +973,9 @@ export default function EscalasPage() {
                           <div style={{ width: 14, height: 14, borderRadius: '50%', background: e.local?.cor_calendario ?? '#4f8ef7' }} />
                           <div>
                             <div style={{ fontWeight: 800, fontSize: 15, color: 'var(--text-primary)' }}>{e.local?.nome ?? 'Local desconhecido'}</div>
-                            <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{e.regra} | {proximoPlantaoStr}</div>
+                            <div style={{ fontSize: 13, color: 'var(--text-secondary)', fontWeight: 600 }}>
+                              {formatDaysArray(e.regra)} • {e.plantoes && e.plantoes.length > 0 ? `Próximo: ${new Date(e.plantoes[0].data_hora_inicio).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })} às ${formatBRTTime(e.plantoes[0].data_hora_inicio)}` : 'Sem plantões futuros'}
+                            </div>
                           </div>
                         </div>
                         <button style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 20 }}>⋮</button>

@@ -173,10 +173,7 @@ export default function PlantaoExtraPage() {
               🚑
             </div>
             <div>
-              <h2 style={{ fontWeight: 700, fontSize: 18, margin: 0 }}>Cadastrar Plantão Extra</h2>
-              <span style={{ fontSize: 13, color: isPro ? 'var(--text-secondary)' : '#d97706', fontWeight: 600 }}>
-                {isPro ? 'Adicione plantões extras e acompanhe seus ganhos' : 'Plano Free: Limite de 4 plantões extras por mês.'}
-              </span>
+              <h2 style={{ fontWeight: 800, fontSize: 20, margin: 0, color: 'var(--text-primary)' }}>Adicione plantões extras e acompanhe seus ganhos</h2>
             </div>
           </div>
 
