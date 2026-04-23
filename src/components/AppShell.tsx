@@ -258,6 +258,24 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="app-shell">
+      {/* Splash Screen de Vídeo */}
+      {loading && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
+          zIndex: 9999, background: '#1a1e2d', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          overflow: 'hidden'
+        }}>
+          <video 
+            src="/icons/capa.mp4" 
+            autoPlay 
+            muted 
+            loop 
+            playsInline 
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+          />
+        </div>
+      )}
+
       <aside className="sidebar">
         <div className="sidebar-logo" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <img src="/icons/icon-192x192.png" alt="Meu Plantão" style={{ height: 38, width: 'auto', borderRadius: '8px' }} />
