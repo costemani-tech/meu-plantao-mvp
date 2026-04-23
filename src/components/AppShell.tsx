@@ -186,8 +186,14 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         .subscribe();
       
       const checkCapacity = async () => {
+        const startTime = Date.now();
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
+        
+        if (!user) {
+          // Se não houver usuário, termina o loading rápido
+          setLoading(false);
+          return;
+        }
 
         // Whitelist + Banco de Dados
         const { data: profile } = await supabase.from('profiles').select('is_pro').eq('id', user.id).single();
@@ -205,7 +211,16 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         } else {
           setOverCapacity(false);
         }
-        setLoading(false);
+        
+        // Garante que o Splash Screen apareça por pelo menos 2.5 segundos para impacto visual
+        const elapsedTime = Date.now() - startTime;
+        const minimumDelay = 2500; 
+        
+        if (elapsedTime < minimumDelay) {
+          setTimeout(() => setLoading(false), minimumDelay - elapsedTime);
+        } else {
+          setLoading(false);
+        }
       };
 
       checkCapacity();
