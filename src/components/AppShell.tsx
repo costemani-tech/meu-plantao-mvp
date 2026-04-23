@@ -282,6 +282,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         }}>
           <video 
             src="/icons/capa.mp4" 
+            poster="/icons/capa.jpeg"
             autoPlay 
             muted 
             loop 

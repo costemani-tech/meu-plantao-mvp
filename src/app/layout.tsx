@@ -5,7 +5,7 @@ import AppShell from '../components/AppShell';
 export const metadata: Metadata = {
   title: 'Meu Plantão — Controle de Escalas Médicas',
   description: 'Gerencie suas escalas de plantão de forma inteligente',
-  manifest: '/manifest.json?v=2',
+  manifest: '/manifest.json?v=3',
 };
 
 import { Toaster } from 'sonner';
