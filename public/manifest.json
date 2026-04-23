@@ -8,16 +8,25 @@
   "theme_color": "#1a1e2d",
   "icons": [
     {
-      "src": "/icons/icon-192x192.png?v=3",
+      "src": "/icons/icon-192x192.png?v=4",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/icons/icon-512x512.png?v=3",
+      "src": "/icons/icon-512x512.png?v=4",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/icons/capa.jpeg",
+      "sizes": "1080x1920",
+      "type": "image/jpeg",
+      "form_factor": "narrow",
+      "label": "Bem-vindo ao Meu Plantão"
     }
   ]
 }
