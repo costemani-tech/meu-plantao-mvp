@@ -66,7 +66,7 @@ export default function LoginPage() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: 'https://meu-plantao-mvp.vercel.app'
+        redirectTo: `${window.location.origin}/auth/callback`
       }
     });
     if (error) showToast(error.message, 'error');
