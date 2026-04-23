@@ -136,12 +136,8 @@ async function StatsSection({ userId, isPro }: { userId: string, isPro: boolean 
               <span style={{ fontSize: 16 }}>🏥</span>
               {locaisAtivos || 0} locais ativos
             </div>
-            <div style={{ 
-              color: 'var(--accent-blue)', 
-              fontSize: 13, fontWeight: 700,
-              display: 'flex', alignItems: 'center', gap: 4
-            }}>
-              Gerenciar <ChevronRight size={16} />
+            <div style={{ color: 'var(--accent-blue)', display: 'flex', alignItems: 'center' }}>
+              <ChevronRight size={18} />
             </div>
           </div>
         </Link>
