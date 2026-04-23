@@ -128,18 +128,20 @@ async function StatsSection({ userId, isPro }: { userId: string, isPro: boolean 
 
         <Link href="/locais" style={{ textDecoration: 'none' }}>
           <div style={{ 
-            display: 'flex', alignItems: 'center', justifyContent: 'center', 
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between', 
             borderTop: '1px solid var(--border-subtle)', paddingTop: 20,
-            cursor: 'pointer'
-          }}>
-            <div style={{ 
-              display: 'flex', alignItems: 'center', gap: 12, fontWeight: 700, fontSize: 14, 
-              color: 'var(--accent-blue)', background: 'var(--accent-blue-light)', 
-              padding: '12px 20px', borderRadius: '12px', width: '100%',
-              justifyContent: 'center', transition: 'all 0.2s'
-            }} className="hover-opacity">
+            cursor: 'pointer', transition: 'opacity 0.2s'
+          }} className="hover-opacity">
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700, fontSize: 14, color: 'var(--text-primary)' }}>
               <span style={{ fontSize: 16 }}>🏥</span>
-              {locaisAtivos || 0} locais ativos — [ Gerenciar locais ]
+              {locaisAtivos || 0} locais ativos
+            </div>
+            <div style={{ 
+              color: 'var(--accent-blue)', 
+              fontSize: 13, fontWeight: 700,
+              display: 'flex', alignItems: 'center', gap: 4
+            }}>
+              Gerenciar <ChevronRight size={16} />
             </div>
           </div>
         </Link>
