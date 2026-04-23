@@ -94,6 +94,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     if (platform === 'android' && !dismissed) {
       setShowPwaBanner(true);
     }
+    };
 
     window.addEventListener('beforeinstallprompt', handlePrompt);
     
