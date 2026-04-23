@@ -90,11 +90,10 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       setHasPrompt(true);
       (window as any).deferredPrompt = e;
       
-      // No Android, só mostramos o banner quando o prompt estiver REALMENTE pronto
-      if (platform === 'android' && !dismissed) {
-        setShowPwaBanner(true);
-      }
-    };
+    // No Android, se não houver prompt, mostramos o banner mesmo assim para incentivar o uso correto
+    if (platform === 'android' && !dismissed) {
+      setShowPwaBanner(true);
+    }
 
     window.addEventListener('beforeinstallprompt', handlePrompt);
     
@@ -452,6 +451,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                       (window as any).deferredPrompt = null;
                       setShowPwaBanner(false);
                     }
+                  } else {
+                    // Fallback: Se não tem prompt, tenta incentivar o menu do Chrome
+                    alert("Para instalar: clique nos 'três pontinhos' do Chrome e selecione 'Instalar Aplicativo' ou 'Adicionar à tela inicial'.");
                   }
                 }
               }}
@@ -463,11 +465,10 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 fontSize: 14, 
                 fontWeight: 800,
                 background: 'var(--accent-blue)',
-                boxShadow: '0 6px 20px rgba(37, 99, 235, 0.25)',
-                opacity: (pwaPlatform !== 'ios' && !hasPrompt) ? 0.7 : 1
+                boxShadow: '0 6px 20px rgba(37, 99, 235, 0.25)'
               }}
             >
-              {pwaPlatform === 'ios' ? (showIosGuide ? 'FECHAR GUIA' : 'COMO INSTALAR?') : (isInstalling ? 'PREPARANDO...' : 'INSTALAR APP GRÁTIS')}
+              {pwaPlatform === 'ios' ? (showIosGuide ? 'FECHAR GUIA' : 'COMO INSTALAR?') : (isInstalling ? 'PREPARANDO...' : (hasPrompt ? 'INSTALAR APP GRÁTIS' : 'ABRIR / INSTALAR APP'))}
             </button>
           </div>
         )}
