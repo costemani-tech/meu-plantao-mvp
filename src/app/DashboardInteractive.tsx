@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, Star } from 'lucide-react';
+import { Plus, Star, Share2 } from 'lucide-react';
+import { formatRelativeShiftDate } from '../lib/date-utils';
 
 export function DashboardInteractive({ isPro, hasLocations = true }: { isPro: boolean, hasLocations?: boolean }) {
   const [showProModal, setShowProModal] = useState('');
@@ -120,5 +121,54 @@ export function DesbloquearGanhosBtn() {
         </div>
       )}
     </>
+  );
+}
+
+export function ShareAgendaButton({ proximos }: { proximos: any[] }) {
+  const handleShare = async () => {
+    if (!proximos || proximos.length === 0) return;
+
+    const text = "Minha escala de plantões:\n" + proximos.map(p => {
+      const localObj = Array.isArray(p.local) ? p.local[0] : p.local;
+      const dataFormatada = formatRelativeShiftDate(p.data_hora_inicio);
+      return `- ${localObj?.nome || 'Local'}: ${dataFormatada}`;
+    }).join('\n');
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'Minha Escala',
+          text: text,
+        });
+      } catch (err) {
+        if ((err as Error).name !== 'AbortError') {
+          console.error('Erro ao compartilhar:', err);
+        }
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(text);
+        alert('Escala copiada para a área de transferência!');
+      } catch (err) {
+        console.error('Erro ao copiar:', err);
+      }
+    }
+  };
+
+  return (
+    <button 
+      onClick={handleShare}
+      style={{ 
+        background: 'none', 
+        border: 'none', 
+        color: 'var(--accent-blue)', 
+        fontSize: '13px', 
+        fontWeight: 700, 
+        cursor: 'pointer', 
+        padding: 0,
+      }}
+    >
+      [ Compartilhar ]
+    </button>
   );
 }

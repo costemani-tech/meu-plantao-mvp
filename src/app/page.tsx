@@ -9,7 +9,7 @@ import {
   TrendingUp, 
   ChevronRight,
 } from 'lucide-react';
-import { DashboardInteractive, DesbloquearGanhosBtn } from './DashboardInteractive';
+import { DashboardInteractive, DesbloquearGanhosBtn, ShareAgendaButton } from './DashboardInteractive';
 import { isUserPro } from '../lib/supabase';
 import { formatRelativeShiftDate } from '../lib/date-utils';
 
@@ -96,7 +96,7 @@ async function StatsSection({ userId, isPro }: { userId: string, isPro: boolean 
 
         <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: 20, marginBottom: 20 }}>
           {isPro ? (
-            <Link href="/relatorio" style={{ textDecoration: 'none', color: 'inherit' }}>
+            <Link href="/extras" style={{ textDecoration: 'none', color: 'inherit' }}>
               <div style={{ cursor: 'pointer' }}>
                 <div style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 600, marginBottom: 4 }}>Extras do mês</div>
                 {totalGanhos > 0 ? (
@@ -165,11 +165,14 @@ async function UpcomingShifts({ userId }: { userId: string }) {
         <h3 style={{ fontSize: 16, fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
           Próximos Plantões
         </h3>
-        <Link href="/calendario" style={{ textDecoration: 'none' }}>
-          <button style={{ background: 'none', border: 'none', color: 'var(--accent-blue)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
-            Ver agenda
-          </button>
-        </Link>
+        <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
+          <Link href="/escalas" style={{ textDecoration: 'none' }}>
+            <span style={{ color: 'var(--accent-blue)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+              [ Ver agenda ]
+            </span>
+          </Link>
+          <ShareAgendaButton proximos={proximos || []} />
+        </div>
       </div>
 
       {(!proximos || proximos.length === 0) ? (
