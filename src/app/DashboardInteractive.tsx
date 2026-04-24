@@ -358,43 +358,35 @@ export function ShareAgendaButton({ proximos, userName, totalGanhos, isPro }: { 
       doc.setFillColor(248, 250, 252);
       doc.rect(0, 0, pageW, pageH, 'F');
       
-      // Marca d'água de Fundo (Texto grande, opacidade muito baixa)
-      doc.setTextColor(226, 232, 240); // Slate-200
-      doc.setFontSize(80);
-      doc.setFont('helvetica', 'bold');
-      doc.saveGraphicsState();
-      // Simular opacidade via cor clara, já que jsPDF standard não tem setAlpha fácil sem plugins
-      doc.text('MEU PLANTÃO', pageW / 2, pageH / 2, { align: 'center', angle: 45 });
-      doc.restoreGraphicsState();
-
-      // Cabeçalho Premium Clean
+      // Cabeçalho Clean SaaS
       doc.setFillColor(255, 255, 255);
-      doc.rect(0, 0, pageW, 45, 'F');
-      doc.setFillColor(37, 99, 235); // Blue-600
-      doc.rect(0, 0, pageW, 3, 'F'); // Barra superior fina
+      doc.rect(0, 0, pageW, 40, 'F');
+      doc.setDrawColor(226, 232, 240); // Slate-200
+      doc.line(0, 40, pageW, 40); // Divisória sutil
 
-      doc.setFontSize(26);
-      doc.setFont('helvetica', 'bold');
-      doc.setTextColor(37, 99, 235);
-      doc.text('Meu Plantão', pageW / 2, 20, { align: 'center' });
+      // Logo Simulation (Ícone Blue + Texto Dark)
+      doc.setFillColor(37, 99, 235); // Blue-600
+      doc.roundedRect(margin, 12, 10, 10, 2, 2, 'F');
       
-      doc.setFontSize(11);
+      doc.setFontSize(22);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(15, 23, 42); // Slate-900
+      doc.text('Meu Plantão', margin + 14, 20);
+      
+      doc.setFontSize(10);
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(100, 116, 139); // Slate-500
-      doc.text('Sua agenda organizada e seus plantões sob controle', pageW / 2, 28, { align: 'center' });
-      
-      doc.setDrawColor(241, 245, 249);
-      doc.line(margin, 36, pageW - margin, 36);
+      doc.text('Sua agenda organizada e seus plantões sob controle', margin + 14, 26);
 
-      let y = 60;
+      let y = 55;
       
       // Identificação
-      doc.setFontSize(13);
+      doc.setFontSize(14);
       doc.setFont('helvetica', 'bold');
-      doc.setTextColor(30, 41, 59);
+      doc.setTextColor(15, 23, 42); // Slate-900
       doc.text(userName, margin, y);
       
-      doc.setFontSize(11);
+      doc.setFontSize(10);
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(100, 116, 139);
       const monthStr = new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
@@ -406,14 +398,14 @@ export function ShareAgendaButton({ proximos, userName, totalGanhos, isPro }: { 
         const localObj = Array.isArray(p.local) ? p.local[0] : p.local;
         const info = getFullShiftInfo(p);
         
-        // Card Background com Sombra Sutil (usando um cinza muito claro)
+        // Card Background SaaS
         doc.setFillColor(255, 255, 255);
-        doc.setDrawColor(241, 245, 249); // Slate-100
-        doc.roundedRect(margin - 2, y - 8, pageW - (margin * 2) + 4, 20, 3, 3, 'FD');
+        doc.setDrawColor(226, 232, 240); // Slate-200
+        doc.roundedRect(margin, y - 8, pageW - (margin * 2), 22, 3, 3, 'FD');
         
-        // Linha decorativa lateral
+        // Linha decorativa lateral (Accent)
         doc.setFillColor(localObj?.cor_calendario || '#2563eb');
-        doc.rect(margin - 2, y - 8, 1.5, 20, 'F');
+        doc.rect(margin, y - 8, 1.5, 22, 'F');
 
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(15, 23, 42); // Slate-900
@@ -422,53 +414,42 @@ export function ShareAgendaButton({ proximos, userName, totalGanhos, isPro }: { 
         
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(10);
-        doc.setTextColor(71, 85, 105); // Slate-600
-        doc.text(`${info}`, margin + 6, y + 7);
+        doc.setTextColor(51, 65, 85); // Slate-700
+        doc.text(`${info}`, margin + 6, y + 8);
         
-        y += 28;
+        y += 30;
 
-        if (y > 230) {
+        if (y > 240) {
           doc.addPage();
-          // Repetir Fundo e Marca d'água
+          // Repetir Fundo e Cabeçalho Simplificado
           doc.setFillColor(248, 250, 252);
           doc.rect(0, 0, pageW, pageH, 'F');
-          doc.setTextColor(226, 232, 240);
-          doc.setFontSize(80);
-          doc.setFont('helvetica', 'bold');
-          doc.text('MEU PLANTÃO', pageW / 2, pageH / 2, { align: 'center', angle: 45 });
           y = 20;
         }
       });
 
-      // Rodapé Branding (Condicional) - Design de Card Premium para Free
+      // Rodapé SaaS (Free Banner)
       const footerY = 270;
       if (!isPro) {
-        // Card de Marketing (Estilo Pro)
-        const cardH = 26;
-        const cardMargin = margin;
-        
         doc.setFillColor(255, 255, 255);
-        doc.setDrawColor(241, 245, 249); // Slate-100
-        doc.roundedRect(cardMargin, footerY - 10, pageW - (cardMargin * 2), cardH, 3, 3, 'FD');
-        
-        // Borda Lateral Blue-300 (Igual ao Pro, mas azul claro)
-        doc.setFillColor(147, 197, 253); // Blue-300
-        doc.rect(cardMargin, footerY - 10, 1.5, cardH, 'F');
+        doc.setDrawColor(226, 232, 240);
+        doc.rect(0, footerY - 10, pageW, 30, 'F');
+        doc.line(0, footerY - 10, pageW, footerY - 10);
         
         doc.setFontSize(11);
         doc.setFont('helvetica', 'bold');
-        doc.setTextColor(37, 99, 235); // Blue-600
-        doc.text('Escala gerada gratuitamente pelo app Meu Plantão.', pageW / 2, footerY - 2, { align: 'center' });
+        doc.setTextColor(30, 41, 59); // Slate-800
+        doc.text('Escala gerada gratuitamente pelo app Meu Plantão.', pageW / 2, footerY, { align: 'center' });
         
         doc.setFontSize(9);
         doc.setFont('helvetica', 'normal');
         doc.setTextColor(100, 116, 139); // Slate-500
-        doc.text('Organize a sua também e tenha controle total em:', pageW / 2, footerY + 4, { align: 'center' });
+        doc.text('Organize a sua também e tenha controle total em:', pageW / 2, footerY + 6, { align: 'center' });
         
-        doc.setFontSize(10);
+        doc.setFontSize(11);
         doc.setFont('helvetica', 'bold');
-        doc.setTextColor(37, 99, 235);
-        doc.text('meuplantao.com.br', pageW / 2, footerY + 10, { align: 'center' });
+        doc.setTextColor(37, 99, 235); // Blue-600
+        doc.text('meuplantao.com.br', pageW / 2, footerY + 12, { align: 'center' });
       } else {
         doc.setFontSize(10);
         doc.setFont('helvetica', 'normal');
