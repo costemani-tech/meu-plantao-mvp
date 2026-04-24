@@ -42,25 +42,25 @@ export const ShareableScheduleCard = forwardRef<HTMLDivElement, ShareableSchedul
       ref={ref}
       style={{
         width: '400px',
-        background: 'url(/icons/capa.jpeg) center center / cover no-repeat',
+        background: 'linear-gradient(rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.92)), url(/icons/capa.jpeg) center center / cover no-repeat',
         fontFamily: 'Inter, system-ui, sans-serif',
         overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column',
         position: 'relative',
+        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
       }}
     >
-      {/* Header with blue gradient */}
       <div style={{
-        background: 'linear-gradient(to right, rgba(29, 78, 216, 0.9), rgba(59, 130, 246, 0.9))',
-        padding: '24px',
+        background: 'linear-gradient(to right, #1d4ed8, #3b82f6)',
+        padding: '24px 20px',
         color: '#ffffff',
         textAlign: 'center',
         position: 'relative',
         zIndex: 1
       }}>
-        <h1 style={{ margin: 0, fontSize: '24px', fontWeight: 800 }}>Meu Plantão</h1>
-        <p style={{ margin: '4px 0 0', fontSize: '13px', opacity: 0.9 }}>
+        <h1 style={{ margin: 0, fontSize: '26px', fontWeight: 800, letterSpacing: '-0.5px' }}>Meu Plantão</h1>
+        <p style={{ margin: '4px 0 0', fontSize: '13px', opacity: 0.9, fontWeight: 500 }}>
           Sua agenda organizada e seus plantões sob controle
         </p>
       </div>
@@ -68,9 +68,8 @@ export const ShareableScheduleCard = forwardRef<HTMLDivElement, ShareableSchedul
       {/* Identification */}
       <div style={{
         padding: '16px 24px',
-        background: 'rgba(255, 255, 255, 0.85)',
-        backdropFilter: 'blur(4px)',
-        borderBottom: '1px solid rgba(226, 232, 240, 0.5)',
+        background: 'rgba(255, 255, 255, 0.5)',
+        borderBottom: '1px solid #e2e8f0',
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
@@ -97,12 +96,11 @@ export const ShareableScheduleCard = forwardRef<HTMLDivElement, ShareableSchedul
           const group = groupedShifts[localName];
           return (
             <div key={localName} style={{
-              background: 'rgba(255, 255, 255, 0.95)',
+              background: '#ffffff',
               borderRadius: '16px',
-              boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
+              boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03)',
               borderLeft: `4px solid ${group.color}`,
               padding: '16px',
-              backdropFilter: 'blur(8px)',
             }}>
               <h3 style={{ margin: '0 0 12px 0', fontSize: '15px', fontWeight: 700, color: '#0f172a' }}>
                 {localName}
@@ -151,15 +149,14 @@ export const ShareableScheduleCard = forwardRef<HTMLDivElement, ShareableSchedul
 
       {/* Resumo de Ganhos Extras */}
       {totalGanhos > 0 && (
-        <div style={{ padding: '0 24px 24px 24px' }}>
+        <div style={{ padding: '0 24px 20px 24px' }}>
           <div style={{
-            background: 'rgba(255, 255, 255, 0.95)',
+            background: '#ffffff',
             borderRadius: '16px',
             padding: '16px',
-            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
             textAlign: 'center',
-            border: '1px solid rgba(226, 232, 240, 0.5)',
-            backdropFilter: 'blur(8px)',
+            border: '1px solid #e2e8f0',
           }}>
             <div style={{ fontSize: '13px', color: '#64748b', fontWeight: 600, marginBottom: '4px' }}>
               Total a receber em extras
@@ -174,11 +171,10 @@ export const ShareableScheduleCard = forwardRef<HTMLDivElement, ShareableSchedul
       {/* Footer Branding (Condicional) */}
       {!isPro ? (
         <div style={{
-          padding: '20px 16px',
+          padding: '24px 16px',
           textAlign: 'center',
-          background: 'rgba(239, 246, 255, 0.9)', // bg-blue-50 with alpha
-          backdropFilter: 'blur(4px)',
-          borderTop: '1px solid rgba(219, 234, 254, 0.5)',
+          background: '#eff6ff', // bg-blue-50
+          borderTop: '1px solid #dbeafe', // border-blue-100
           position: 'relative',
           zIndex: 1
         }}>
@@ -191,13 +187,12 @@ export const ShareableScheduleCard = forwardRef<HTMLDivElement, ShareableSchedul
         </div>
       ) : (
         <div style={{
-          padding: '16px',
+          padding: '20px 16px',
           textAlign: 'center',
-          fontSize: '11px',
+          fontSize: '12px',
           color: '#94a3b8',
-          background: 'rgba(248, 250, 252, 0.85)',
-          backdropFilter: 'blur(4px)',
-          borderTop: '1px solid rgba(226, 232, 240, 0.5)',
+          background: 'rgba(255, 255, 255, 0.5)',
+          borderTop: '1px solid #e2e8f0',
           position: 'relative',
           zIndex: 1
         }}>

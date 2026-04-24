@@ -230,8 +230,8 @@ export function ShareAgendaButton({ proximos, userName, totalGanhos, isPro }: { 
       const pageH = doc.internal.pageSize.getHeight();
       const margin = 15;
       
-      // Fundo Escuro (Tema Capa)
-      doc.setFillColor(13, 17, 43); // Dark Navy
+      // Fundo Claro (Tema Unificado)
+      doc.setFillColor(248, 250, 252); // Slate-50
       doc.rect(0, 0, pageW, pageH, 'F');
       
       // Cabeçalho Premium Azul
@@ -249,29 +249,35 @@ export function ShareAgendaButton({ proximos, userName, totalGanhos, isPro }: { 
 
       let y = 45;
       doc.setFontSize(11);
-      doc.setTextColor(255, 255, 255); // Branco para títulos
+      doc.setTextColor(30, 41, 59); // Slate-800
 
       proximos.forEach((p, i) => {
         const localObj = Array.isArray(p.local) ? p.local[0] : p.local;
         const info = getFullShiftInfo(p);
         
+        // Card Background
+        doc.setFillColor(255, 255, 255);
+        doc.roundedRect(margin - 2, y - 8, pageW - (margin * 2) + 4, 18, 2, 2, 'F');
+        
         // Linha decorativa lateral
         doc.setFillColor(localObj?.cor_calendario || '#2563eb');
-        doc.rect(margin, y - 5, 2, 14, 'F');
+        doc.rect(margin, y - 8, 1.5, 18, 'F');
 
         doc.setFont('helvetica', 'bold');
+        doc.setTextColor(30, 41, 59);
         doc.text(`${localObj?.nome || 'Local de Trabalho'}`, margin + 6, y);
+        
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(9);
-        doc.setTextColor(200, 200, 200); // Cinza claro para detalhes
+        doc.setTextColor(71, 85, 105); // Slate-600
         doc.text(`${info}`, margin + 6, y + 6);
         
-        doc.setFontSize(11);
-        doc.setTextColor(30, 41, 59);
-        y += 22;
+        y += 25;
 
         if (y > 250) {
           doc.addPage();
+          doc.setFillColor(248, 250, 252);
+          doc.rect(0, 0, pageW, pageH, 'F');
           y = 20;
         }
       });
@@ -280,20 +286,24 @@ export function ShareAgendaButton({ proximos, userName, totalGanhos, isPro }: { 
       const footerY = 280;
       if (!isPro) {
         doc.setFillColor(239, 246, 255); // Blue-50
-        doc.rect(0, footerY - 5, pageW, 25, 'F');
+        doc.rect(0, footerY - 10, pageW, 30, 'F');
+        doc.setDrawColor(219, 234, 254); // Blue-100
+        doc.line(0, footerY - 10, pageW, footerY - 10);
         
-        doc.setFontSize(10);
+        doc.setFontSize(12);
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(37, 99, 235); // Blue-600
-        doc.text('🚀 Escala gerada gratuitamente pelo app Meu Plantão.', pageW / 2, footerY + 5, { align: 'center' });
-        doc.setFontSize(9);
+        doc.text('🚀 Escala gerada gratuitamente pelo app Meu Plantão.', pageW / 2, footerY, { align: 'center' });
+        
+        doc.setFontSize(10);
         doc.setFont('helvetica', 'normal');
-        doc.text('Organize a sua também em meuplantao.com.br', pageW / 2, footerY + 11, { align: 'center' });
+        doc.setTextColor(59, 130, 246); // Blue-500
+        doc.text('Organize a sua também em meuplantao.com.br', pageW / 2, footerY + 7, { align: 'center' });
       } else {
         doc.setFontSize(9);
         doc.setFont('helvetica', 'normal');
-        doc.setTextColor(148, 163, 184); // Gray-400
-        doc.text('Gerado por meuplantao.com.br', pageW / 2, footerY + 10, { align: 'center' });
+        doc.setTextColor(148, 163, 184); // Slate-400
+        doc.text('Gerado por meuplantao.com.br', pageW / 2, footerY + 5, { align: 'center' });
       }
 
       doc.save(`Escala_Meu_Plantao.pdf`);
@@ -393,7 +403,7 @@ export function ShareAgendaButton({ proximos, userName, totalGanhos, isPro }: { 
             <div style={{ padding: 24, background: 'var(--bg-secondary)', borderTop: '1px solid var(--border-subtle)' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 <button onClick={handleShareImage} disabled={isGeneratingImage} className="btn btn-primary" style={{ justifyContent: 'center', gap: 10, padding: 14, borderRadius: 12, background: 'linear-gradient(to right, #1d4ed8, #3b82f6)' }}>
-                  <ImageIcon size={18} /> {isGeneratingImage ? 'Gerando...' : 'Compartilhar Imagem PRO'}
+                  <ImageIcon size={18} /> {isGeneratingImage ? 'Gerando...' : (isPro ? 'Compartilhar Imagem PRO' : 'Compartilhar Imagem')}
                 </button>
 
                 <button onClick={handleDirectShare} className="btn btn-secondary" style={{ justifyContent: 'center', gap: 10, padding: 14, borderRadius: 12 }}>
