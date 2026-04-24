@@ -70,6 +70,8 @@ export const ShareableScheduleCard = forwardRef<HTMLDivElement, ShareableSchedul
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
+        position: 'relative',
+        zIndex: 1
       }}>
         <div style={{ fontWeight: 700, fontSize: '15px', color: '#1e293b' }}>
           Dr(a). {userName}
@@ -79,8 +81,32 @@ export const ShareableScheduleCard = forwardRef<HTMLDivElement, ShareableSchedul
         </div>
       </div>
 
+      {/* Watermark Background */}
+      <div style={{
+        position: 'absolute',
+        top: '150px',
+        left: '0',
+        width: '100%',
+        height: '100%',
+        zIndex: 0,
+        pointerEvents: 'none',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        opacity: 0.03,
+        transform: 'rotate(-30deg)',
+        userSelect: 'none'
+      }}>
+        <div style={{ fontSize: '40px', fontWeight: 900, whiteSpace: 'nowrap' }}>MEU PLANTÃO</div>
+        <div style={{ fontSize: '16px', fontWeight: 700, whiteSpace: 'nowrap' }}>Sua agenda organizada</div>
+        <div style={{ fontSize: '40px', fontWeight: 900, whiteSpace: 'nowrap', marginTop: '40px' }}>MEU PLANTÃO</div>
+        <div style={{ fontSize: '16px', fontWeight: 700, whiteSpace: 'nowrap' }}>Plantões sob controle</div>
+        <div style={{ fontSize: '40px', fontWeight: 900, whiteSpace: 'nowrap', marginTop: '40px' }}>MEU PLANTÃO</div>
+      </div>
+
       {/* Shifts List */}
-      <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: '16px', position: 'relative', zIndex: 1 }}>
         {localNames.length === 0 && (
           <div style={{ textAlign: 'center', padding: '20px', color: '#64748b', fontSize: '14px' }}>
             Nenhum plantão agendado.
