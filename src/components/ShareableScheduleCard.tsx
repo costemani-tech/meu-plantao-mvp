@@ -77,7 +77,7 @@ export const ShareableScheduleCard = forwardRef<HTMLDivElement, ShareableSchedul
         zIndex: 1
       }}>
         <div style={{ fontWeight: 700, fontSize: '15px', color: '#1e293b' }}>
-          Dr(a). {userName}
+          {userName}
         </div>
         <div style={{ fontWeight: 600, fontSize: '13px', color: '#64748b' }}>
           {!isPro ? `${monthYear} • ${shifts.length} Plantões` : monthYear}

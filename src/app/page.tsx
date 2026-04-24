@@ -269,6 +269,15 @@ export default async function DashboardPage() {
     .eq('id', user.id)
     .single();
 
+  // Formatação Premium do Nome (Primeiro e Último)
+  const getShortName = (fullName: string) => {
+    const parts = fullName?.trim().split(/\s+/) || [];
+    if (parts.length <= 1) return parts[0] || 'Médico';
+    return `${parts[0]} ${parts[parts.length - 1]}`;
+  };
+
+  const userName = getShortName(profile?.nome || user.user_metadata?.full_name || user.user_metadata?.name || 'Médico');
+
   const isPro = isUserPro(user.email) || (profile?.is_pro === true);
 
   const inicioMes = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
@@ -323,7 +332,7 @@ export default async function DashboardPage() {
       <Suspense fallback={<ShiftsSkeleton />}>
         <UpcomingShifts
           userId={user.id}
-          userName={profile?.nome || 'Médico'}
+          userName={userName}
           totalGanhos={totalGanhosGlobal}
           isPro={isPro}
         />
