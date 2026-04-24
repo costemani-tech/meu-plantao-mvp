@@ -78,9 +78,21 @@ export default function LoginPage() {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      background: 'linear-gradient(135deg, var(--bg-primary) 0%, #1a1e2d 100%)',
-      padding: 24
+      background: 'url(/capa.jpeg), linear-gradient(135deg, var(--bg-primary) 0%, #1a1e2d 100%)',
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      backgroundBlendMode: 'overlay',
+      padding: 24,
+      position: 'relative'
     }}>
+      {/* Watermark Overlay */}
+      <div style={{
+        position: 'absolute',
+        inset: 0,
+        background: 'var(--bg-primary)',
+        opacity: 0.92,
+        zIndex: 0
+      }} />
       
       <div className="card" style={{ width: '100%', maxWidth: 420, zIndex: 10, padding: '40px 32px' }}>
         <div style={{ textAlign: 'center', marginBottom: 32 }}>

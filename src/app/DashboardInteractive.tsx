@@ -316,23 +316,35 @@ export function ShareAgendaButton({ proximos, userName, totalGanhos, isPro }: { 
         }
       });
 
-      // Rodapé Branding (Condicional) - Fiel à Imagem 2
-      const footerY = 275;
+      // Rodapé Branding (Condicional) - Design de Card Premium para Free
+      const footerY = 270;
       if (!isPro) {
-        doc.setFillColor(239, 246, 255); // Blue-50
-        doc.rect(0, footerY - 10, pageW, 35, 'F');
-        doc.setDrawColor(219, 234, 254); // Blue-100
-        doc.line(0, footerY - 10, pageW, footerY - 10);
+        // Card de Marketing (Estilo Pro)
+        const cardH = 26;
+        const cardMargin = margin;
         
-        doc.setFontSize(12);
+        doc.setFillColor(255, 255, 255);
+        doc.setDrawColor(241, 245, 249); // Slate-100
+        doc.roundedRect(cardMargin, footerY - 10, pageW - (cardMargin * 2), cardH, 3, 3, 'FD');
+        
+        // Borda Lateral Blue-300 (Igual ao Pro, mas azul claro)
+        doc.setFillColor(147, 197, 253); // Blue-300
+        doc.rect(cardMargin, footerY - 10, 1.5, cardH, 'F');
+        
+        doc.setFontSize(11);
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(37, 99, 235); // Blue-600
-        doc.text('Escala gerada gratuitamente pelo app Meu Plantão.', pageW / 2, footerY + 6, { align: 'center' });
+        doc.text('🚀 Escala gerada gratuitamente pelo app Meu Plantão.', pageW / 2, footerY - 2, { align: 'center' });
+        
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(100, 116, 139); // Slate-500
+        doc.text('Organize a sua também e tenha controle total em:', pageW / 2, footerY + 4, { align: 'center' });
         
         doc.setFontSize(10);
-        doc.setFont('helvetica', 'normal');
-        doc.setTextColor(59, 130, 246); // Blue-500
-        doc.text('Organize a sua também em meuplantao.com.br', pageW / 2, footerY + 14, { align: 'center' });
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(37, 99, 235);
+        doc.text('meuplantao.com.br', pageW / 2, footerY + 10, { align: 'center' });
       } else {
         doc.setFontSize(10);
         doc.setFont('helvetica', 'normal');
