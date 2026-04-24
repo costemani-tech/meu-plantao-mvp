@@ -17,9 +17,10 @@ export interface ShareableScheduleCardProps {
   monthYear: string;
   shifts: ShiftInfo[];
   totalGanhos: number;
+  isPro?: boolean;
 }
 
-export const ShareableScheduleCard = forwardRef<HTMLDivElement, ShareableScheduleCardProps>(({ userName, monthYear, shifts, totalGanhos }, ref) => {
+export const ShareableScheduleCard = forwardRef<HTMLDivElement, ShareableScheduleCardProps>(({ userName, monthYear, shifts, totalGanhos, isPro = false }, ref) => {
 
   // Group shifts by local/hospital
   const groupedShifts = shifts.reduce((acc, shift) => {
@@ -162,17 +163,33 @@ export const ShareableScheduleCard = forwardRef<HTMLDivElement, ShareableSchedul
         </div>
       )}
 
-      {/* Footer Branding Minimalista (Plano PRO) */}
-      <div style={{
-        padding: '16px',
-        textAlign: 'center',
-        fontSize: '11px',
-        color: '#94a3b8',
-        background: '#f8fafc',
-        borderTop: '1px solid #e2e8f0'
-      }}>
-        Gerado por <strong>meuplantao.com.br</strong>
-      </div>
+      {/* Footer Branding (Condicional) */}
+      {!isPro ? (
+        <div style={{
+          padding: '20px 16px',
+          textAlign: 'center',
+          background: '#eff6ff', // bg-blue-50
+          borderTop: '1px solid #dbeafe', // border-blue-100
+        }}>
+          <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#2563eb' }}>
+            🚀 Escala gerada gratuitamente pelo app Meu Plantão.
+          </div>
+          <div style={{ fontSize: '14px', color: '#3b82f6', marginTop: '4px' }}>
+            Organize a sua também em <span style={{ fontWeight: '600', textDecoration: 'underline' }}>meuplantao.com.br</span>
+          </div>
+        </div>
+      ) : (
+        <div style={{
+          padding: '16px',
+          textAlign: 'center',
+          fontSize: '11px',
+          color: '#94a3b8',
+          background: '#f8fafc',
+          borderTop: '1px solid #e2e8f0'
+        }}>
+          Gerado por <strong>meuplantao.com.br</strong>
+        </div>
+      )}
     </div>
   );
 });

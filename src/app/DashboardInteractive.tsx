@@ -413,6 +413,7 @@ export function ShareAgendaButton({ proximos, userName, totalGanhos, isPro }: { 
                   monthYear={new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
                   shifts={proximos}
                   totalGanhos={totalGanhos}
+                  isPro={isPro}
                 />
               </div>
             </div>
