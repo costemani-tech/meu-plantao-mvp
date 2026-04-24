@@ -147,12 +147,12 @@ async function StatsSection({ userId, isPro }: { userId: string, isPro: boolean 
 }
 
 // Sub-componente: Próximos Plantões
-async function UpcomingShifts({ userId }: { userId: string }) {
+async function UpcomingShifts({ userId, userName, totalGanhos }: { userId: string, userName: string, totalGanhos: number }) {
   const supabase = await getSupabase();
 
   const { data: proximos } = await supabase
     .from('plantoes')
-    .select('id, data_hora_inicio, local:locais_trabalho(nome, cor_calendario)')
+    .select('id, data_hora_inicio, data_hora_fim, local:locais_trabalho(nome, cor_calendario)')
     .eq('usuario_id', userId)
     .gte('data_hora_inicio', new Date().toISOString())
     .neq('status', 'Cancelado')
@@ -171,7 +171,7 @@ async function UpcomingShifts({ userId }: { userId: string }) {
               [ Ver agenda ]
             </span>
           </Link>
-          <ShareAgendaButton proximos={proximos || []} />
+          <ShareAgendaButton proximos={proximos || []} userName={userName} totalGanhos={totalGanhos} />
         </div>
       </div>
 
@@ -265,11 +265,33 @@ export default async function DashboardPage() {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('is_pro')
+    .select('is_pro, nome')
     .eq('id', user.id)
     .single();
 
   const isPro = isUserPro(user.email) || (profile?.is_pro === true);
+
+  const inicioMes = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
+  const fimMes = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0, 23, 59, 59).toISOString();
+  const { data: plantoesComValor } = await supabase
+    .from('plantoes')
+    .select('notas')
+    .eq('usuario_id', user.id)
+    .neq('status', 'Cancelado')
+    .gte('data_hora_inicio', inicioMes)
+    .lte('data_hora_inicio', fimMes);
+
+  let totalGanhosGlobal = 0;
+  if (plantoesComValor) {
+    totalGanhosGlobal = plantoesComValor.reduce((acc, p) => {
+      if (!p.notas) return acc;
+      const match = p.notas.match(/R\$\s*([\d.,]+)/);
+      if (match) {
+        return acc + parseFloat(match[1].replace('.', '').replace(',', '.'));
+      }
+      return acc;
+    }, 0);
+  }
 
   const { count: locaisCount } = await supabase
     .from('locais_trabalho')
@@ -299,7 +321,11 @@ export default async function DashboardPage() {
 
       {/* PRÓXIMOS PLANTÕES (Assíncrono) */}
       <Suspense fallback={<ShiftsSkeleton />}>
-        <UpcomingShifts userId={user.id} />
+        <UpcomingShifts
+          userId={user.id}
+          userName={profile?.nome || 'Médico'}
+          totalGanhos={totalGanhosGlobal}
+        />
       </Suspense>
 
       {/* INTERATIVIDADE DO CLIENTE (FAB + Paywall) */}

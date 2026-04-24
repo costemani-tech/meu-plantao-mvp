@@ -1,10 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, Star, Share2, FileText, Copy, X, Send, Calendar as CalendarIcon, Clock } from 'lucide-react';
+import { Plus, Star, Share2, FileText, Copy, X, Send, Calendar as CalendarIcon, Clock, Image as ImageIcon } from 'lucide-react';
 import jsPDF from 'jspdf';
+import { toBlob } from 'html-to-image';
 import { formatRelativeShiftDate, formatBRTTime } from '../lib/date-utils';
+import { ShareableScheduleCard } from '../components/ShareableScheduleCard';
 
 export function DashboardInteractive({ isPro, hasLocations = true }: { isPro: boolean, hasLocations?: boolean }) {
   const [showProModal, setShowProModal] = useState('');
@@ -125,8 +127,51 @@ export function DesbloquearGanhosBtn() {
   );
 }
 
-export function ShareAgendaButton({ proximos }: { proximos: any[] }) {
+export function ShareAgendaButton({ proximos, userName, totalGanhos }: { proximos: any[], userName: string, totalGanhos: number }) {
   const [showModal, setShowModal] = useState(false);
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  const handleShareImage = async () => {
+    if (!cardRef.current) return;
+
+    try {
+      setIsGeneratingImage(true);
+
+      const blob = await toBlob(cardRef.current, {
+        cacheBust: true,
+        style: {
+          transform: 'scale(1)', // Ensure correct scaling
+        }
+      });
+
+      if (!blob) throw new Error('Falha ao gerar a imagem');
+
+      const file = new File([blob], 'minha-escala.png', { type: 'image/png' });
+
+      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          title: 'Meu Plantão',
+          text: 'Confira minha escala de plantões!',
+          files: [file],
+        });
+      } else {
+        // Fallback to download
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'minha-escala.png';
+        a.click();
+        URL.revokeObjectURL(url);
+        alert('Imagem baixada! O compartilhamento direto de imagens não é suportado no seu navegador.');
+      }
+    } catch (err) {
+      console.error('Erro ao gerar/compartilhar imagem:', err);
+      alert('Houve um erro ao gerar a imagem da sua escala.');
+    } finally {
+      setIsGeneratingImage(false);
+    }
+  };
 
   const getShiftType = (startTime: string) => {
     const hour = new Date(startTime).getHours();
@@ -331,18 +376,33 @@ export function ShareAgendaButton({ proximos }: { proximos: any[] }) {
 
             <div style={{ padding: 24, background: 'var(--bg-secondary)', borderTop: '1px solid var(--border-subtle)' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                <button onClick={handleDirectShare} className="btn btn-primary" style={{ justifyContent: 'center', gap: 10, padding: '16px', borderRadius: 16, fontSize: 15, background: 'var(--accent-blue)', boxShadow: '0 4px 12px rgba(37, 99, 235, 0.2)' }}>
-                  <Send size={18} /> Compartilhar no WhatsApp
+                <button onClick={handleShareImage} disabled={isGeneratingImage} className="btn btn-primary" style={{ justifyContent: 'center', gap: 10, padding: 14, borderRadius: 12, background: 'linear-gradient(to right, #1d4ed8, #3b82f6)' }}>
+                  <ImageIcon size={18} /> {isGeneratingImage ? 'Gerando...' : 'Compartilhar Imagem PRO'}
+                </button>
+
+                <button onClick={handleDirectShare} className="btn btn-secondary" style={{ justifyContent: 'center', gap: 10, padding: 14, borderRadius: 12 }}>
+                  <Send size={18} /> Compartilhar Texto Direto
                 </button>
                 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                  <button onClick={handleCopy} className="btn btn-secondary" style={{ justifyContent: 'center', gap: 8, padding: '14px', borderRadius: 14, fontSize: 13, background: 'var(--bg-primary)' }}>
+                  <button onClick={handleCopy} className="btn btn-secondary" style={{ justifyContent: 'center', gap: 8, padding: 12, borderRadius: 12, fontSize: 13 }}>
                     <Copy size={16} /> Copiar Texto
                   </button>
-                  <button onClick={handleExportPDF} className="btn btn-secondary" style={{ justifyContent: 'center', gap: 8, padding: '14px', borderRadius: 14, fontSize: 13, background: 'var(--bg-primary)' }}>
-                    <FileText size={16} /> Exportar PDF
+                  <button onClick={handleExportPDF} className="btn btn-secondary" style={{ justifyContent: 'center', gap: 8, padding: 12, borderRadius: 12, fontSize: 13 }}>
+                    <FileText size={16} /> Gerar PDF
                   </button>
                 </div>
+              </div>
+
+              {/* Hidden Component for Image Generation */}
+              <div style={{ position: 'absolute', left: '-9999px', top: '-9999px' }}>
+                <ShareableScheduleCard
+                  ref={cardRef}
+                  userName={userName}
+                  monthYear={new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
+                  shifts={proximos}
+                  totalGanhos={totalGanhos}
+                />
               </div>
             </div>
           </div>
