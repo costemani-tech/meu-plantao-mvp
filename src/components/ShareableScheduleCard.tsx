@@ -42,19 +42,22 @@ export const ShareableScheduleCard = forwardRef<HTMLDivElement, ShareableSchedul
       ref={ref}
       style={{
         width: '400px',
-        background: '#f8fafc', // Very light gray/blue background for the main card
+        background: 'url(/icons/capa.jpeg) center center / cover no-repeat',
         fontFamily: 'Inter, system-ui, sans-serif',
         overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column',
+        position: 'relative',
       }}
     >
       {/* Header with blue gradient */}
       <div style={{
-        background: 'linear-gradient(to right, #1d4ed8, #3b82f6)',
+        background: 'linear-gradient(to right, rgba(29, 78, 216, 0.9), rgba(59, 130, 246, 0.9))',
         padding: '24px',
         color: '#ffffff',
         textAlign: 'center',
+        position: 'relative',
+        zIndex: 1
       }}>
         <h1 style={{ margin: 0, fontSize: '24px', fontWeight: 800 }}>Meu Plantão</h1>
         <p style={{ margin: '4px 0 0', fontSize: '13px', opacity: 0.9 }}>
@@ -65,8 +68,9 @@ export const ShareableScheduleCard = forwardRef<HTMLDivElement, ShareableSchedul
       {/* Identification */}
       <div style={{
         padding: '16px 24px',
-        background: '#ffffff',
-        borderBottom: '1px solid #e2e8f0',
+        background: 'rgba(255, 255, 255, 0.85)',
+        backdropFilter: 'blur(4px)',
+        borderBottom: '1px solid rgba(226, 232, 240, 0.5)',
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
@@ -81,30 +85,6 @@ export const ShareableScheduleCard = forwardRef<HTMLDivElement, ShareableSchedul
         </div>
       </div>
 
-      {/* Watermark Background */}
-      <div style={{
-        position: 'absolute',
-        top: '150px',
-        left: '0',
-        width: '100%',
-        height: '100%',
-        zIndex: 0,
-        pointerEvents: 'none',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        opacity: 0.08,
-        transform: 'rotate(-30deg)',
-        userSelect: 'none'
-      }}>
-        <img src="/icons/logo_original.png" alt="" style={{ width: '140px', marginBottom: '10px', filter: 'grayscale(100%)' }} />
-        <div style={{ fontSize: '40px', fontWeight: 900, whiteSpace: 'nowrap', color: '#64748b' }}>MEU PLANTÃO</div>
-        <div style={{ fontSize: '16px', fontWeight: 700, whiteSpace: 'nowrap', color: '#64748b' }}>Sua agenda organizada</div>
-        <div style={{ fontSize: '40px', fontWeight: 900, whiteSpace: 'nowrap', marginTop: '60px', color: '#64748b' }}>MEU PLANTÃO</div>
-        <div style={{ fontSize: '16px', fontWeight: 700, whiteSpace: 'nowrap', color: '#64748b' }}>Plantões sob controle</div>
-      </div>
-
       {/* Shifts List */}
       <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: '16px', position: 'relative', zIndex: 1 }}>
         {localNames.length === 0 && (
@@ -117,11 +97,12 @@ export const ShareableScheduleCard = forwardRef<HTMLDivElement, ShareableSchedul
           const group = groupedShifts[localName];
           return (
             <div key={localName} style={{
-              background: '#ffffff',
-              borderRadius: '12px',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+              background: 'rgba(255, 255, 255, 0.95)',
+              borderRadius: '16px',
+              boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
               borderLeft: `4px solid ${group.color}`,
               padding: '16px',
+              backdropFilter: 'blur(8px)',
             }}>
               <h3 style={{ margin: '0 0 12px 0', fontSize: '15px', fontWeight: 700, color: '#0f172a' }}>
                 {localName}
@@ -172,12 +153,13 @@ export const ShareableScheduleCard = forwardRef<HTMLDivElement, ShareableSchedul
       {totalGanhos > 0 && (
         <div style={{ padding: '0 24px 24px 24px' }}>
           <div style={{
-            background: '#ffffff',
-            borderRadius: '12px',
+            background: 'rgba(255, 255, 255, 0.95)',
+            borderRadius: '16px',
             padding: '16px',
-            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
             textAlign: 'center',
-            border: '1px solid #e2e8f0'
+            border: '1px solid rgba(226, 232, 240, 0.5)',
+            backdropFilter: 'blur(8px)',
           }}>
             <div style={{ fontSize: '13px', color: '#64748b', fontWeight: 600, marginBottom: '4px' }}>
               Total a receber em extras
@@ -194,8 +176,11 @@ export const ShareableScheduleCard = forwardRef<HTMLDivElement, ShareableSchedul
         <div style={{
           padding: '20px 16px',
           textAlign: 'center',
-          background: '#eff6ff', // bg-blue-50
-          borderTop: '1px solid #dbeafe', // border-blue-100
+          background: 'rgba(239, 246, 255, 0.9)', // bg-blue-50 with alpha
+          backdropFilter: 'blur(4px)',
+          borderTop: '1px solid rgba(219, 234, 254, 0.5)',
+          position: 'relative',
+          zIndex: 1
         }}>
           <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#2563eb' }}>
             🚀 Escala gerada gratuitamente pelo app Meu Plantão.
@@ -210,8 +195,11 @@ export const ShareableScheduleCard = forwardRef<HTMLDivElement, ShareableSchedul
           textAlign: 'center',
           fontSize: '11px',
           color: '#94a3b8',
-          background: '#f8fafc',
-          borderTop: '1px solid #e2e8f0'
+          background: 'rgba(248, 250, 252, 0.85)',
+          backdropFilter: 'blur(4px)',
+          borderTop: '1px solid rgba(226, 232, 240, 0.5)',
+          position: 'relative',
+          zIndex: 1
         }}>
           Gerado por <strong>meuplantao.com.br</strong>
         </div>

@@ -227,7 +227,12 @@ export function ShareAgendaButton({ proximos, userName, totalGanhos, isPro }: { 
     try {
       const doc = new jsPDF('portrait', 'mm', 'a4');
       const pageW = doc.internal.pageSize.getWidth();
+      const pageH = doc.internal.pageSize.getHeight();
       const margin = 15;
+      
+      // Fundo Escuro (Tema Capa)
+      doc.setFillColor(13, 17, 43); // Dark Navy
+      doc.rect(0, 0, pageW, pageH, 'F');
       
       // Cabeçalho Premium Azul
       doc.setFillColor(37, 99, 235); // Blue-600
@@ -242,19 +247,9 @@ export function ShareAgendaButton({ proximos, userName, totalGanhos, isPro }: { 
       doc.setTextColor(191, 219, 254); // Blue-200
       doc.text(`Próximos Plantões  •  Gerado em ${new Date().toLocaleDateString('pt-BR')}`, margin, 23);
 
-      // Marca d'água de fundo (Watermark)
-      doc.setTextColor(235, 235, 235); // Cinza muito claro, mas visível
-      doc.setFontSize(60);
-      doc.setFont('helvetica', 'bold');
-      doc.text('MEU PLANTÃO', pageW / 2, 150, { align: 'center', angle: -30 });
-      doc.setFontSize(25);
-      doc.text('Sua agenda organizada', pageW / 2, 165, { align: 'center', angle: -30 });
-      
-      doc.setTextColor(30, 41, 59); // Restaurar cor do texto principal
-
       let y = 45;
       doc.setFontSize(11);
-      doc.setTextColor(30, 41, 59);
+      doc.setTextColor(255, 255, 255); // Branco para títulos
 
       proximos.forEach((p, i) => {
         const localObj = Array.isArray(p.local) ? p.local[0] : p.local;
@@ -268,7 +263,7 @@ export function ShareAgendaButton({ proximos, userName, totalGanhos, isPro }: { 
         doc.text(`${localObj?.nome || 'Local de Trabalho'}`, margin + 6, y);
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(9);
-        doc.setTextColor(71, 85, 105);
+        doc.setTextColor(200, 200, 200); // Cinza claro para detalhes
         doc.text(`${info}`, margin + 6, y + 6);
         
         doc.setFontSize(11);
