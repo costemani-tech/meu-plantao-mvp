@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, Star, Share2 } from 'lucide-react';
+import { Plus, Star, Share2, FileText, Copy, X, Send } from 'lucide-react';
+import jsPDF from 'jspdf';
 import { formatRelativeShiftDate } from '../lib/date-utils';
 
 export function DashboardInteractive({ isPro, hasLocations = true }: { isPro: boolean, hasLocations?: boolean }) {
@@ -125,55 +126,147 @@ export function DesbloquearGanhosBtn() {
 }
 
 export function ShareAgendaButton({ proximos }: { proximos: any[] }) {
-  const handleShare = async () => {
-    if (!proximos || proximos.length === 0) {
-      alert("Nenhum plantão agendado para compartilhar.");
-      return;
-    }
+  const [showModal, setShowModal] = useState(false);
 
-    const text = "Minha escala de plantões:\n" + proximos.map(p => {
+  const getShareText = () => {
+    if (!proximos || proximos.length === 0) return "";
+    return "Minha escala de plantões:\n" + proximos.map(p => {
       const localObj = Array.isArray(p.local) ? p.local[0] : p.local;
       const dataFormatada = formatRelativeShiftDate(p.data_hora_inicio).replace('•', '-');
       return `${localObj?.nome || 'Local'}: ${dataFormatada}`;
     }).join('\n');
+  };
 
-    // Sempre tenta copiar para o clipboard (melhor para Desktop)
+  const handleCopy = async () => {
+    const text = getShareText();
     try {
       await navigator.clipboard.writeText(text);
+      alert('Escala copiada!');
     } catch (err) {
       console.error('Erro ao copiar:', err);
     }
+  };
 
-    // Se tiver a API de share (Mobile), abre o menu
+  const handleDirectShare = async () => {
+    const text = getShareText();
     if (navigator.share) {
       try {
-        await navigator.share({
-          text: text,
-        });
+        await navigator.share({ text });
       } catch (err) {
-        if ((err as Error).name !== 'AbortError') {
-          console.error('Erro ao compartilhar:', err);
-        }
+        if ((err as Error).name !== 'AbortError') handleCopy();
       }
     } else {
-      alert('Escala copiada! Agora é só colar no WhatsApp.');
+      handleCopy();
+    }
+  };
+
+  const handleExportPDF = () => {
+    if (!proximos || proximos.length === 0) return;
+    
+    try {
+      const doc = new jsPDF('portrait', 'mm', 'a4');
+      const pageW = doc.internal.pageSize.getWidth();
+      const margin = 15;
+      
+      // Cabeçalho
+      doc.setFillColor(15, 23, 42);
+      doc.rect(0, 0, pageW, 25, 'F');
+      doc.setFontSize(16);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(255, 255, 255);
+      doc.text('Próximos Plantões', margin, 12);
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(148, 163, 184);
+      doc.text(`Gerado em ${new Date().toLocaleDateString('pt-BR')}`, margin, 19);
+
+      let y = 35;
+      doc.setFontSize(10);
+      doc.setTextColor(30, 41, 59);
+
+      proximos.forEach((p, i) => {
+        const localObj = Array.isArray(p.local) ? p.local[0] : p.local;
+        const dataStr = formatRelativeShiftDate(p.data_hora_inicio).replace('•', '-');
+        
+        doc.setFont('helvetica', 'bold');
+        doc.text(`${localObj?.nome || 'Local de Trabalho'}`, margin, y);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`${dataStr}`, margin, y + 6);
+        
+        y += 15;
+        if (y > 270) {
+          doc.addPage();
+          y = 20;
+        }
+      });
+
+      doc.save(`Escala_Proximos_Plantoes.pdf`);
+    } catch (err) {
+      console.error('Erro PDF:', err);
+      alert('Erro ao gerar PDF.');
     }
   };
 
   return (
-    <button 
-      onClick={handleShare}
-      style={{ 
-        background: 'none', 
-        border: 'none', 
-        color: 'var(--accent-blue)', 
-        fontSize: '13px', 
-        fontWeight: 700, 
-        cursor: 'pointer', 
-        padding: 0,
-      }}
-    >
-      [ Compartilhar ]
-    </button>
+    <>
+      <button 
+        onClick={() => setShowModal(true)}
+        style={{ 
+          background: 'none', 
+          border: 'none', 
+          color: 'var(--accent-blue)', 
+          fontSize: '13px', 
+          fontWeight: 700, 
+          cursor: 'pointer', 
+          padding: 0,
+        }}
+      >
+        [ Compartilhar ]
+      </button>
+
+      {showModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', zIndex: 100000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+          <div className="card" style={{ maxWidth: 450, width: '100%', borderRadius: 24, overflow: 'hidden' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <h3 style={{ fontSize: 18, fontWeight: 800, margin: 0 }}>Prévia da Escala</h3>
+              <button onClick={() => setShowModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
+                <X size={20} />
+              </button>
+            </div>
+
+            <div style={{ 
+              background: 'var(--bg-secondary)', 
+              padding: 16, 
+              borderRadius: 16, 
+              border: '1px solid var(--border-subtle)',
+              marginBottom: 24,
+              maxHeight: 250,
+              overflowY: 'auto',
+              whiteSpace: 'pre-wrap',
+              fontSize: 14,
+              color: 'var(--text-primary)',
+              lineHeight: 1.6
+            }}>
+              {getShareText() || "Nenhum plantão agendado."}
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <button onClick={handleDirectShare} className="btn btn-primary" style={{ justifyContent: 'center', gap: 10, padding: 14, borderRadius: 12 }}>
+                <Send size={18} /> Compartilhar Direto
+              </button>
+              
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <button onClick={handleCopy} className="btn btn-secondary" style={{ justifyContent: 'center', gap: 8, padding: 12, borderRadius: 12, fontSize: 13 }}>
+                  <Copy size={16} /> Copiar Texto
+                </button>
+                <button onClick={handleExportPDF} className="btn btn-secondary" style={{ justifyContent: 'center', gap: 8, padding: 12, borderRadius: 12, fontSize: 13 }}>
+                  <FileText size={16} /> Gerar PDF
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
