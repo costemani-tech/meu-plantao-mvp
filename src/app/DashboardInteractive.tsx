@@ -356,17 +356,19 @@ export function ShareAgendaButton({ proximos, userName, totalGanhos, isPro }: { 
             </div>
 
             <div style={{ 
-              padding: '0 12px 24px 12px',
-              maxHeight: 420,
+              padding: '0 8px 24px 8px',
+              maxHeight: 400,
               overflowY: 'auto',
               display: 'flex',
               justifyContent: 'center',
-              background: 'var(--bg-primary)'
+              background: 'var(--bg-primary)',
+              overflowX: 'hidden'
             }}>
               <div style={{ 
-                transform: 'scale(0.85)', 
+                transform: 'scale(0.78)', 
                 transformOrigin: 'top center',
-                marginBottom: -60 // Compensate for scale shrinkage
+                marginBottom: -100,
+                width: '400px'
               }}>
                 <ShareableScheduleCard
                   userName={userName}
@@ -379,22 +381,34 @@ export function ShareAgendaButton({ proximos, userName, totalGanhos, isPro }: { 
             </div>
 
             <div style={{ padding: 24, background: 'var(--bg-secondary)', borderTop: '1px solid var(--border-subtle)' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                <button onClick={handleShareImage} disabled={isGeneratingImage} className="btn btn-primary" style={{ justifyContent: 'center', gap: 10, padding: 14, borderRadius: 12, background: 'linear-gradient(to right, #1d4ed8, #3b82f6)' }}>
-                  <ImageIcon size={18} /> {isGeneratingImage ? 'Gerando...' : (isPro ? 'Compartilhar Imagem PRO' : 'Compartilhar Imagem')}
-                </button>
+                {isPro && (
+                  <>
+                    <button onClick={handleShareImage} disabled={isGeneratingImage} className="btn btn-primary" style={{ justifyContent: 'center', gap: 10, padding: 14, borderRadius: 12, background: 'linear-gradient(to right, #1d4ed8, #3b82f6)' }}>
+                      <ImageIcon size={18} /> {isGeneratingImage ? 'Gerando...' : 'Compartilhar Imagem PRO'}
+                    </button>
 
-                <button onClick={handleDirectShare} className="btn btn-secondary" style={{ justifyContent: 'center', gap: 10, padding: 14, borderRadius: 12 }}>
-                  <Send size={18} /> Compartilhar Texto Direto
-                </button>
+                    <button onClick={handleDirectShare} className="btn btn-secondary" style={{ justifyContent: 'center', gap: 10, padding: 14, borderRadius: 12 }}>
+                      <Send size={18} /> Compartilhar Texto Direto
+                    </button>
+                  </>
+                )}
                 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                  <button onClick={handleCopy} className="btn btn-secondary" style={{ justifyContent: 'center', gap: 8, padding: 12, borderRadius: 12, fontSize: 13 }}>
-                    <Copy size={16} /> Copiar Texto
-                  </button>
-                  <button onClick={handleExportPDF} className="btn btn-secondary" style={{ justifyContent: 'center', gap: 8, padding: 12, borderRadius: 12, fontSize: 13 }}>
-                    <FileText size={16} /> Gerar PDF
-                  </button>
+                <div style={{ display: 'grid', gridTemplateColumns: isPro ? '1fr 1fr' : '1fr', gap: 12 }}>
+                  {!isPro && (
+                    <button onClick={handleExportPDF} className="btn btn-primary" style={{ justifyContent: 'center', gap: 10, padding: 14, borderRadius: 12, background: 'linear-gradient(to right, #1d4ed8, #3b82f6)' }}>
+                      <FileText size={18} /> Gerar PDF Grátis
+                    </button>
+                  )}
+                  {isPro && (
+                    <>
+                      <button onClick={handleCopy} className="btn btn-secondary" style={{ justifyContent: 'center', gap: 8, padding: 12, borderRadius: 12, fontSize: 13 }}>
+                        <Copy size={16} /> Copiar Texto
+                      </button>
+                      <button onClick={handleExportPDF} className="btn btn-secondary" style={{ justifyContent: 'center', gap: 8, padding: 12, borderRadius: 12, fontSize: 13 }}>
+                        <FileText size={16} /> Gerar PDF
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
 

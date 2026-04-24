@@ -168,46 +168,19 @@ export const ShareableScheduleCard = forwardRef<HTMLDivElement, ShareableSchedul
         </div>
       )}
 
-      {/* Footer Branding (Condicional) */}
-      {!isPro ? (
-        <div style={{
-          padding: '32px 24px',
-          textAlign: 'center',
-          background: '#eff6ff', // bg-blue-50
-          borderTop: '1px solid #dbeafe', // border-blue-100
-          position: 'relative',
-          zIndex: 1
-        }}>
-          <div style={{ 
-            fontSize: '18px', 
-            fontWeight: 900, 
-            color: '#1e40af', // Blue-800
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '8px'
-          }}>
-            🚀 Escala gerada gratuitamente pelo app Meu Plantão.
-          </div>
-          <div style={{ fontSize: '15px', color: '#2563eb', marginTop: '12px', fontWeight: 500, lineHeight: 1.4 }}>
-            Organize a sua também pelo nosso aplicativo!<br/>
-            Acesse <span style={{ fontWeight: 800, textDecoration: 'underline' }}>meuplantao.com.br</span>
-          </div>
-        </div>
-      ) : (
-        <div style={{
-          padding: '20px 16px',
-          textAlign: 'center',
-          fontSize: '12px',
-          color: '#94a3b8',
-          background: 'rgba(255, 255, 255, 0.5)',
-          borderTop: '1px solid #e2e8f0',
-          position: 'relative',
-          zIndex: 1
-        }}>
-          Gerado por <strong>meuplantao.com.br</strong>
-        </div>
-      )}
+      {/* Footer Branding - Minimalista para todos (Marketing agressivo apenas no PDF) */}
+      <div style={{
+        padding: '20px 16px',
+        textAlign: 'center',
+        fontSize: '12px',
+        color: '#94a3b8',
+        background: 'rgba(255, 255, 255, 0.5)',
+        borderTop: '1px solid #e2e8f0',
+        position: 'relative',
+        zIndex: 1
+      }}>
+        Gerado por <strong>meuplantao.com.br</strong>
+      </div>
     </div>
   );
 });
