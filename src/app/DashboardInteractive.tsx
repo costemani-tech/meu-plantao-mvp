@@ -346,59 +346,25 @@ export function ShareAgendaButton({ proximos, userName, totalGanhos, isPro }: { 
             </div>
 
             <div style={{ 
-              padding: '0 24px 24px 24px',
-              maxHeight: 380,
-              overflowY: 'auto'
+              padding: '0 12px 24px 12px',
+              maxHeight: 420,
+              overflowY: 'auto',
+              display: 'flex',
+              justifyContent: 'center',
+              background: 'var(--bg-primary)'
             }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                {proximos.length > 0 ? proximos.map((p, idx) => {
-                  const localObj = Array.isArray(p.local) ? p.local[0] : p.local;
-                  const hour = new Date(p.data_hora_inicio).getHours();
-                  const isNight = hour >= 19 || hour < 5;
-                  
-                  return (
-                    <div key={p.id} style={{ 
-                      background: 'var(--bg-secondary)', 
-                      padding: 16, 
-                      borderRadius: 18, 
-                      border: '1px solid var(--border-subtle)',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: 8,
-                      position: 'relative',
-                      overflow: 'hidden'
-                    }}>
-                      <div style={{ position: 'absolute', top: 0, left: 0, width: 4, height: '100%', background: localObj?.cor_calendario || '#2563eb' }} />
-                      
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontSize: 14, fontWeight: 800, color: 'var(--text-primary)' }}>{localObj?.nome || 'Local'}</span>
-                        <span style={{ 
-                          fontSize: 10, 
-                          fontWeight: 700, 
-                          padding: '4px 8px', 
-                          borderRadius: 8, 
-                          background: isNight ? 'rgba(139, 92, 246, 0.1)' : 'rgba(245, 158, 11, 0.1)',
-                          color: isNight ? '#8b5cf6' : '#d97706'
-                        }}>
-                          {isNight ? '🌙 Noturno' : '☀️ Diurno'}
-                        </span>
-                      </div>
-
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--text-secondary)' }}>
-                          <CalendarIcon size={14} color="var(--accent-blue)" />
-                          {formatRelativeShiftDate(p.data_hora_inicio).split(' • ')[0]}
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--text-secondary)' }}>
-                          <Clock size={14} color="var(--accent-blue)" />
-                          {formatBRTTime(p.data_hora_inicio)} às {formatBRTTime(p.data_hora_fim || new Date(new Date(p.data_hora_inicio).getTime() + 12 * 60 * 60 * 1000).toISOString())}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                }) : (
-                  <p style={{ textAlign: 'center', color: 'var(--text-muted)', padding: 20 }}>Nenhum plantão agendado.</p>
-                )}
+              <div style={{ 
+                transform: 'scale(0.85)', 
+                transformOrigin: 'top center',
+                marginBottom: -60 // Compensate for scale shrinkage
+              }}>
+                <ShareableScheduleCard
+                  userName={userName}
+                  monthYear={new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
+                  shifts={proximos}
+                  totalGanhos={totalGanhos}
+                  isPro={isPro}
+                />
               </div>
             </div>
 
