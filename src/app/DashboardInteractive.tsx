@@ -230,85 +230,92 @@ export function ShareAgendaButton({ proximos, userName, totalGanhos, isPro }: { 
       const pageH = doc.internal.pageSize.getHeight();
       const margin = 15;
       
-      // Fundo Claro (Tema Unificado)
-      doc.setFillColor(248, 250, 252); // Slate-50
+      // Fundo Branco (Igual ao Card)
+      doc.setFillColor(255, 255, 255);
       doc.rect(0, 0, pageW, pageH, 'F');
       
-      // Cabeçalho Premium Azul
+      // Cabeçalho Premium Azul (Mantendo degrade via cores sólidas se necessário, mas azul-600 é a base)
       doc.setFillColor(37, 99, 235); // Blue-600
-      doc.rect(0, 0, pageW, 30, 'F');
-      doc.setFontSize(22);
+      doc.rect(0, 0, pageW, 40, 'F');
+      doc.setFontSize(24);
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(255, 255, 255);
-      doc.text('Meu Plantão', margin, 16);
+      doc.text('Meu Plantão', pageW / 2, 18, { align: 'center' });
       
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(191, 219, 254); // Blue-200
-      doc.text(`Próximos Plantões  •  Gerado em ${new Date().toLocaleDateString('pt-BR')}`, margin, 23);
-
-      let y = 45;
       doc.setFontSize(11);
-      doc.setTextColor(30, 41, 59); // Slate-800
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(219, 234, 254); // Blue-100
+      doc.text('Sua agenda organizada e seus plantões sob controle', pageW / 2, 26, { align: 'center' });
+
+      let y = 55;
+      
+      // Identificação
+      doc.setFontSize(13);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(30, 41, 59);
+      doc.text(userName, margin, y);
+      
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(100, 116, 139);
+      const monthStr = new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+      doc.text(monthStr, pageW - margin, y, { align: 'right' });
+      
+      y += 12;
 
       proximos.forEach((p, i) => {
         const localObj = Array.isArray(p.local) ? p.local[0] : p.local;
         const info = getFullShiftInfo(p);
         
-        // Card Background com Borda Sutil
+        // Card Background com Sombra Sutil (usando um cinza muito claro)
         doc.setFillColor(255, 255, 255);
-        doc.setDrawColor(226, 232, 240); // Slate-200
-        doc.roundedRect(margin - 2, y - 8, pageW - (margin * 2) + 4, 18, 2, 2, 'FD');
+        doc.setDrawColor(241, 245, 249); // Slate-100
+        doc.roundedRect(margin - 2, y - 8, pageW - (margin * 2) + 4, 20, 3, 3, 'FD');
         
         // Linha decorativa lateral
         doc.setFillColor(localObj?.cor_calendario || '#2563eb');
-        doc.rect(margin, y - 8, 1.5, 18, 'F');
+        doc.rect(margin - 2, y - 8, 1.5, 20, 'F');
 
         doc.setFont('helvetica', 'bold');
-        doc.setTextColor(30, 41, 59);
+        doc.setTextColor(15, 23, 42); // Slate-900
+        doc.setFontSize(12);
         doc.text(`${localObj?.nome || 'Local de Trabalho'}`, margin + 6, y);
         
         doc.setFont('helvetica', 'normal');
-        doc.setFontSize(9);
+        doc.setFontSize(10);
         doc.setTextColor(71, 85, 105); // Slate-600
-        doc.text(`${info}`, margin + 6, y + 6);
+        doc.text(`${info}`, margin + 6, y + 7);
         
-        y += 25;
+        y += 28;
 
-        if (y > 240) {
+        if (y > 230) {
           doc.addPage();
-          doc.setFillColor(248, 250, 252);
-          doc.rect(0, 0, pageW, pageH, 'F');
           y = 20;
         }
       });
 
-      // Rodapé Branding (Condicional)
+      // Rodapé Branding (Condicional) - Fiel à Imagem 2
       const footerY = 275;
       if (!isPro) {
-        // Bloco de Marketing de Alto Impacto
-        doc.setFillColor(37, 99, 235); // Blue-600
-        doc.rect(0, footerY - 15, pageW, 40, 'F');
+        doc.setFillColor(239, 246, 255); // Blue-50
+        doc.rect(0, footerY - 10, pageW, 32, 'F');
+        doc.setDrawColor(219, 234, 254); // Blue-100
+        doc.line(0, footerY - 10, pageW, footerY - 10);
         
-        doc.setFontSize(16);
+        doc.setFontSize(13);
         doc.setFont('helvetica', 'bold');
-        doc.setTextColor(255, 255, 255);
-        doc.text('🚀 Escala gerada GRATUITAMENTE pelo app Meu Plantão', pageW / 2, footerY - 2, { align: 'center' });
+        doc.setTextColor(37, 99, 235); // Blue-600
+        doc.text('🚀 Escala gerada gratuitamente pelo app Meu Plantão.', pageW / 2, footerY + 5, { align: 'center' });
         
-        doc.setFontSize(12);
+        doc.setFontSize(10);
         doc.setFont('helvetica', 'normal');
-        doc.setTextColor(191, 219, 254); // Blue-100
-        doc.text('Organize seus plantões e ganhos agora mesmo!', pageW / 2, footerY + 6, { align: 'center' });
-        
-        doc.setFontSize(14);
-        doc.setFont('helvetica', 'bold');
-        doc.setTextColor(255, 255, 255);
-        doc.text('Acesse: meuplantao.com.br', pageW / 2, footerY + 15, { align: 'center' });
+        doc.setTextColor(59, 130, 246); // Blue-500
+        doc.text('Organize a sua também em meuplantao.com.br', pageW / 2, footerY + 12, { align: 'center' });
       } else {
         doc.setFontSize(10);
         doc.setFont('helvetica', 'normal');
         doc.setTextColor(148, 163, 184); // Slate-400
-        doc.text('Gerado por meuplantao.com.br', pageW / 2, footerY + 15, { align: 'center' });
+        doc.text('Gerado por meuplantao.com.br', pageW / 2, footerY + 10, { align: 'center' });
       }
 
       doc.save(`Escala_Meu_Plantao.pdf`);
