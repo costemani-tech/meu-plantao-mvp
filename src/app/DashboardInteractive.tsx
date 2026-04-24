@@ -286,19 +286,21 @@ export function ShareAgendaButton({ proximos, userName, totalGanhos, isPro }: { 
       const footerY = 280;
       if (!isPro) {
         doc.setFillColor(239, 246, 255); // Blue-50
-        doc.rect(0, footerY - 10, pageW, 30, 'F');
+        doc.rect(0, footerY - 12, pageW, 32, 'F');
         doc.setDrawColor(219, 234, 254); // Blue-100
-        doc.line(0, footerY - 10, pageW, footerY - 10);
+        doc.line(0, footerY - 12, pageW, footerY - 12);
         
-        doc.setFontSize(12);
+        doc.setFontSize(13);
         doc.setFont('helvetica', 'bold');
-        doc.setTextColor(37, 99, 235); // Blue-600
-        doc.text('🚀 Escala gerada gratuitamente pelo app Meu Plantão.', pageW / 2, footerY, { align: 'center' });
+        doc.setTextColor(30, 58, 138); // Blue-800
+        doc.text('🚀 Escala gerada gratuitamente pelo app Meu Plantão.', pageW / 2, footerY - 2, { align: 'center' });
         
-        doc.setFontSize(10);
+        doc.setFontSize(11);
         doc.setFont('helvetica', 'normal');
-        doc.setTextColor(59, 130, 246); // Blue-500
-        doc.text('Organize a sua também em meuplantao.com.br', pageW / 2, footerY + 7, { align: 'center' });
+        doc.setTextColor(37, 99, 235); // Blue-600
+        doc.text('Organize a sua também pelo nosso aplicativo!', pageW / 2, footerY + 5, { align: 'center' });
+        doc.setFont('helvetica', 'bold');
+        doc.text('Acesse meuplantao.com.br', pageW / 2, footerY + 11, { align: 'center' });
       } else {
         doc.setFontSize(9);
         doc.setFont('helvetica', 'normal');

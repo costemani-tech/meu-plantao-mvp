@@ -80,7 +80,7 @@ export const ShareableScheduleCard = forwardRef<HTMLDivElement, ShareableSchedul
           Dr(a). {userName}
         </div>
         <div style={{ fontWeight: 600, fontSize: '13px', color: '#64748b' }}>
-          {monthYear}
+          {!isPro ? `${monthYear} • ${shifts.length} Plantões` : monthYear}
         </div>
       </div>
 
@@ -171,18 +171,27 @@ export const ShareableScheduleCard = forwardRef<HTMLDivElement, ShareableSchedul
       {/* Footer Branding (Condicional) */}
       {!isPro ? (
         <div style={{
-          padding: '24px 16px',
+          padding: '32px 24px',
           textAlign: 'center',
           background: '#eff6ff', // bg-blue-50
           borderTop: '1px solid #dbeafe', // border-blue-100
           position: 'relative',
           zIndex: 1
         }}>
-          <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#2563eb' }}>
+          <div style={{ 
+            fontSize: '18px', 
+            fontWeight: 900, 
+            color: '#1e40af', // Blue-800
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px'
+          }}>
             🚀 Escala gerada gratuitamente pelo app Meu Plantão.
           </div>
-          <div style={{ fontSize: '14px', color: '#3b82f6', marginTop: '4px' }}>
-            Organize a sua também em <span style={{ fontWeight: '600', textDecoration: 'underline' }}>meuplantao.com.br</span>
+          <div style={{ fontSize: '15px', color: '#2563eb', marginTop: '12px', fontWeight: 500, lineHeight: 1.4 }}>
+            Organize a sua também pelo nosso aplicativo!<br/>
+            Acesse <span style={{ fontWeight: 800, textDecoration: 'underline' }}>meuplantao.com.br</span>
           </div>
         </div>
       ) : (
