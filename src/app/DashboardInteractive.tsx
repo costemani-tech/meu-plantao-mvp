@@ -423,7 +423,6 @@ export function ShareAgendaButton({ proximos, userName, totalGanhos, isPro }: { 
                   isPro={isPro}
                 />
               </div>
-            </div>
           </div>
         </div>
       )}
