@@ -230,24 +230,39 @@ export function ShareAgendaButton({ proximos, userName, totalGanhos, isPro }: { 
       const pageH = doc.internal.pageSize.getHeight();
       const margin = 15;
       
-      // Fundo Branco (Igual ao Card)
-      doc.setFillColor(255, 255, 255);
+      // Fundo Suave (Slate-50)
+      doc.setFillColor(248, 250, 252);
       doc.rect(0, 0, pageW, pageH, 'F');
       
-      // Cabeçalho Premium Azul (Mantendo degrade via cores sólidas se necessário, mas azul-600 é a base)
-      doc.setFillColor(37, 99, 235); // Blue-600
-      doc.rect(0, 0, pageW, 40, 'F');
-      doc.setFontSize(24);
+      // Marca d'água de Fundo (Texto grande, opacidade muito baixa)
+      doc.setTextColor(226, 232, 240); // Slate-200
+      doc.setFontSize(80);
       doc.setFont('helvetica', 'bold');
-      doc.setTextColor(255, 255, 255);
-      doc.text('Meu Plantão', pageW / 2, 18, { align: 'center' });
+      doc.saveGraphicsState();
+      // Simular opacidade via cor clara, já que jsPDF standard não tem setAlpha fácil sem plugins
+      doc.text('MEU PLANTÃO', pageW / 2, pageH / 2, { align: 'center', angle: 45 });
+      doc.restoreGraphicsState();
+
+      // Cabeçalho Premium Clean
+      doc.setFillColor(255, 255, 255);
+      doc.rect(0, 0, pageW, 45, 'F');
+      doc.setFillColor(37, 99, 235); // Blue-600
+      doc.rect(0, 0, pageW, 3, 'F'); // Barra superior fina
+
+      doc.setFontSize(26);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(37, 99, 235);
+      doc.text('Meu Plantão', pageW / 2, 20, { align: 'center' });
       
       doc.setFontSize(11);
       doc.setFont('helvetica', 'normal');
-      doc.setTextColor(219, 234, 254); // Blue-100
-      doc.text('Sua agenda organizada e seus plantões sob controle', pageW / 2, 26, { align: 'center' });
+      doc.setTextColor(100, 116, 139); // Slate-500
+      doc.text('Sua agenda organizada e seus plantões sob controle', pageW / 2, 28, { align: 'center' });
+      
+      doc.setDrawColor(241, 245, 249);
+      doc.line(margin, 36, pageW - margin, 36);
 
-      let y = 55;
+      let y = 60;
       
       // Identificação
       doc.setFontSize(13);
@@ -290,6 +305,13 @@ export function ShareAgendaButton({ proximos, userName, totalGanhos, isPro }: { 
 
         if (y > 230) {
           doc.addPage();
+          // Repetir Fundo e Marca d'água
+          doc.setFillColor(248, 250, 252);
+          doc.rect(0, 0, pageW, pageH, 'F');
+          doc.setTextColor(226, 232, 240);
+          doc.setFontSize(80);
+          doc.setFont('helvetica', 'bold');
+          doc.text('MEU PLANTÃO', pageW / 2, pageH / 2, { align: 'center', angle: 45 });
           y = 20;
         }
       });
