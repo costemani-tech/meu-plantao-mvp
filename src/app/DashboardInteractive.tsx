@@ -67,16 +67,78 @@ export function DashboardInteractive({ isPro, hasLocations = true }: { isPro: bo
 
       {/* MODAL PRO PAYWALL */}
       {showProModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-          <div className="card" style={{ maxWidth: 400, width: '100%', textAlign: 'center', borderRadius: '24px' }}>
-            <span style={{ fontSize: 48, display: 'block', marginBottom: 16 }}>⭐</span>
-            <h2 style={{ fontSize: 20, fontWeight: 800, marginBottom: 8, color: 'var(--text-primary)' }}>Upgrade para o Pro</h2>
-            <p style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 24, lineHeight: 1.5 }}>
-              Desbloqueie recursos exclusivos como controle financeiro, exportação de escala em PDF e locais ilimitados.
+        <div style={{ position: 'fixed', inset: 0, zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+          {/* Background Watermark Identidade */}
+          <div style={{ 
+            position: 'absolute', inset: 0, 
+            background: 'url(/capa.jpeg), rgba(0,0,0,0.4)', 
+            backgroundSize: 'cover', backgroundPosition: 'center', backgroundBlendMode: 'overlay',
+            opacity: 0.15, zIndex: -1 
+          }} />
+          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', zIndex: -1 }} />
+
+          <div className="card" style={{ maxWidth: 420, width: '100%', textAlign: 'center', borderRadius: '32px', padding: '40px 32px', border: 'none', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)' }}>
+            {/* Logo Logo */}
+            <div style={{ fontSize: 14, fontWeight: 900, color: 'var(--accent-blue)', textTransform: 'uppercase', letterSpacing: 2, marginBottom: 8 }}>Meu Plantão</div>
+            
+            <h2 style={{ fontSize: 24, fontWeight: 900, marginBottom: 24, color: '#001a41', lineHeight: 1.2 }}>
+              💎 Leve seu controle para outro nível
+            </h2>
+
+            {/* Minicards de Benefícios */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 32, textAlign: 'left' }}>
+              {[
+                { title: 'Previsão Financeira', desc: 'Saiba exatamente quanto vai receber no mês.' },
+                { title: 'Escala Premium', desc: 'Gere PDFs e imagens profissionais para compartilhar.' },
+                { title: 'Controle Ilimitado', desc: 'Adicione quantos locais e plantões precisar.' }
+              ].map((b, i) => (
+                <div key={i} style={{ 
+                  background: '#eff6ff', // blue-50
+                  padding: '16px',
+                  borderRadius: '16px',
+                  borderLeft: '4px solid #3b82f6', // blue-500
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: 12
+                }}>
+                  <div style={{ color: '#3b82f6', marginTop: 2 }}>✅</div>
+                  <div>
+                    <div style={{ fontWeight: 800, fontSize: 14, color: '#1e3a8a' }}>{b.title}</div>
+                    <div style={{ fontSize: 12, color: '#60a5fa' }}>{b.desc}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <p style={{ fontSize: 18, fontWeight: 700, color: '#1e293b', marginBottom: 24, lineHeight: 1.4 }}>
+              🚀 Usado por profissionais para organizar plantões com mais controle.
             </p>
-            <div style={{ display: 'flex', gap: 12 }}>
-              <button className="btn btn-secondary" style={{ flex: 1, justifyContent: 'center', borderRadius: '12px' }} onClick={() => setShowProModal('')}>Voltar</button>
-              <button className="btn btn-primary" style={{ flex: 1, justifyContent: 'center', background: 'linear-gradient(to right, #f59e0b, #d97706)', border: 'none', borderRadius: '12px', fontWeight: 700 }} onClick={() => setShowProModal('')}>Assinar Pro</button>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <button 
+                className="btn btn-primary" 
+                style={{ 
+                  width: '100%', justifyContent: 'center', 
+                  background: 'linear-gradient(to right, #2563eb, #1e40af)', 
+                  border: 'none', borderRadius: '100px', 
+                  padding: '18px', fontSize: 16, fontWeight: 900,
+                  boxShadow: '0 10px 15px -3px rgba(37, 99, 235, 0.3)'
+                }} 
+                onClick={() => setShowProModal('')}
+              >
+                🚀 Desbloquear agora
+              </button>
+              
+              <button 
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }} 
+                onClick={() => setShowProModal('')}
+              >
+                Talvez mais tarde
+              </button>
+            </div>
+
+            <div style={{ marginTop: 24, fontSize: 11, color: '#94a3b8', fontWeight: 500 }}>
+              Acesso imediato a todas as funcionalidades.
             </div>
           </div>
         </div>
@@ -107,18 +169,80 @@ export function DesbloquearGanhosBtn() {
         [ Desbloquear ganhos 💰 ]
       </button>
 
-      {/* MODAL PRO PAYWALL - Duplicated for simplicity but could be hoisted */}
+      {/* MODAL PRO PAYWALL */}
       {showProModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-          <div className="card" style={{ maxWidth: 400, width: '100%', textAlign: 'center', borderRadius: '24px' }}>
-            <span style={{ fontSize: 48, display: 'block', marginBottom: 16 }}>⭐</span>
-            <h2 style={{ fontSize: 20, fontWeight: 800, marginBottom: 8, color: 'var(--text-primary)' }}>Upgrade para o Pro</h2>
-            <p style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 24, lineHeight: 1.5 }}>
-              Desbloqueie recursos exclusivos como controle financeiro, exportação de escala em PDF e locais ilimitados.
+        <div style={{ position: 'fixed', inset: 0, zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+          {/* Background Watermark Identidade */}
+          <div style={{ 
+            position: 'absolute', inset: 0, 
+            background: 'url(/capa.jpeg), rgba(0,0,0,0.4)', 
+            backgroundSize: 'cover', backgroundPosition: 'center', backgroundBlendMode: 'overlay',
+            opacity: 0.15, zIndex: -1 
+          }} />
+          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', zIndex: -1 }} />
+
+          <div className="card" style={{ maxWidth: 420, width: '100%', textAlign: 'center', borderRadius: '32px', padding: '40px 32px', border: 'none', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)' }}>
+            {/* Logo Logo */}
+            <div style={{ fontSize: 14, fontWeight: 900, color: 'var(--accent-blue)', textTransform: 'uppercase', letterSpacing: 2, marginBottom: 8 }}>Meu Plantão</div>
+            
+            <h2 style={{ fontSize: 24, fontWeight: 900, marginBottom: 24, color: '#001a41', lineHeight: 1.2 }}>
+              💎 Leve seu controle para outro nível
+            </h2>
+
+            {/* Minicards de Benefícios */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 32, textAlign: 'left' }}>
+              {[
+                { title: 'Previsão Financeira', desc: 'Saiba exatamente quanto vai receber no mês.' },
+                { title: 'Escala Premium', desc: 'Gere PDFs e imagens profissionais para compartilhar.' },
+                { title: 'Controle Ilimitado', desc: 'Adicione quantos locais e plantões precisar.' }
+              ].map((b, i) => (
+                <div key={i} style={{ 
+                  background: '#eff6ff', // blue-50
+                  padding: '16px',
+                  borderRadius: '16px',
+                  borderLeft: '4px solid #3b82f6', // blue-500
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: 12
+                }}>
+                  <div style={{ color: '#3b82f6', marginTop: 2 }}>✅</div>
+                  <div>
+                    <div style={{ fontWeight: 800, fontSize: 14, color: '#1e3a8a' }}>{b.title}</div>
+                    <div style={{ fontSize: 12, color: '#60a5fa' }}>{b.desc}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <p style={{ fontSize: 18, fontWeight: 700, color: '#1e293b', marginBottom: 24, lineHeight: 1.4 }}>
+              🚀 Usado por profissionais para organizar plantões com mais controle.
             </p>
-            <div style={{ display: 'flex', gap: 12 }}>
-              <button className="btn btn-secondary" style={{ flex: 1, justifyContent: 'center', borderRadius: '12px' }} onClick={() => setShowProModal('')}>Voltar</button>
-              <button className="btn btn-primary" style={{ flex: 1, justifyContent: 'center', background: 'linear-gradient(to right, #f59e0b, #d97706)', border: 'none', borderRadius: '12px', fontWeight: 700 }} onClick={() => setShowProModal('')}>Assinar Pro</button>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <button 
+                className="btn btn-primary" 
+                style={{ 
+                  width: '100%', justifyContent: 'center', 
+                  background: 'linear-gradient(to right, #2563eb, #1e40af)', 
+                  border: 'none', borderRadius: '100px', 
+                  padding: '18px', fontSize: 16, fontWeight: 900,
+                  boxShadow: '0 10px 15px -3px rgba(37, 99, 235, 0.3)'
+                }} 
+                onClick={() => setShowProModal('')}
+              >
+                🚀 Desbloquear agora
+              </button>
+              
+              <button 
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }} 
+                onClick={() => setShowProModal('')}
+              >
+                Talvez mais tarde
+              </button>
+            </div>
+
+            <div style={{ marginTop: 24, fontSize: 11, color: '#94a3b8', fontWeight: 500 }}>
+              Acesso imediato a todas as funcionalidades.
             </div>
           </div>
         </div>
