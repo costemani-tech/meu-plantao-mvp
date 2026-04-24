@@ -94,15 +94,15 @@ export const ShareableScheduleCard = forwardRef<HTMLDivElement, ShareableSchedul
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        opacity: 0.03,
+        opacity: 0.08,
         transform: 'rotate(-30deg)',
         userSelect: 'none'
       }}>
-        <div style={{ fontSize: '40px', fontWeight: 900, whiteSpace: 'nowrap' }}>MEU PLANTÃO</div>
-        <div style={{ fontSize: '16px', fontWeight: 700, whiteSpace: 'nowrap' }}>Sua agenda organizada</div>
-        <div style={{ fontSize: '40px', fontWeight: 900, whiteSpace: 'nowrap', marginTop: '40px' }}>MEU PLANTÃO</div>
-        <div style={{ fontSize: '16px', fontWeight: 700, whiteSpace: 'nowrap' }}>Plantões sob controle</div>
-        <div style={{ fontSize: '40px', fontWeight: 900, whiteSpace: 'nowrap', marginTop: '40px' }}>MEU PLANTÃO</div>
+        <img src="/icons/logo_original.png" alt="" style={{ width: '140px', marginBottom: '10px', filter: 'grayscale(100%)' }} />
+        <div style={{ fontSize: '40px', fontWeight: 900, whiteSpace: 'nowrap', color: '#64748b' }}>MEU PLANTÃO</div>
+        <div style={{ fontSize: '16px', fontWeight: 700, whiteSpace: 'nowrap', color: '#64748b' }}>Sua agenda organizada</div>
+        <div style={{ fontSize: '40px', fontWeight: 900, whiteSpace: 'nowrap', marginTop: '60px', color: '#64748b' }}>MEU PLANTÃO</div>
+        <div style={{ fontSize: '16px', fontWeight: 700, whiteSpace: 'nowrap', color: '#64748b' }}>Plantões sob controle</div>
       </div>
 
       {/* Shifts List */}

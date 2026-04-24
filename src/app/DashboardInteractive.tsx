@@ -243,15 +243,14 @@ export function ShareAgendaButton({ proximos, userName, totalGanhos, isPro }: { 
       doc.text(`Próximos Plantões  •  Gerado em ${new Date().toLocaleDateString('pt-BR')}`, margin, 23);
 
       // Marca d'água de fundo (Watermark)
-      doc.saveGraphicsState();
-      doc.setGState(new (doc as any).GState({ opacity: 0.05 }));
-      doc.setTextColor(100, 100, 100);
+      doc.setTextColor(235, 235, 235); // Cinza muito claro, mas visível
       doc.setFontSize(60);
       doc.setFont('helvetica', 'bold');
       doc.text('MEU PLANTÃO', pageW / 2, 150, { align: 'center', angle: -30 });
       doc.setFontSize(25);
       doc.text('Sua agenda organizada', pageW / 2, 165, { align: 'center', angle: -30 });
-      doc.restoreGraphicsState();
+      
+      doc.setTextColor(30, 41, 59); // Restaurar cor do texto principal
 
       let y = 45;
       doc.setFontSize(11);
