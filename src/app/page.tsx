@@ -171,7 +171,7 @@ async function UpcomingShifts({ userId, userName, totalGanhos }: { userId: strin
               [ Ver agenda ]
             </span>
           </Link>
-          <ShareAgendaButton proximos={proximos || []} userName={userName} totalGanhos={totalGanhos} />
+          <ShareAgendaButton proximos={proximos || []} userName={userName} totalGanhos={totalGanhos} isPro={isPro} />
         </div>
       </div>
 

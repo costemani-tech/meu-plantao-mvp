@@ -127,7 +127,7 @@ export function DesbloquearGanhosBtn() {
   );
 }
 
-export function ShareAgendaButton({ proximos, userName, totalGanhos }: { proximos: any[], userName: string, totalGanhos: number }) {
+export function ShareAgendaButton({ proximos, userName, totalGanhos, isPro }: { proximos: any[], userName: string, totalGanhos: number, isPro: boolean }) {
   const [showModal, setShowModal] = useState(false);
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -188,10 +188,14 @@ export function ShareAgendaButton({ proximos, userName, totalGanhos }: { proximo
 
   const getShareText = () => {
     if (!proximos || proximos.length === 0) return "";
-    return "Minha escala de plantões:\n" + proximos.map(p => {
+    const list = proximos.map(p => {
       const localObj = Array.isArray(p.local) ? p.local[0] : p.local;
       return `${localObj?.nome || 'Local'}: ${getFullShiftInfo(p)}`;
     }).join('\n');
+
+    if (isPro) return "Minha escala de plantões:\n" + list;
+
+    return `Minha escala de plantões:\n${list}\n\n🚀 Escala gerada gratuitamente pelo app Meu Plantão. Organize a sua também em meuplantao.com.br`;
   };
 
   const handleCopy = async () => {
@@ -267,18 +271,25 @@ export function ShareAgendaButton({ proximos, userName, totalGanhos }: { proximo
         }
       });
 
-      // Rodapé Branding Viral
+      // Rodapé Branding (Condicional)
       const footerY = 280;
-      doc.setFillColor(239, 246, 255); // Blue-50
-      doc.rect(0, footerY - 5, pageW, 25, 'F');
-      
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'bold');
-      doc.setTextColor(37, 99, 235); // Blue-600
-      doc.text('🚀 Escala gerada gratuitamente pelo app Meu Plantão.', pageW / 2, footerY + 5, { align: 'center' });
-      doc.setFontSize(9);
-      doc.setFont('helvetica', 'normal');
-      doc.text('Organize a sua também em meuplantao.com.br', pageW / 2, footerY + 11, { align: 'center' });
+      if (!isPro) {
+        doc.setFillColor(239, 246, 255); // Blue-50
+        doc.rect(0, footerY - 5, pageW, 25, 'F');
+        
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(37, 99, 235); // Blue-600
+        doc.text('🚀 Escala gerada gratuitamente pelo app Meu Plantão.', pageW / 2, footerY + 5, { align: 'center' });
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'normal');
+        doc.text('Organize a sua também em meuplantao.com.br', pageW / 2, footerY + 11, { align: 'center' });
+      } else {
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(148, 163, 184); // Gray-400
+        doc.text('Gerado por meuplantao.com.br', pageW / 2, footerY + 10, { align: 'center' });
+      }
 
       doc.save(`Escala_Meu_Plantao.pdf`);
     } catch (err) {

@@ -162,19 +162,16 @@ export const ShareableScheduleCard = forwardRef<HTMLDivElement, ShareableSchedul
         </div>
       )}
 
-      {/* Footer Branding Viral */}
+      {/* Footer Branding Minimalista (Plano PRO) */}
       <div style={{
-        padding: '20px 16px',
+        padding: '16px',
         textAlign: 'center',
-        background: '#eff6ff', // Blue-50
-        borderTop: '1px solid #dbeafe',
+        fontSize: '11px',
+        color: '#94a3b8',
+        background: '#f8fafc',
+        borderTop: '1px solid #e2e8f0'
       }}>
-        <div style={{ fontSize: '13px', fontWeight: 800, color: '#2563eb', marginBottom: '4px' }}>
-          🚀 Escala gerada gratuitamente pelo app Meu Plantão.
-        </div>
-        <div style={{ fontSize: '11px', color: '#3b82f6' }}>
-          Organize a sua também em <strong>meuplantao.com.br</strong>
-        </div>
+        Gerado por <strong>meuplantao.com.br</strong>
       </div>
     </div>
   );
