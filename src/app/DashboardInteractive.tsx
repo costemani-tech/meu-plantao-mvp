@@ -88,9 +88,9 @@ export function DashboardInteractive({ isPro, hasLocations = true }: { isPro: bo
             {/* Minicards de Benefícios */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 32, textAlign: 'left' }}>
               {[
-                { title: 'Previsão Financeira', desc: 'Saiba exatamente quanto vai receber no mês.' },
-                { title: 'Escala Premium', desc: 'Gere PDFs e imagens profissionais para compartilhar.' },
-                { title: 'Controle Ilimitado', desc: 'Adicione quantos locais e plantões precisar.' }
+                { icon: '💰', title: 'Previsão Financeira', desc: 'Veja quanto vai receber no mês.' },
+                { icon: '📄', title: 'Escalas Premium', desc: 'Gere PDF profissional para envio.' },
+                { icon: '⚡', title: 'Controle Ilimitado', desc: 'Gestão total das suas escalas.' }
               ].map((b, i) => (
                 <div key={i} style={{ 
                   background: '#eff6ff', // blue-50
@@ -101,7 +101,7 @@ export function DashboardInteractive({ isPro, hasLocations = true }: { isPro: bo
                   alignItems: 'flex-start',
                   gap: 12
                 }}>
-                  <div style={{ color: '#3b82f6', marginTop: 2 }}>✅</div>
+                  <div style={{ fontSize: 18, marginTop: 2 }}>{b.icon}</div>
                   <div>
                     <div style={{ fontWeight: 800, fontSize: 14, color: '#1e3a8a' }}>{b.title}</div>
                     <div style={{ fontSize: 12, color: '#60a5fa' }}>{b.desc}</div>
@@ -192,9 +192,9 @@ export function DesbloquearGanhosBtn() {
             {/* Minicards de Benefícios */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 32, textAlign: 'left' }}>
               {[
-                { title: 'Previsão Financeira', desc: 'Saiba exatamente quanto vai receber no mês.' },
-                { title: 'Escala Premium', desc: 'Gere PDFs e imagens profissionais para compartilhar.' },
-                { title: 'Controle Ilimitado', desc: 'Adicione quantos locais e plantões precisar.' }
+                { icon: '💰', title: 'Previsão Financeira', desc: 'Veja quanto vai receber no mês.' },
+                { icon: '📄', title: 'Escalas Premium', desc: 'Gere PDF profissional para envio.' },
+                { icon: '⚡', title: 'Controle Ilimitado', desc: 'Gestão total das suas escalas.' }
               ].map((b, i) => (
                 <div key={i} style={{ 
                   background: '#eff6ff', // blue-50
@@ -205,7 +205,7 @@ export function DesbloquearGanhosBtn() {
                   alignItems: 'flex-start',
                   gap: 12
                 }}>
-                  <div style={{ color: '#3b82f6', marginTop: 2 }}>✅</div>
+                  <div style={{ fontSize: 18, marginTop: 2 }}>{b.icon}</div>
                   <div>
                     <div style={{ fontWeight: 800, fontSize: 14, color: '#1e3a8a' }}>{b.title}</div>
                     <div style={{ fontSize: 12, color: '#60a5fa' }}>{b.desc}</div>
