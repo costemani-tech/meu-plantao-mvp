@@ -166,7 +166,7 @@ async function UpcomingShifts({ userId }: { userId: string }) {
           Próximos Plantões
         </h3>
         <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
-          <Link href="/escalas" style={{ textDecoration: 'none' }}>
+          <Link href="/calendario" style={{ textDecoration: 'none' }}>
             <span style={{ color: 'var(--accent-blue)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
               [ Ver agenda ]
             </span>

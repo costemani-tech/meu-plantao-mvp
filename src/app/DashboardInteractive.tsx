@@ -126,18 +126,28 @@ export function DesbloquearGanhosBtn() {
 
 export function ShareAgendaButton({ proximos }: { proximos: any[] }) {
   const handleShare = async () => {
-    if (!proximos || proximos.length === 0) return;
+    if (!proximos || proximos.length === 0) {
+      alert("Nenhum plantão agendado para compartilhar.");
+      return;
+    }
 
     const text = "Minha escala de plantões:\n" + proximos.map(p => {
       const localObj = Array.isArray(p.local) ? p.local[0] : p.local;
-      const dataFormatada = formatRelativeShiftDate(p.data_hora_inicio);
-      return `- ${localObj?.nome || 'Local'}: ${dataFormatada}`;
+      const dataFormatada = formatRelativeShiftDate(p.data_hora_inicio).replace('•', '-');
+      return `${localObj?.nome || 'Local'}: ${dataFormatada}`;
     }).join('\n');
 
+    // Sempre tenta copiar para o clipboard (melhor para Desktop)
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch (err) {
+      console.error('Erro ao copiar:', err);
+    }
+
+    // Se tiver a API de share (Mobile), abre o menu
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'Minha Escala',
           text: text,
         });
       } catch (err) {
@@ -146,12 +156,7 @@ export function ShareAgendaButton({ proximos }: { proximos: any[] }) {
         }
       }
     } else {
-      try {
-        await navigator.clipboard.writeText(text);
-        alert('Escala copiada para a área de transferência!');
-      } catch (err) {
-        console.error('Erro ao copiar:', err);
-      }
+      alert('Escala copiada! Agora é só colar no WhatsApp.');
     }
   };
 
