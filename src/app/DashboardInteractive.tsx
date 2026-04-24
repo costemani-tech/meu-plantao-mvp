@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Plus, Star, Share2, FileText, Copy, X, Send, Calendar as CalendarIcon, Clock, Image as ImageIcon } from 'lucide-react';
 import jsPDF from 'jspdf';
@@ -11,6 +11,13 @@ import { ShareableScheduleCard } from '../components/ShareableScheduleCard';
 export function DashboardInteractive({ isPro, hasLocations = true }: { isPro: boolean, hasLocations?: boolean }) {
   const [showProModal, setShowProModal] = useState('');
   const router = useRouter();
+
+  // Auto-open Paywall para usuários Free
+  useEffect(() => {
+    if (!isPro) {
+      setShowProModal('Onload');
+    }
+  }, [isPro]);
 
   const handleFabClick = () => {
     if (!hasLocations) {
@@ -31,36 +38,36 @@ export function DashboardInteractive({ isPro, hasLocations = true }: { isPro: bo
         <Plus size={28} />
       </button>
 
-      {/* SEÇÃO PRO - DESTAQUES (Paywall PLG) */}
+      {/* SEÇÃO PRO - BANNER PREMIUM SaaS (Redesign Clean) */}
       {!isPro && (
         <div className="card" style={{ 
-          background: 'linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%)', 
-          border: '1px solid #FDE68A', 
+          background: '#ffffff', 
+          border: '1px solid #dbeafe', // blue-100
           borderRadius: '24px', 
           padding: '24px',
-          marginBottom: 32
+          marginBottom: 32,
+          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)',
+          textAlign: 'center'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-            <Star size={20} fill="#f59e0b" color="#f59e0b" />
-            <h3 style={{ fontSize: 16, fontWeight: 800, color: '#92400e', margin: 0 }}>Vantagens do Plano Pro</h3>
-          </div>
-          <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 20px 0', display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <li style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#b45309', fontWeight: 600 }}>
-              ✅ Relatórios financeiros detalhados
-            </li>
-            <li style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#b45309', fontWeight: 600 }}>
-              ✅ Exportação de escala em PDF oficial
-            </li>
-            <li style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#b45309', fontWeight: 600 }}>
-              ✅ Edição ilimitada de ciclos customizados
-            </li>
-          </ul>
+          <h3 style={{ fontSize: 18, fontWeight: 800, color: '#001a41', margin: '0 0 4px 0' }}>
+            💎 Leve seu controle para outro nível
+          </h3>
+          <p style={{ fontSize: 14, color: '#64748b', margin: '0 0 20px 0', fontWeight: 500 }}>
+            Desbloqueie a previsão financeira, relatórios em PDF e controle ilimitado.
+          </p>
+          
           <button 
             className="btn btn-primary" 
-            style={{ width: '100%', justifyContent: 'center', background: '#d97706', border: 'none', padding: '14px', borderRadius: '12px', fontWeight: 800 }}
-            onClick={() => setShowProModal('Assinatura')}
+            style={{ 
+              width: '100%', justifyContent: 'center', 
+              background: 'linear-gradient(to right, #2563eb, #1e40af)', 
+              border: 'none', padding: '16px', borderRadius: '14px', 
+              fontWeight: 900, fontSize: 15,
+              boxShadow: '0 10px 15px -3px rgba(37, 99, 235, 0.3)'
+            }}
+            onClick={() => setShowProModal('Banner')}
           >
-            Assinar Pro ⭐
+            🚀 Assinar PRO
           </button>
         </div>
       )}
