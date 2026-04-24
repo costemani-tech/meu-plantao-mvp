@@ -298,19 +298,19 @@ export function ShareAgendaButton({ proximos, userName, totalGanhos, isPro }: { 
       const footerY = 275;
       if (!isPro) {
         doc.setFillColor(239, 246, 255); // Blue-50
-        doc.rect(0, footerY - 10, pageW, 32, 'F');
+        doc.rect(0, footerY - 10, pageW, 35, 'F');
         doc.setDrawColor(219, 234, 254); // Blue-100
         doc.line(0, footerY - 10, pageW, footerY - 10);
         
-        doc.setFontSize(13);
+        doc.setFontSize(12);
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(37, 99, 235); // Blue-600
-        doc.text('🚀 Escala gerada gratuitamente pelo app Meu Plantão.', pageW / 2, footerY + 5, { align: 'center' });
+        doc.text('Escala gerada gratuitamente pelo app Meu Plantão.', pageW / 2, footerY + 6, { align: 'center' });
         
         doc.setFontSize(10);
         doc.setFont('helvetica', 'normal');
         doc.setTextColor(59, 130, 246); // Blue-500
-        doc.text('Organize a sua também em meuplantao.com.br', pageW / 2, footerY + 12, { align: 'center' });
+        doc.text('Organize a sua também em meuplantao.com.br', pageW / 2, footerY + 14, { align: 'center' });
       } else {
         doc.setFontSize(10);
         doc.setFont('helvetica', 'normal');
