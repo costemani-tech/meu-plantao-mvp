@@ -71,7 +71,7 @@ export function DashboardInteractive({ isPro, hasLocations = true }: { isPro: bo
           {/* Background Watermark Identidade */}
           <div style={{ 
             position: 'absolute', inset: 0, 
-            background: 'url(/capa.jpeg), rgba(0,0,0,0.4)', 
+            background: 'url(/icons/capa.jpeg), rgba(0,0,0,0.4)', 
             backgroundSize: 'cover', backgroundPosition: 'center', backgroundBlendMode: 'overlay',
             opacity: 0.15, zIndex: -1 
           }} />
@@ -175,7 +175,7 @@ export function DesbloquearGanhosBtn() {
           {/* Background Watermark Identidade */}
           <div style={{ 
             position: 'absolute', inset: 0, 
-            background: 'url(/capa.jpeg), rgba(0,0,0,0.4)', 
+            background: 'url(/icons/capa.jpeg), rgba(0,0,0,0.4)', 
             backgroundSize: 'cover', backgroundPosition: 'center', backgroundBlendMode: 'overlay',
             opacity: 0.15, zIndex: -1 
           }} />
@@ -319,7 +319,7 @@ export function ShareAgendaButton({ proximos, userName, totalGanhos, isPro }: { 
 
     if (isPro) return "Minha escala de plantões:\n" + list;
 
-    return `Minha escala de plantões:\n${list}\n\n🚀 Escala gerada gratuitamente pelo app Meu Plantão. Organize a sua também em meuplantao.com.br`;
+    return `Minha escala de plantões:\n${list}\n\nEscala gerada gratuitamente pelo app Meu Plantão. Organize a sua também em meuplantao.com.br`;
   };
 
   const handleCopy = async () => {
@@ -458,7 +458,7 @@ export function ShareAgendaButton({ proximos, userName, totalGanhos, isPro }: { 
         doc.setFontSize(11);
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(37, 99, 235); // Blue-600
-        doc.text('🚀 Escala gerada gratuitamente pelo app Meu Plantão.', pageW / 2, footerY - 2, { align: 'center' });
+        doc.text('Escala gerada gratuitamente pelo app Meu Plantão.', pageW / 2, footerY - 2, { align: 'center' });
         
         doc.setFontSize(9);
         doc.setFont('helvetica', 'normal');

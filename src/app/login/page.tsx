@@ -78,7 +78,7 @@ export default function LoginPage() {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      background: 'url(/capa.jpeg), linear-gradient(135deg, var(--bg-primary) 0%, #1a1e2d 100%)',
+      background: 'url(/icons/capa.jpeg), linear-gradient(135deg, var(--bg-primary) 0%, #1a1e2d 100%)',
       backgroundSize: 'cover',
       backgroundPosition: 'center',
       backgroundBlendMode: 'overlay',
