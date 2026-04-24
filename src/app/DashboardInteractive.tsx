@@ -2,9 +2,9 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, Star, Share2, FileText, Copy, X, Send } from 'lucide-react';
+import { Plus, Star, Share2, FileText, Copy, X, Send, Calendar as CalendarIcon, Clock } from 'lucide-react';
 import jsPDF from 'jspdf';
-import { formatRelativeShiftDate } from '../lib/date-utils';
+import { formatRelativeShiftDate, formatBRTTime } from '../lib/date-utils';
 
 export function DashboardInteractive({ isPro, hasLocations = true }: { isPro: boolean, hasLocations?: boolean }) {
   const [showProModal, setShowProModal] = useState('');
@@ -128,12 +128,24 @@ export function DesbloquearGanhosBtn() {
 export function ShareAgendaButton({ proximos }: { proximos: any[] }) {
   const [showModal, setShowModal] = useState(false);
 
+  const getShiftType = (startTime: string) => {
+    const hour = new Date(startTime).getHours();
+    return (hour >= 19 || hour < 5) ? "Plantão Noturno" : "Plantão Diurno";
+  };
+
+  const getFullShiftInfo = (p: any) => {
+    const start = formatBRTTime(p.data_hora_inicio);
+    const end = formatBRTTime(p.data_hora_fim || new Date(new Date(p.data_hora_inicio).getTime() + 12 * 60 * 60 * 1000).toISOString());
+    const dateStr = formatRelativeShiftDate(p.data_hora_inicio).split(' • ')[0];
+    const type = getShiftType(p.data_hora_inicio);
+    return `${dateStr} • ${start} às ${end} • ${type}`;
+  };
+
   const getShareText = () => {
     if (!proximos || proximos.length === 0) return "";
     return "Minha escala de plantões:\n" + proximos.map(p => {
       const localObj = Array.isArray(p.local) ? p.local[0] : p.local;
-      const dataFormatada = formatRelativeShiftDate(p.data_hora_inicio).replace('•', '-');
-      return `${localObj?.nome || 'Local'}: ${dataFormatada}`;
+      return `${localObj?.nome || 'Local'}: ${getFullShiftInfo(p)}`;
     }).join('\n');
   };
 
@@ -168,39 +180,62 @@ export function ShareAgendaButton({ proximos }: { proximos: any[] }) {
       const pageW = doc.internal.pageSize.getWidth();
       const margin = 15;
       
-      // Cabeçalho
-      doc.setFillColor(15, 23, 42);
-      doc.rect(0, 0, pageW, 25, 'F');
-      doc.setFontSize(16);
+      // Cabeçalho Premium Azul
+      doc.setFillColor(37, 99, 235); // Blue-600
+      doc.rect(0, 0, pageW, 30, 'F');
+      doc.setFontSize(22);
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(255, 255, 255);
-      doc.text('Próximos Plantões', margin, 12);
-      doc.setFontSize(9);
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(148, 163, 184);
-      doc.text(`Gerado em ${new Date().toLocaleDateString('pt-BR')}`, margin, 19);
-
-      let y = 35;
+      doc.text('Meu Plantão', margin, 16);
+      
       doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(191, 219, 254); // Blue-200
+      doc.text(`Próximos Plantões  •  Gerado em ${new Date().toLocaleDateString('pt-BR')}`, margin, 23);
+
+      let y = 45;
+      doc.setFontSize(11);
       doc.setTextColor(30, 41, 59);
 
       proximos.forEach((p, i) => {
         const localObj = Array.isArray(p.local) ? p.local[0] : p.local;
-        const dataStr = formatRelativeShiftDate(p.data_hora_inicio).replace('•', '-');
+        const info = getFullShiftInfo(p);
         
+        // Linha decorativa lateral
+        doc.setFillColor(localObj?.cor_calendario || '#2563eb');
+        doc.rect(margin, y - 5, 2, 14, 'F');
+
         doc.setFont('helvetica', 'bold');
-        doc.text(`${localObj?.nome || 'Local de Trabalho'}`, margin, y);
+        doc.text(`${localObj?.nome || 'Local de Trabalho'}`, margin + 6, y);
         doc.setFont('helvetica', 'normal');
-        doc.text(`${dataStr}`, margin, y + 6);
+        doc.setFontSize(9);
+        doc.setTextColor(71, 85, 105);
+        doc.text(`${info}`, margin + 6, y + 6);
         
-        y += 15;
-        if (y > 270) {
+        doc.setFontSize(11);
+        doc.setTextColor(30, 41, 59);
+        y += 22;
+
+        if (y > 250) {
           doc.addPage();
           y = 20;
         }
       });
 
-      doc.save(`Escala_Proximos_Plantoes.pdf`);
+      // Rodapé Branding Viral
+      const footerY = 280;
+      doc.setFillColor(239, 246, 255); // Blue-50
+      doc.rect(0, footerY - 5, pageW, 25, 'F');
+      
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(37, 99, 235); // Blue-600
+      doc.text('🚀 Escala gerada gratuitamente pelo app Meu Plantão.', pageW / 2, footerY + 5, { align: 'center' });
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'normal');
+      doc.text('Organize a sua também em meuplantao.com.br', pageW / 2, footerY + 11, { align: 'center' });
+
+      doc.save(`Escala_Meu_Plantao.pdf`);
     } catch (err) {
       console.error('Erro PDF:', err);
       alert('Erro ao gerar PDF.');
@@ -225,43 +260,89 @@ export function ShareAgendaButton({ proximos }: { proximos: any[] }) {
       </button>
 
       {showModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', zIndex: 100000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-          <div className="card" style={{ maxWidth: 450, width: '100%', borderRadius: 24, overflow: 'hidden' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-              <h3 style={{ fontSize: 18, fontWeight: 800, margin: 0 }}>Prévia da Escala</h3>
-              <button onClick={() => setShowModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)', zIndex: 100000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+          <div className="card" style={{ maxWidth: 480, width: '100%', borderRadius: 28, overflow: 'hidden', border: '1px solid var(--border-subtle)', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '24px 24px 16px 24px' }}>
+              <div>
+                <h3 style={{ fontSize: 18, fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>Prévia da Escala</h3>
+                <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Confira seus próximos plantões</p>
+              </div>
+              <button onClick={() => setShowModal(false)} style={{ background: 'var(--bg-secondary)', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', width: 36, height: 36, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <X size={20} />
               </button>
             </div>
 
             <div style={{ 
-              background: 'var(--bg-secondary)', 
-              padding: 16, 
-              borderRadius: 16, 
-              border: '1px solid var(--border-subtle)',
-              marginBottom: 24,
-              maxHeight: 250,
-              overflowY: 'auto',
-              whiteSpace: 'pre-wrap',
-              fontSize: 14,
-              color: 'var(--text-primary)',
-              lineHeight: 1.6
+              padding: '0 24px 24px 24px',
+              maxHeight: 380,
+              overflowY: 'auto'
             }}>
-              {getShareText() || "Nenhum plantão agendado."}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {proximos.length > 0 ? proximos.map((p, idx) => {
+                  const localObj = Array.isArray(p.local) ? p.local[0] : p.local;
+                  const hour = new Date(p.data_hora_inicio).getHours();
+                  const isNight = hour >= 19 || hour < 5;
+                  
+                  return (
+                    <div key={p.id} style={{ 
+                      background: 'var(--bg-secondary)', 
+                      padding: 16, 
+                      borderRadius: 18, 
+                      border: '1px solid var(--border-subtle)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 8,
+                      position: 'relative',
+                      overflow: 'hidden'
+                    }}>
+                      <div style={{ position: 'absolute', top: 0, left: 0, width: 4, height: '100%', background: localObj?.cor_calendario || '#2563eb' }} />
+                      
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: 14, fontWeight: 800, color: 'var(--text-primary)' }}>{localObj?.nome || 'Local'}</span>
+                        <span style={{ 
+                          fontSize: 10, 
+                          fontWeight: 700, 
+                          padding: '4px 8px', 
+                          borderRadius: 8, 
+                          background: isNight ? 'rgba(139, 92, 246, 0.1)' : 'rgba(245, 158, 11, 0.1)',
+                          color: isNight ? '#8b5cf6' : '#d97706'
+                        }}>
+                          {isNight ? '🌙 Noturno' : '☀️ Diurno'}
+                        </span>
+                      </div>
+
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--text-secondary)' }}>
+                          <CalendarIcon size={14} color="var(--accent-blue)" />
+                          {formatRelativeShiftDate(p.data_hora_inicio).split(' • ')[0]}
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--text-secondary)' }}>
+                          <Clock size={14} color="var(--accent-blue)" />
+                          {formatBRTTime(p.data_hora_inicio)} às {formatBRTTime(p.data_hora_fim || new Date(new Date(p.data_hora_inicio).getTime() + 12 * 60 * 60 * 1000).toISOString())}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                }) : (
+                  <p style={{ textAlign: 'center', color: 'var(--text-muted)', padding: 20 }}>Nenhum plantão agendado.</p>
+                )}
+              </div>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <button onClick={handleDirectShare} className="btn btn-primary" style={{ justifyContent: 'center', gap: 10, padding: 14, borderRadius: 12 }}>
-                <Send size={18} /> Compartilhar Direto
-              </button>
-              
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                <button onClick={handleCopy} className="btn btn-secondary" style={{ justifyContent: 'center', gap: 8, padding: 12, borderRadius: 12, fontSize: 13 }}>
-                  <Copy size={16} /> Copiar Texto
+            <div style={{ padding: 24, background: 'var(--bg-secondary)', borderTop: '1px solid var(--border-subtle)' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <button onClick={handleDirectShare} className="btn btn-primary" style={{ justifyContent: 'center', gap: 10, padding: '16px', borderRadius: 16, fontSize: 15, background: 'var(--accent-blue)', boxShadow: '0 4px 12px rgba(37, 99, 235, 0.2)' }}>
+                  <Send size={18} /> Compartilhar no WhatsApp
                 </button>
-                <button onClick={handleExportPDF} className="btn btn-secondary" style={{ justifyContent: 'center', gap: 8, padding: 12, borderRadius: 12, fontSize: 13 }}>
-                  <FileText size={16} /> Gerar PDF
-                </button>
+                
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  <button onClick={handleCopy} className="btn btn-secondary" style={{ justifyContent: 'center', gap: 8, padding: '14px', borderRadius: 14, fontSize: 13, background: 'var(--bg-primary)' }}>
+                    <Copy size={16} /> Copiar Texto
+                  </button>
+                  <button onClick={handleExportPDF} className="btn btn-secondary" style={{ justifyContent: 'center', gap: 8, padding: '14px', borderRadius: 14, fontSize: 13, background: 'var(--bg-primary)' }}>
+                    <FileText size={16} /> Exportar PDF
+                  </button>
+                </div>
               </div>
             </div>
           </div>
