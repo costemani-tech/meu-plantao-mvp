@@ -147,7 +147,7 @@ async function StatsSection({ userId, isPro }: { userId: string, isPro: boolean 
 }
 
 // Sub-componente: Próximos Plantões
-async function UpcomingShifts({ userId, userName, totalGanhos }: { userId: string, userName: string, totalGanhos: number }) {
+async function UpcomingShifts({ userId, userName, totalGanhos, isPro }: { userId: string, userName: string, totalGanhos: number, isPro: boolean }) {
   const supabase = await getSupabase();
 
   const { data: proximos } = await supabase
@@ -325,6 +325,7 @@ export default async function DashboardPage() {
           userId={user.id}
           userName={profile?.nome || 'Médico'}
           totalGanhos={totalGanhosGlobal}
+          isPro={isPro}
         />
       </Suspense>
 
