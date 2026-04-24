@@ -255,9 +255,10 @@ export function ShareAgendaButton({ proximos, userName, totalGanhos, isPro }: { 
         const localObj = Array.isArray(p.local) ? p.local[0] : p.local;
         const info = getFullShiftInfo(p);
         
-        // Card Background
+        // Card Background com Borda Sutil
         doc.setFillColor(255, 255, 255);
-        doc.roundedRect(margin - 2, y - 8, pageW - (margin * 2) + 4, 18, 2, 2, 'F');
+        doc.setDrawColor(226, 232, 240); // Slate-200
+        doc.roundedRect(margin - 2, y - 8, pageW - (margin * 2) + 4, 18, 2, 2, 'FD');
         
         // Linha decorativa lateral
         doc.setFillColor(localObj?.cor_calendario || '#2563eb');
@@ -274,7 +275,7 @@ export function ShareAgendaButton({ proximos, userName, totalGanhos, isPro }: { 
         
         y += 25;
 
-        if (y > 250) {
+        if (y > 240) {
           doc.addPage();
           doc.setFillColor(248, 250, 252);
           doc.rect(0, 0, pageW, pageH, 'F');
@@ -283,29 +284,31 @@ export function ShareAgendaButton({ proximos, userName, totalGanhos, isPro }: { 
       });
 
       // Rodapé Branding (Condicional)
-      const footerY = 280;
+      const footerY = 275;
       if (!isPro) {
-        doc.setFillColor(239, 246, 255); // Blue-50
-        doc.rect(0, footerY - 12, pageW, 32, 'F');
-        doc.setDrawColor(219, 234, 254); // Blue-100
-        doc.line(0, footerY - 12, pageW, footerY - 12);
+        // Bloco de Marketing de Alto Impacto
+        doc.setFillColor(37, 99, 235); // Blue-600
+        doc.rect(0, footerY - 15, pageW, 40, 'F');
         
-        doc.setFontSize(13);
+        doc.setFontSize(16);
         doc.setFont('helvetica', 'bold');
-        doc.setTextColor(30, 58, 138); // Blue-800
-        doc.text('🚀 Escala gerada gratuitamente pelo app Meu Plantão.', pageW / 2, footerY - 2, { align: 'center' });
+        doc.setTextColor(255, 255, 255);
+        doc.text('🚀 Escala gerada GRATUITAMENTE pelo app Meu Plantão', pageW / 2, footerY - 2, { align: 'center' });
         
-        doc.setFontSize(11);
+        doc.setFontSize(12);
         doc.setFont('helvetica', 'normal');
-        doc.setTextColor(37, 99, 235); // Blue-600
-        doc.text('Organize a sua também pelo nosso aplicativo!', pageW / 2, footerY + 5, { align: 'center' });
+        doc.setTextColor(191, 219, 254); // Blue-100
+        doc.text('Organize seus plantões e ganhos agora mesmo!', pageW / 2, footerY + 6, { align: 'center' });
+        
+        doc.setFontSize(14);
         doc.setFont('helvetica', 'bold');
-        doc.text('Acesse meuplantao.com.br', pageW / 2, footerY + 11, { align: 'center' });
+        doc.setTextColor(255, 255, 255);
+        doc.text('Acesse: meuplantao.com.br', pageW / 2, footerY + 15, { align: 'center' });
       } else {
-        doc.setFontSize(9);
+        doc.setFontSize(10);
         doc.setFont('helvetica', 'normal');
         doc.setTextColor(148, 163, 184); // Slate-400
-        doc.text('Gerado por meuplantao.com.br', pageW / 2, footerY + 5, { align: 'center' });
+        doc.text('Gerado por meuplantao.com.br', pageW / 2, footerY + 15, { align: 'center' });
       }
 
       doc.save(`Escala_Meu_Plantao.pdf`);
