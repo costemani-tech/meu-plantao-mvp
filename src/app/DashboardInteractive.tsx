@@ -215,7 +215,7 @@ export function ShareAgendaButton({ proximos }: { proximos: any[] }) {
           background: 'none', 
           border: 'none', 
           color: 'var(--accent-blue)', 
-          fontSize: '13px', 
+          fontSize: '12px', 
           fontWeight: 700, 
           cursor: 'pointer', 
           padding: 0,
