@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import jsPDF from 'jspdf';
-import { toBlob } from 'html-to-image';
+import { toBlob, toCanvas } from 'html-to-image';
 import { formatRelativeShiftDate, formatBRTTime } from '../lib/date-utils';
 import { ShareableScheduleCard } from '../components/ShareableScheduleCard';
 import { supabase } from '../lib/supabase';
@@ -446,57 +446,44 @@ export function ShareAgendaButton({ proximos: initialProximos, userName, totalGa
     return `${dateStr} • ${start} às ${end} • ${type}`;
   };
 
-  const handleExportPDF = () => {
-    if (!shifts || shifts.length === 0) return;
+  const handleExportPDF = async () => {
+    if (!cardRef.current || !shifts || shifts.length === 0) return;
     try {
-      const doc = new jsPDF('portrait', 'mm', 'a4');
-      const pageW = doc.internal.pageSize.getWidth();
-      const pageH = doc.internal.pageSize.getHeight();
-      const margin = 15;
-      doc.setFillColor(248, 250, 252); doc.rect(0, 0, pageW, pageH, 'F');
-      doc.setFillColor(255, 255, 255); doc.rect(0, 0, pageW, 40, 'F');
-      doc.setDrawColor(226, 232, 240); doc.line(0, 40, pageW, 40);
-      doc.setFillColor(37, 99, 235); doc.roundedRect(margin, 12, 10, 10, 2, 2, 'F');
-      doc.setFontSize(22); doc.setFont('helvetica', 'bold'); doc.setTextColor(15, 23, 42); doc.text('Meu Plantão', margin + 14, 20);
-      doc.setFontSize(10); doc.setFont('helvetica', 'normal'); doc.setTextColor(100, 116, 139); doc.text('Sua agenda organizada e seus plantões sob controle', margin + 14, 26);
-      let y = 55;
-      doc.setFontSize(14); doc.setFont('helvetica', 'bold'); doc.setTextColor(15, 23, 42); doc.text(userName, margin, y);
-      doc.setFontSize(10); doc.setFont('helvetica', 'normal'); doc.setTextColor(100, 116, 139);
-      const monthStr = currentDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
-      doc.text(monthStr, pageW - margin, y, { align: 'right' });
-      y += 12;
-
-      shifts.forEach((p, i) => {
-        const localObj = Array.isArray(p.local) ? p.local[0] : p.local;
-        const info = getFullShiftInfo(p);
-        doc.setFillColor(255, 255, 255); doc.setDrawColor(226, 232, 240); doc.roundedRect(margin, y - 8, pageW - (margin * 2), 22, 3, 3, 'FD');
-        doc.setFillColor(localObj?.cor_calendario || '#2563eb'); doc.rect(margin, y - 8, 1.5, 22, 'F');
-        doc.setFont('helvetica', 'bold'); doc.setTextColor(15, 23, 42); doc.setFontSize(12); doc.text(`${localObj?.nome || 'Local de Trabalho'}`, margin + 6, y);
-        doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor(51, 65, 85); doc.text(`${info}`, margin + 6, y + 8);
-        y += 30;
-        if (y > 240) { doc.addPage(); doc.setFillColor(248, 250, 252); doc.rect(0, 0, pageW, pageH, 'F'); y = 20; }
+      setLoading(true);
+      // Captura o componente como Canvas para garantir paridade visual total
+      const canvas = await toCanvas(cardRef.current, { 
+        cacheBust: true, 
+        pixelRatio: 2,
+        backgroundColor: '#f8fafc' // bg-slate-50
       });
+      
+      const imgData = canvas.toDataURL('image/png');
+      const doc = new jsPDF('p', 'mm', 'a4');
+      
+      const imgWidth = 190; // largura útil no A4 (210mm - margens)
+      const pageHeight = 297;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      let heightLeft = imgHeight;
+      let position = 10; // Margem inicial superior
 
-      if (totalGanhos > 0 && !hideFinance) {
-        y += 5;
-        doc.setFillColor(255, 255, 255); doc.setDrawColor(226, 232, 240); doc.roundedRect(margin, y, pageW - (margin * 2), 20, 4, 4, 'FD');
-        doc.setFontSize(9); doc.setTextColor(100, 116, 139); doc.text('Total a receber em extras no mês', pageW / 2, y + 8, { align: 'center' });
-        doc.setFontSize(14); doc.setFont('helvetica', 'bold'); doc.setTextColor(22, 163, 74);
-        doc.text(totalGanhos.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }), pageW / 2, y + 15, { align: 'center' });
+      // Adiciona a primeira página
+      doc.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+
+      // Adiciona páginas extras se o conteúdo for longo (Paginação Automática)
+      while (heightLeft >= 0) {
+        position = heightLeft - imgHeight - 10; // Ajuste de margem
+        doc.addPage();
+        doc.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
       }
 
-      const footerY = 270;
-      if (!isPro) {
-        doc.setFillColor(255, 255, 255); doc.setDrawColor(226, 232, 240); doc.rect(0, footerY - 10, pageW, 30, 'F'); doc.line(0, footerY - 10, pageW, footerY - 10);
-        doc.setFontSize(11); doc.setFont('helvetica', 'bold'); doc.setTextColor(30, 41, 59); doc.text('Escala gerada gratuitamente pelo app Meu Plantão.', pageW / 2, footerY, { align: 'center' });
-        doc.setFontSize(9); doc.setFont('helvetica', 'normal'); doc.setTextColor(100, 116, 139); doc.text('Organize a sua também e tenha controle total em:', pageW / 2, footerY + 6, { align: 'center' });
-        doc.setFontSize(11); doc.setFont('helvetica', 'bold'); doc.setTextColor(37, 99, 235); doc.text('meuplantao.com.br', pageW / 2, footerY + 12, { align: 'center' });
-      } else {
-        doc.setFontSize(10); doc.setFont('helvetica', 'normal'); doc.setTextColor(148, 163, 184); doc.text('Gerado por meuplantao.com.br', pageW / 2, footerY + 10, { align: 'center' });
-      }
+      const monthStr = currentDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
       doc.save(`Escala_Meu_Plantao_${monthStr}.pdf`);
     } catch (err) {
-      console.error(err);
+      console.error('Erro ao gerar PDF:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
