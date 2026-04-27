@@ -48,11 +48,11 @@ export function EarningsPrivacyWrapper({ total, isPro }: { total: number, isPro:
   if (!mounted) return <div style={{ height: 40 }} />;
 
   return (
-    <div style={{ position: 'relative' }}>
-      <div style={{ position: 'absolute', top: -30, right: 0 }}>
+    <div style={{ position: 'relative', marginBottom: 12 }}>
+      <div style={{ position: 'absolute', top: -34, right: 0 }}>
          <button 
            onClick={toggle}
-           style={{ background: 'rgba(255,255,255,0.1)', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: 8, borderRadius: 12, display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 700 }}
+           style={{ background: 'rgba(255,255,255,0.08)', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: '6px 12px', borderRadius: 12, display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 700, transition: 'all 0.2s' }}
          >
            {hidden ? <Eye size={16} /> : <EyeOff size={16} />}
            {hidden ? 'Mostrar' : 'Ocultar'}
@@ -547,22 +547,24 @@ export function ShareAgendaButton({ proximos: initialProximos, userName, totalGa
             </div>
 
             <div style={{ padding: 24, background: 'var(--bg-secondary)', borderTop: '1px solid var(--border-subtle)', display: 'flex', flexDirection: 'column', gap: 16 }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(255,255,255,0.05)', padding: '12px 16px', borderRadius: 16, border: '1px solid var(--border-subtle)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    {hideFinance ? <EyeOff size={18} color="var(--text-muted)" /> : <Eye size={18} color="var(--accent-teal)" />}
-                    <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>Ocultar valores financeiros</span>
+                {isPro && (
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(255,255,255,0.05)', padding: '12px 16px', borderRadius: 16, border: '1px solid var(--border-subtle)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      {hideFinance ? <EyeOff size={18} color="var(--text-muted)" /> : <Eye size={18} color="var(--accent-teal)" />}
+                      <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>Ocultar ganhos</span>
+                    </div>
+                    <button 
+                      onClick={() => setHideFinance(!hideFinance)}
+                      style={{ 
+                        width: 44, height: 24, borderRadius: 20, 
+                        background: hideFinance ? 'var(--accent-blue)' : 'var(--bg-tertiary)', 
+                        border: 'none', position: 'relative', cursor: 'pointer', transition: 'all 0.2s'
+                      }}
+                    >
+                      <div style={{ position: 'absolute', top: 3, left: hideFinance ? 23 : 3, width: 18, height: 18, borderRadius: '50%', background: '#fff', transition: 'all 0.2s' }} />
+                    </button>
                   </div>
-                  <button 
-                    onClick={() => setHideFinance(!hideFinance)}
-                    style={{ 
-                      width: 44, height: 24, borderRadius: 20, 
-                      background: hideFinance ? 'var(--accent-blue)' : 'var(--bg-tertiary)', 
-                      border: 'none', position: 'relative', cursor: 'pointer', transition: 'all 0.2s'
-                    }}
-                  >
-                    <div style={{ position: 'absolute', top: 3, left: hideFinance ? 23 : 3, width: 18, height: 18, borderRadius: '50%', background: '#fff', transition: 'all 0.2s' }} />
-                  </button>
-                </div>
+                )}
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                   {isPro && (
