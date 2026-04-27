@@ -3,11 +3,14 @@ import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
+import React from 'react';
 import { 
   Calendar, 
   Clock, 
   TrendingUp, 
   ChevronRight,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import { DashboardInteractive, DesbloquearGanhosBtn, ShareAgendaButton } from './DashboardInteractive';
 import { isUserPro } from '../lib/supabase';
@@ -20,6 +23,71 @@ async function getSupabase() {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     { cookies: { getAll() { return cookieStore.getAll(); } } }
+  );
+}
+
+// Sub-componente Cliente: Controle de Privacidade dos Ganhos
+function EarningsPrivacyWrapper({ total, isPro }: { total: number, isPro: boolean }) {
+  const [hidden, setHidden] = React.useState(true);
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    const saved = localStorage.getItem('meu_plantao_privacy') === 'true';
+    setHidden(saved);
+    setMounted(true);
+  }, []);
+
+  const toggle = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const newVal = !hidden;
+    setHidden(newVal);
+    localStorage.setItem('meu_plantao_privacy', String(newVal));
+  };
+
+  if (!mounted) return <div style={{ height: 40 }} />;
+
+  return (
+    <div style={{ position: 'relative' }}>
+      <div style={{ position: 'absolute', top: -30, right: 0 }}>
+         <button 
+           onClick={toggle}
+           style={{ background: 'rgba(255,255,255,0.1)', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: 8, borderRadius: 12, display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 700 }}
+         >
+           {hidden ? <Eye size={16} /> : <EyeOff size={16} />}
+           {hidden ? 'Mostrar' : 'Ocultar'}
+         </button>
+      </div>
+
+      {isPro ? (
+        <Link href="/extras" style={{ textDecoration: 'none', color: 'inherit' }}>
+          <div style={{ cursor: 'pointer' }}>
+            <div style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 600, marginBottom: 4 }}>Extras do mês</div>
+            {total > 0 ? (
+              <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--accent-teal)', display: 'flex', alignItems: 'center', gap: 10, transition: 'all 0.3s' }}>
+                💰 <span style={{ filter: hidden ? 'blur(8px)' : 'none' }}>
+                  {hidden ? 'R$ 0.000,00' : total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                </span>
+                {!hidden && <ChevronRight size={18} />}
+              </div>
+            ) : (
+              <div>
+                <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: 10 }}>
+                  💰 Nenhum extra
+                </div>
+              </div>
+            )}
+          </div>
+        </Link>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)' }}>
+            💰 Ver meus ganhos reais
+          </div>
+          <DesbloquearGanhosBtn />
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -69,16 +137,11 @@ async function StatsSection({ userId, isPro }: { userId: string, isPro: boolean 
       const match = p.notas.match(/R\$\s*([\d.,]+)/);
       if (match) {
         let valStr = match[1];
-        // Se houver vírgula, assume formato BR (ponto é milhar, vírgula é decimal)
         if (valStr.includes(',')) {
           valStr = valStr.replace(/\./g, '').replace(',', '.');
-        } 
-        // Se não houver vírgula mas houver ponto, e for formato X.XX (2 decimais), trata como decimal
-        else if (valStr.includes('.') && valStr.split('.').pop()?.length === 2) {
-          // Já está no formato correto para parseFloat
-        }
-        // Caso contrário, remove pontos (trata como milhar)
-        else {
+        } else if (valStr.includes('.') && valStr.split('.').pop()?.length === 2) {
+          // OK
+        } else {
           valStr = valStr.replace(/\./g, '');
         }
         return acc + parseFloat(valStr || '0');
@@ -106,35 +169,7 @@ async function StatsSection({ userId, isPro }: { userId: string, isPro: boolean 
         </div>
 
         <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: 20, marginBottom: 20 }}>
-          {isPro ? (
-            <Link href="/extras" style={{ textDecoration: 'none', color: 'inherit' }}>
-              <div style={{ cursor: 'pointer' }}>
-                <div style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 600, marginBottom: 4 }}>Extras do mês</div>
-                {totalGanhos > 0 ? (
-                  <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--accent-teal)', display: 'flex', alignItems: 'center', gap: 10 }}>
-                    💰 {totalGanhos.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} a receber em extras
-                    <ChevronRight size={18} />
-                  </div>
-                ) : (
-                  <div>
-                    <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: 10 }}>
-                      💰 Nenhum extra registrado
-                    </div>
-                    <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 4 }}>
-                      Adicione plantões extras para acompanhar seus ganhos.
-                    </div>
-                  </div>
-                )}
-              </div>
-            </Link>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)' }}>
-                💰 Ver meus ganhos reais
-              </div>
-              <DesbloquearGanhosBtn />
-            </div>
-          )}
+          <EarningsPrivacyWrapper total={totalGanhos} isPro={isPro} />
         </div>
 
         <Link href="/locais" style={{ textDecoration: 'none' }}>

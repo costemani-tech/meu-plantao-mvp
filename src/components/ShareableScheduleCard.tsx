@@ -19,9 +19,17 @@ export interface ShareableScheduleCardProps {
   shifts: ShiftInfo[];
   totalGanhos: number;
   isPro?: boolean;
+  hideValues?: boolean;
 }
 
-export const ShareableScheduleCard = forwardRef<HTMLDivElement, ShareableScheduleCardProps>(({ userName, monthYear, shifts, totalGanhos, isPro = false }, ref) => {
+export const ShareableScheduleCard = forwardRef<HTMLDivElement, ShareableScheduleCardProps>(({ 
+  userName, 
+  monthYear, 
+  shifts, 
+  totalGanhos, 
+  isPro = false,
+  hideValues = false
+}, ref) => {
 
   // Group shifts by local/hospital
   const groupedShifts = shifts.reduce((acc, shift) => {
@@ -37,6 +45,9 @@ export const ShareableScheduleCard = forwardRef<HTMLDivElement, ShareableSchedul
   }, {} as Record<string, { color: string, shifts: ShiftInfo[] }>);
 
   const localNames = Object.keys(groupedShifts).sort();
+  
+  // Highlight the first shift ever in the list
+  const firstShiftId = shifts.length > 0 ? shifts[0].id : null;
 
   return (
     <div
@@ -52,7 +63,7 @@ export const ShareableScheduleCard = forwardRef<HTMLDivElement, ShareableSchedul
         boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
       }}
     >
-      {/* Novo Cabeçalho SaaS Clean */}
+      {/* Cabeçalho SaaS Clean */}
       <div style={{
         background: '#ffffff',
         padding: '24px 20px',
@@ -85,30 +96,43 @@ export const ShareableScheduleCard = forwardRef<HTMLDivElement, ShareableSchedul
         </div>
       </div>
 
-      {/* Identification */}
+      {/* Identification & Dynamic Month */}
       <div style={{
         padding: '16px 24px',
         background: '#ffffff',
         borderBottom: '1px solid #e2e8f0',
         display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
+        flexDirection: 'column',
+        gap: '4px',
         position: 'relative',
         zIndex: 1
       }}>
-        <div style={{ fontWeight: 700, fontSize: '15px', color: '#0f172a' }}>
-          {userName}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ fontWeight: 800, fontSize: '16px', color: '#0f172a' }}>
+            {userName}
+          </div>
+          <div style={{ 
+            fontWeight: 700, 
+            fontSize: '11px', 
+            color: '#2563eb', 
+            background: '#eff6ff', 
+            padding: '2px 8px', 
+            borderRadius: '100px',
+            textTransform: 'capitalize'
+          }}>
+            {monthYear}
+          </div>
         </div>
-        <div style={{ fontWeight: 600, fontSize: '12px', color: '#64748b' }}>
-          {!isPro ? `${monthYear} • ${shifts.length} Plantões` : monthYear}
+        <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span>📅 {shifts.length} {shifts.length === 1 ? 'plantão' : 'plantões'} no mês</span>
         </div>
       </div>
 
       {/* Shifts List */}
       <div style={{ padding: '20px 20px', display: 'flex', flexDirection: 'column', gap: '12px', position: 'relative', zIndex: 1 }}>
         {localNames.length === 0 && (
-          <div style={{ textAlign: 'center', padding: '20px', color: '#64748b', fontSize: '14px' }}>
-            Nenhum plantão agendado.
+          <div style={{ textAlign: 'center', padding: '40px 20px', color: '#94a3b8', fontSize: '14px', background: '#fff', borderRadius: 16, border: '1px dashed #e2e8f0' }}>
+            Nenhum plantão agendado para este período.
           </div>
         )}
 
@@ -133,6 +157,8 @@ export const ShareableScheduleCard = forwardRef<HTMLDivElement, ShareableSchedul
                   const start = formatBRTTime(shift.data_hora_inicio);
                   const end = formatBRTTime(shift.data_hora_fim || new Date(new Date(shift.data_hora_inicio).getTime() + 12 * 60 * 60 * 1000).toISOString());
                   
+                  const isHighlighted = shift.id === firstShiftId;
+
                   return (
                     <div key={idx} style={{
                       fontSize: '11px',
@@ -140,7 +166,11 @@ export const ShareableScheduleCard = forwardRef<HTMLDivElement, ShareableSchedul
                       fontWeight: 500,
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '4px'
+                      gap: '4px',
+                      padding: isHighlighted ? '4px 6px' : '0',
+                      background: isHighlighted ? 'rgba(37, 99, 235, 0.05)' : 'transparent',
+                      borderRadius: '6px',
+                      border: isHighlighted ? '1px solid rgba(37, 99, 235, 0.1)' : 'none'
                     }}>
                       <span style={{ color: group.color, fontWeight: 800 }}>•</span>
                       <span style={{ fontWeight: 700 }}>{dateStr}</span>
@@ -167,7 +197,7 @@ export const ShareableScheduleCard = forwardRef<HTMLDivElement, ShareableSchedul
       </div>
 
       {/* Resumo de Ganhos Extras */}
-      {totalGanhos > 0 && (
+      {totalGanhos > 0 && !hideValues && (
         <div style={{ padding: '0 20px 12px 20px' }}>
           <div style={{
             background: '#ffffff',
@@ -197,7 +227,14 @@ export const ShareableScheduleCard = forwardRef<HTMLDivElement, ShareableSchedul
         position: 'relative',
         zIndex: 1
       }}>
-        Gerado por <span style={{ color: '#2563eb', fontWeight: 700 }}>meuplantao.com.br</span>
+        {isPro ? (
+           <>Gerado por <span style={{ color: '#2563eb', fontWeight: 700 }}>meuplantao.com.br</span></>
+        ) : (
+           <div style={{ opacity: 0.8 }}>
+             <div style={{ fontWeight: 700, color: '#475569', marginBottom: 2 }}>Organize sua escala também</div>
+             <div style={{ color: '#2563eb', fontWeight: 800 }}>meuplantao.com.br</div>
+           </div>
+        )}
       </div>
     </div>
   );
