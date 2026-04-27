@@ -434,6 +434,8 @@ export function ShareAgendaButton({ proximos: initialProximos, userName, totalGa
               <button onClick={() => setShowModal(false)} style={{ background: 'var(--bg-secondary)', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', width: 36, height: 36, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <X size={20} />
               </button>
+            </div>
+
             {/* SELETOR DE MÊS PREMIUM */}
             <div style={{ padding: '0 24px 20px 24px', display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--bg-secondary)', padding: '8px 12px', borderRadius: 16, border: '1px solid var(--border-subtle)' }}>
