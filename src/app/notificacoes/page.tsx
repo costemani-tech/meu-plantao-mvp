@@ -25,6 +25,7 @@ export default function NotificacoesPage() {
       .from('notificacoes')
       .select('*')
       .eq('usuario_id', user.id)
+      .lte('publicar_em', new Date().toISOString())
       .order('created_at', { ascending: false });
       
     if (data) setNotis(data as Notificacao[]);

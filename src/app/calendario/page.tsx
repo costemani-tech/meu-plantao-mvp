@@ -666,7 +666,8 @@ export default function CalendarioPage() {
                             data_inicio: dataNovaFormatada, 
                             forcar_conflito: false,
                             tipo_jornada: tipo_jornada,
-                            hora_fim: edicaoCiclo!.horaFim
+                            hora_fim: edicaoCiclo!.horaFim,
+                            antecedencia: 2
                           })
                         });
                         

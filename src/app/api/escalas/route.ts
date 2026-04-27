@@ -157,8 +157,9 @@ export async function POST(req: NextRequest) {
     );
 
     // ── 5. Geração dos slots ─────────────────────────────────────────────────
+    const { data_fim: dataFimCorpo } = body;
     const anoAtual = new Date().getFullYear();
-    const dataFim = new Date(anoAtual, 11, 31, 23, 59, 59);
+    const dataFim = dataFimCorpo ? new Date(dataFimCorpo) : new Date(anoAtual, 11, 31, 23, 59, 59);
     const slots = gerarPlantoesAte(new Date(data_inicio), regra as Regra, dataFim, tipo_jornada, hora_fim);
 
     if (slots.length === 0) {
@@ -256,7 +257,82 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // ── 9. Resposta de sucesso ───────────────────────────────────────────────
+    // ── 9. Notificações (Opcional) ───────────────────────────────────────────
+    const { antecedencia } = body;
+    if (antecedencia && Number(antecedencia) > 0) {
+      try {
+        const { data: local } = await supabaseAdmin
+          .from('locais_trabalho')
+          .select('nome')
+          .eq('id', local_id)
+          .single();
+          
+        const nomeLocal = local?.nome || 'seu local de trabalho';
+        const offsetMs = Number(antecedencia) * 60 * 60 * 1000;
+        
+        const pushNotifications = [];
+        const dbNotificacoes = [];
+        const now = new Date();
+
+        for (const s of slots) {
+          const publicarEm = new Date(s.inicio.getTime() - offsetMs);
+          
+          if (publicarEm > now) {
+            const horaStr = s.inicio.toLocaleTimeString('pt-BR', { 
+              hour: '2-digit', 
+              minute: '2-digit',
+              timeZone: 'America/Sao_Paulo' // Força fuso horário brasileiro para a mensagem
+            });
+
+            pushNotifications.push({
+              app_id: process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID,
+              include_aliases: { external_id: [usuario_id] },
+              target_channel: 'push',
+              collapse_id: `shift_${escala.id}_${s.inicio.toISOString()}`,
+              headings: { "pt": `🩺 Plantão hoje às ${horaStr}` },
+              contents: { "pt": `${nomeLocal}\nPrepare-se com antecedência. Bom plantão!` },
+              send_after: publicarEm.toISOString()
+            });
+
+            dbNotificacoes.push({
+              usuario_id,
+              escala_id: escala.id,
+              data_hora_inicio: s.inicio.toISOString(),
+              publicar_em: publicarEm.toISOString(), // Requer que a coluna exista
+              titulo: `🏥 Plantão em ${antecedencia}h — ${nomeLocal}`,
+              mensagem: `Você tem plantão em ${nomeLocal} às ${horaStr}. Bom trabalho!`,
+              lida: false
+            });
+          }
+        }
+
+        if (pushNotifications.length > 0) {
+          // Envia em lotes para o OneSignal
+          const restKey = process.env.ONESIGNAL_REST_KEY;
+          const pushPromises = pushNotifications.map(payload => 
+            fetch('https://onesignal.com/api/v1/notifications', {
+              method: 'POST',
+              headers: {
+                "Content-Type": "application/json; charset=utf-8",
+                "Authorization": `Key ${restKey}`
+              },
+              body: JSON.stringify(payload)
+            }).then(r => r.json())
+          );
+          await Promise.all(pushPromises);
+        }
+
+        if (dbNotificacoes.length > 0) {
+          await supabaseAdmin.from('notificacoes').upsert(dbNotificacoes, {
+            onConflict: 'usuario_id,escala_id,data_hora_inicio'
+          });
+        }
+      } catch (err) {
+        console.error('[API Escala POST] Erro ao agendar notificações:', err);
+      }
+    }
+
+    // ── 10. Resposta de sucesso ──────────────────────────────────────────────
     return NextResponse.json({
       success: true,
       escala_id: escala.id,

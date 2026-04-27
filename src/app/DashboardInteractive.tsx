@@ -526,37 +526,26 @@ export function ShareAgendaButton({ proximos, userName, totalGanhos, isPro }: { 
               </div>
             </div>
 
-            <div style={{ padding: 24, background: 'var(--bg-secondary)', borderTop: '1px solid var(--border-subtle)' }}>
+            <div style={{ padding: 24, background: 'var(--bg-secondary)', borderTop: '1px solid var(--border-subtle)', display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {isPro && (
-                  <>
-                    <button onClick={handleShareImage} disabled={isGeneratingImage} className="btn btn-primary" style={{ justifyContent: 'center', gap: 10, padding: 14, borderRadius: 12, background: 'linear-gradient(to right, #1d4ed8, #3b82f6)' }}>
-                      <ImageIcon size={18} /> {isGeneratingImage ? 'Gerando...' : 'Compartilhar Imagem PRO'}
-                    </button>
-
-                    <button onClick={handleDirectShare} className="btn btn-secondary" style={{ justifyContent: 'center', gap: 10, padding: 14, borderRadius: 12 }}>
-                      <Send size={18} /> Compartilhar Texto Direto
-                    </button>
-                  </>
+                  <button onClick={handleShareImage} disabled={isGeneratingImage} className="btn btn-primary" style={{ justifyContent: 'center', gap: 10, padding: '16px', borderRadius: 14, background: 'linear-gradient(to right, #1d4ed8, #3b82f6)', width: '100%' }}>
+                    <ImageIcon size={20} /> {isGeneratingImage ? 'Gerando...' : 'Compartilhar Imagem PRO'}
+                  </button>
                 )}
                 
-                <div style={{ display: 'grid', gridTemplateColumns: isPro ? '1fr 1fr' : '1fr', gap: 12 }}>
-                  {!isPro && (
-                    <button onClick={handleExportPDF} className="btn btn-primary" style={{ justifyContent: 'center', gap: 10, padding: 14, borderRadius: 12, background: 'linear-gradient(to right, #1d4ed8, #3b82f6)' }}>
-                      <FileText size={18} /> Gerar PDF Grátis
-                    </button>
-                  )}
-                  {isPro && (
-                    <>
-                      <button onClick={handleCopy} className="btn btn-secondary" style={{ justifyContent: 'center', gap: 8, padding: 12, borderRadius: 12, fontSize: 13 }}>
-                        <Copy size={16} /> Copiar Texto
-                      </button>
-                      <button onClick={handleExportPDF} className="btn btn-secondary" style={{ justifyContent: 'center', gap: 8, padding: 12, borderRadius: 12, fontSize: 13 }}>
-                        <FileText size={16} /> Gerar PDF
-                      </button>
-                    </>
-                  )}
-                </div>
-              </div>
+                <button 
+                  onClick={handleExportPDF} 
+                  className={isPro ? "btn btn-secondary" : "btn btn-primary"} 
+                  style={{ 
+                    justifyContent: 'center', gap: 10, padding: '16px', borderRadius: 14, 
+                    width: '100%', 
+                    background: !isPro ? 'linear-gradient(to right, #1d4ed8, #3b82f6)' : 'var(--bg-primary)',
+                    border: isPro ? '1px solid var(--border-subtle)' : 'none'
+                  }}
+                >
+                  <FileText size={20} /> {isPro ? 'Gerar PDF' : 'Gerar PDF Grátis'}
+                </button>
+            </div>
 
               {/* Hidden Component for Image Generation */}
               <div style={{ position: 'absolute', left: '-9999px', top: '-9999px' }}>

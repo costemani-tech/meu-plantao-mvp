@@ -130,24 +130,43 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       if (!user) return;
       currentUser = user;
 
-      // Vincula o dispositivo ao usuário no OneSignal (necessário para push personalizado)
+      // Vincula o dispositivo ao usuário no OneSignal e dispara prompt de permissão
       try {
         const win = window as any;
         if (win.OneSignalDeferred) {
           win.OneSignalDeferred.push(async (OneSignal: any) => {
-            const userId = (await supabase.auth.getUser()).data.user?.id;
-            if (userId) await OneSignal.login(userId);
+            const currentAuth = await supabase.auth.getUser();
+            const userId = currentAuth.data.user?.id;
+            
+            if (userId) {
+              // 1. Vincula Identidade (Essencial para alertas direcionados)
+              await OneSignal.login(userId);
+              
+              // 2. Dispara Prompt de Permissão se ainda não houver decisão
+              // Usamos o Slidedown para uma experiência mais premium e menos intrusiva que o nativo direto
+              if (OneSignal.Notifications.permissionNative === 'default') {
+                setTimeout(async () => {
+                  try {
+                    await OneSignal.Slidedown.promptPush();
+                  } catch (err) {
+                    // Fallback para o nativo se o slidedown falhar ou não estiver configurado
+                    await OneSignal.Notifications.requestPermission();
+                  }
+                }, 2000); // Pequeno delay para não sobrecarregar o usuário no load
+              }
+            }
           });
         }
       } catch (e) {
-        console.log('OneSignal login error:', e);
+        console.error('OneSignal initialization error:', e);
       }
       
       const { count } = await supabase
         .from('notificacoes')
         .select('*', { count: 'exact', head: true })
         .eq('usuario_id', user.id)
-        .eq('lida', false);
+        .eq('lida', false)
+        .lte('publicar_em', new Date().toISOString());
       setUnreadCount(count || 0);
     };
     

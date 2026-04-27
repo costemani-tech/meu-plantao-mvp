@@ -65,14 +65,25 @@ async function StatsSection({ userId, isPro }: { userId: string, isPro: boolean 
   let totalGanhos = 0;
   if (plantoesComValor) {
     totalGanhos = plantoesComValor.reduce((acc, p) => {
-      let valor = 0;
-      if (p.notas) {
-        const match = p.notas.match(/R\$\s*([\d.]+)/);
-        if (match && match[1]) {
-          valor = parseFloat(match[1]);
+      if (!p.notas) return acc;
+      const match = p.notas.match(/R\$\s*([\d.,]+)/);
+      if (match) {
+        let valStr = match[1];
+        // Se houver vírgula, assume formato BR (ponto é milhar, vírgula é decimal)
+        if (valStr.includes(',')) {
+          valStr = valStr.replace(/\./g, '').replace(',', '.');
+        } 
+        // Se não houver vírgula mas houver ponto, e for formato X.XX (2 decimais), trata como decimal
+        else if (valStr.includes('.') && valStr.split('.').pop()?.length === 2) {
+          // Já está no formato correto para parseFloat
         }
+        // Caso contrário, remove pontos (trata como milhar)
+        else {
+          valStr = valStr.replace(/\./g, '');
+        }
+        return acc + parseFloat(valStr || '0');
       }
-      return acc + valor;
+      return acc;
     }, 0);
   }
 
@@ -296,7 +307,15 @@ export default async function DashboardPage() {
       if (!p.notas) return acc;
       const match = p.notas.match(/R\$\s*([\d.,]+)/);
       if (match) {
-        return acc + parseFloat(match[1].replace('.', '').replace(',', '.'));
+        let valStr = match[1];
+        if (valStr.includes(',')) {
+          valStr = valStr.replace(/\./g, '').replace(',', '.');
+        } else if (valStr.includes('.') && valStr.split('.').pop()?.length === 2) {
+          // OK
+        } else {
+          valStr = valStr.replace(/\./g, '');
+        }
+        return acc + parseFloat(valStr || '0');
       }
       return acc;
     }, 0);

@@ -39,7 +39,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 await OneSignal.init({
                   appId: "${process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID || 'SUA_CHAVE_ONESIGNAL'}",
                   notifyButton: { enable: false },
-                  allowLocalhostAsSecureOrigin: true
+                  allowLocalhostAsSecureOrigin: true,
+                  serviceWorkerPath: 'OneSignalSDKWorker.js',
+                  serviceWorkerParam: { scope: '/' }
                 });
               });
             `

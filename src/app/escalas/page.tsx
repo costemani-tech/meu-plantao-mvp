@@ -407,6 +407,7 @@ export default function EscalasPage() {
                 usuario_id: user.id,
                 escala_id: escalaCriada.id,
                 data_hora_inicio: plantao.data_hora_inicio,
+                publicar_em: sendAfter.toISOString(),
                 titulo: `🏥 Plantão em ${antecedencia}h — ${nomeLocal}`,
                 mensagem: `Você tem plantão em ${nomeLocal} às ${horaStr}. Bom trabalho!`,
                 lida: false
@@ -414,14 +415,6 @@ export default function EscalasPage() {
             }
           });
           
-          if (pushNotifications.length > 0) {
-            await fetch('/api/onesignal', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ notifications: pushNotifications })
-            }).catch(() => {});
-          }
-
           if (dbNotificacoes.length > 0) {
             try {
               await supabase.from('notificacoes').upsert(dbNotificacoes, { 
