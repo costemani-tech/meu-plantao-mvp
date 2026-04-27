@@ -12,7 +12,12 @@ import {
   Eye,
   EyeOff
 } from 'lucide-react';
-import { DashboardInteractive, DesbloquearGanhosBtn, ShareAgendaButton } from './DashboardInteractive';
+import { 
+  DashboardInteractive, 
+  DesbloquearGanhosBtn, 
+  ShareAgendaButton,
+  EarningsPrivacyWrapper 
+} from './DashboardInteractive';
 import { isUserPro } from '../lib/supabase';
 import { formatRelativeShiftDate } from '../lib/date-utils';
 
@@ -26,70 +31,6 @@ async function getSupabase() {
   );
 }
 
-// Sub-componente Cliente: Controle de Privacidade dos Ganhos
-function EarningsPrivacyWrapper({ total, isPro }: { total: number, isPro: boolean }) {
-  const [hidden, setHidden] = React.useState(true);
-  const [mounted, setMounted] = React.useState(false);
-
-  React.useEffect(() => {
-    const saved = localStorage.getItem('meu_plantao_privacy') === 'true';
-    setHidden(saved);
-    setMounted(true);
-  }, []);
-
-  const toggle = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const newVal = !hidden;
-    setHidden(newVal);
-    localStorage.setItem('meu_plantao_privacy', String(newVal));
-  };
-
-  if (!mounted) return <div style={{ height: 40 }} />;
-
-  return (
-    <div style={{ position: 'relative' }}>
-      <div style={{ position: 'absolute', top: -30, right: 0 }}>
-         <button 
-           onClick={toggle}
-           style={{ background: 'rgba(255,255,255,0.1)', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: 8, borderRadius: 12, display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 700 }}
-         >
-           {hidden ? <Eye size={16} /> : <EyeOff size={16} />}
-           {hidden ? 'Mostrar' : 'Ocultar'}
-         </button>
-      </div>
-
-      {isPro ? (
-        <Link href="/extras" style={{ textDecoration: 'none', color: 'inherit' }}>
-          <div style={{ cursor: 'pointer' }}>
-            <div style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 600, marginBottom: 4 }}>Extras do mês</div>
-            {total > 0 ? (
-              <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--accent-teal)', display: 'flex', alignItems: 'center', gap: 10, transition: 'all 0.3s' }}>
-                💰 <span style={{ filter: hidden ? 'blur(8px)' : 'none' }}>
-                  {hidden ? 'R$ 0.000,00' : total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                </span>
-                {!hidden && <ChevronRight size={18} />}
-              </div>
-            ) : (
-              <div>
-                <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: 10 }}>
-                  💰 Nenhum extra
-                </div>
-              </div>
-            )}
-          </div>
-        </Link>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)' }}>
-            💰 Ver meus ganhos reais
-          </div>
-          <DesbloquearGanhosBtn />
-        </div>
-      )}
-    </div>
-  );
-}
 
 // Sub-componente: Resumo de Ganhos e Plantões
 async function StatsSection({ userId, isPro }: { userId: string, isPro: boolean }) {
