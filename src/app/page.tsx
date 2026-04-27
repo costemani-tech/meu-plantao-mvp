@@ -109,7 +109,7 @@ async function StatsSection({ userId, isPro }: { userId: string, isPro: boolean 
           📅 {totalMes || 0} <span style={{ fontSize: 18, color: 'var(--text-secondary)', fontWeight: 600 }}>plantões este mês</span>
         </div>
 
-        <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: 20, marginBottom: 20 }}>
+        <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: 36, marginBottom: 20 }}>
           <EarningsPrivacyWrapper total={totalGanhos} isPro={isPro} />
         </div>
 

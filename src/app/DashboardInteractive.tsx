@@ -49,10 +49,23 @@ export function EarningsPrivacyWrapper({ total, isPro }: { total: number, isPro:
 
   return (
     <div style={{ position: 'relative', marginBottom: 12 }}>
-      <div style={{ position: 'absolute', top: -34, right: 0 }}>
+      <div style={{ position: 'absolute', top: -38, right: 0 }}>
          <button 
            onClick={toggle}
-           style={{ background: 'rgba(255,255,255,0.08)', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: '6px 12px', borderRadius: 12, display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 700, transition: 'all 0.2s' }}
+           style={{ 
+             background: 'rgba(255,255,255,0.08)', 
+             border: '1px solid var(--border-subtle)', 
+             cursor: 'pointer', 
+             color: 'var(--text-muted)', 
+             padding: '4px 10px', 
+             borderRadius: 12, 
+             display: 'flex', 
+             alignItems: 'center', 
+             gap: 6, 
+             fontSize: 11, 
+             fontWeight: 700, 
+             transition: 'all 0.2s' 
+           }}
          >
            {hidden ? <Eye size={16} /> : <EyeOff size={16} />}
            {hidden ? 'Mostrar' : 'Ocultar'}
@@ -468,11 +481,11 @@ export function ShareAgendaButton({ proximos: initialProximos, userName, totalGa
 
       // Adiciona a primeira página
       doc.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
+      heightLeft -= (pageHeight - 20); // desconta margens top/bottom
 
       // Adiciona páginas extras se o conteúdo for longo (Paginação Automática)
       while (heightLeft >= 0) {
-        position = heightLeft - imgHeight - 10; // Ajuste de margem
+        position = heightLeft - imgHeight;
         doc.addPage();
         doc.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
         heightLeft -= pageHeight;
@@ -548,21 +561,27 @@ export function ShareAgendaButton({ proximos: initialProximos, userName, totalGa
 
             <div style={{ padding: 24, background: 'var(--bg-secondary)', borderTop: '1px solid var(--border-subtle)', display: 'flex', flexDirection: 'column', gap: 16 }}>
                 {isPro && (
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(255,255,255,0.05)', padding: '12px 16px', borderRadius: 16, border: '1px solid var(--border-subtle)' }}>
+                  <div 
+                    onClick={() => setHideFinance(!hideFinance)}
+                    style={{ 
+                      display: 'flex', alignItems: 'center', justifyContent: 'space-between', 
+                      background: 'rgba(255,255,255,0.05)', padding: '12px 16px', borderRadius: 16, 
+                      border: '1px solid var(--border-subtle)', cursor: 'pointer', transition: 'all 0.2s'
+                    }}
+                  >
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                       {hideFinance ? <EyeOff size={18} color="var(--text-muted)" /> : <Eye size={18} color="var(--accent-teal)" />}
                       <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>Ocultar ganhos</span>
                     </div>
-                    <button 
-                      onClick={() => setHideFinance(!hideFinance)}
+                    <div 
                       style={{ 
                         width: 44, height: 24, borderRadius: 20, 
                         background: hideFinance ? 'var(--accent-blue)' : 'var(--bg-tertiary)', 
-                        border: 'none', position: 'relative', cursor: 'pointer', transition: 'all 0.2s'
+                        border: 'none', position: 'relative', transition: 'all 0.2s'
                       }}
                     >
                       <div style={{ position: 'absolute', top: 3, left: hideFinance ? 23 : 3, width: 18, height: 18, borderRadius: '50%', background: '#fff', transition: 'all 0.2s' }} />
-                    </button>
+                    </div>
                   </div>
                 )}
 
