@@ -600,9 +600,9 @@ export default function CalendarioPage() {
                  className="input-field"
                  style={{ width: '100%', marginBottom: 24, padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-subtle)', background: 'var(--bg-primary)', color: 'var(--text-primary)' }}
               >
-                   <option value="12x36">12h Trabalhadas / 36h Descanso (Plantonista)</option>
-                   <option value="24x48">24h Trabalhadas / 48h Descanso (Plantonista)</option>
-                   <option value="24x72">24h Trabalhadas / 72h Descanso (Plantonista)</option>
+                   <option value="12x36">12x36 (Trabalha 12h, folga 36h)</option>
+                   <option value="24x48">24x48 (Trabalha 24h, folga 48h)</option>
+                   <option value="24x72">24x72 (Trabalha 24h, folga 72h)</option>
                    <option value="5x2">Diarista (Segunda a Sexta)</option>
                    <option value="6x1">Diarista (6x1)</option>
                    <option value="Outro">Outro (Personalizado)</option>

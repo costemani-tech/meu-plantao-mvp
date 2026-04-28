@@ -14,9 +14,9 @@ const CORES_PRESET = [
 ];
 
 const REGRAS_PADRAO = [
-  { value: '12x36', label: '12x36 (trabalha 12h, folga 36h)' },
-  { value: '24x48', label: '24x48 (trabalha 24h, folga 48h)' },
-  { value: '24x72', label: '24x72 (trabalha 24h, folga 72h)' },
+  { value: '12x36', label: '12x36 (Trabalha 12h, folga 36h)' },
+  { value: '24x48', label: '24x48 (Trabalha 24h, folga 48h)' },
+  { value: '24x72', label: '24x72 (Trabalha 24h, folga 72h)' },
   { value: 'Outro', label: 'Outro (Personalizado)' },
 ] as const;
 type Regra = string;
@@ -47,12 +47,7 @@ interface EscalaAtiva {
   plantoes?: { data_hora_inicio: string; data_hora_fim: string }[];
 }
 
-const DESCRICAO_REGRA: Record<string, string> = {
-  '12x36': '12h trabalhadas + 36h de folga (ciclo 48h)',
-  '24x48': '24h trabalhadas + 48h de folga (ciclo 72h)',
-  '24x72': '24h trabalhadas + 72h de folga (ciclo 96h)',
-  'Outro': 'Personalize suas horas de trabalho e folga',
-};
+
 
 export default function EscalasPage() {
   const router = useRouter();
@@ -735,9 +730,7 @@ export default function EscalasPage() {
                 <option key={r.value} value={r.value}>{r.label}</option>
               ))}
             </select>
-            <p style={{ fontSize: 12, color: 'var(--accent-teal)', marginTop: 6, fontWeight: 500 }}>
-              {DESCRICAO_REGRA[regra] ?? 'Personalize suas horas de trabalho e folga'}
-            </p>
+
 
             {isCustomRule && (
               <div
@@ -821,11 +814,8 @@ export default function EscalasPage() {
               <>
                 <label className="form-label" style={{ fontSize: 12 }}>Ciclo em Dias Corridos</label>
                 <select className="form-select" value={regraDiarista} onChange={e => setRegraDiarista(e.target.value)}>
-                  <option value="5x2">5 Dias / 2 Folga</option>
-                  <option value="6x1">6 Dias / 1 Folga</option>
-                  <option value="4x3">4 Dias / 3 Folga</option>
-                  <option value="3x1">3 Dias / 1 Folga</option>
-                  <option value="12x2">12 Dias / 2 Folga</option>
+                  <option value="5x2">Diarista (Segunda a Sexta)</option>
+                  <option value="6x1">Diarista (6x1)</option>
                   <option value="Outro">Outro (Personalizado)</option>
                 </select>
                 {regraDiarista === 'Outro' && (
