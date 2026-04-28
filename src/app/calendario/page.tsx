@@ -19,7 +19,8 @@ const REGRAS_PRESETS = [
   { id: '24x72', label: '24x72 (Um dia por três)' },
   { id: '5x2', label: '5x2 (Segunda a Sexta)' },
   { id: '12x60', label: '12x60' },
-  { id: 'fixo', label: 'Dia Fixo da Semana' }
+  { id: 'fixo', label: 'Dia Fixo da Semana' },
+  { id: 'custom', label: 'Outro (Personalizado)' }
 ];
 
 export default function CalendarioPage() {
@@ -32,7 +33,7 @@ export default function CalendarioPage() {
   const [excluindo, setExcluindo] = useState(false);
   
   const [menuAberto, setMenuAberto] = useState(false);
-  const [edicaoCiclo, setEdicaoCiclo] = useState<{p: PlantaoComLocal, regra: string, dataInicio: string, horaInicio: string, horaFim: string} | null>(null);
+  const [edicaoCiclo, setEdicaoCiclo] = useState<{p: PlantaoComLocal, regra: string, dataInicio: string, horaInicio: string, horaFim: string, horasTrabalho?: string, horasDescanso?: string} | null>(null);
   const [salvandoCiclo, setSalvandoCiclo] = useState(false);
   
   const [showExportModal, setShowExportModal] = useState(false);
@@ -288,7 +289,9 @@ export default function CalendarioPage() {
                                  regra: p.escala?.regra || '12x36', 
                                  dataInicio: p.data_hora_inicio.substring(0, 10), 
                                  horaInicio: d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }), 
-                                 horaFim: f.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+                                 horaFim: f.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+                                 horasTrabalho: '12',
+                                 horasDescanso: '36'
                                }); 
                              }} style={{ background: 'rgba(30, 41, 59, 0.6)', border: 'none', color: '#fff', padding: 10, borderRadius: 10, cursor: 'pointer' }}><Edit2 size={18} /></button>
                              <button onClick={() => setModalExclusao(p)} style={{ background: 'rgba(239, 68, 68, 0.15)', border: 'none', color: '#ef4444', padding: 10, borderRadius: 10, cursor: 'pointer' }}><Trash2 size={18} /></button>
@@ -336,7 +339,7 @@ export default function CalendarioPage() {
                </div>
 
                <div>
-                 <label style={{ fontSize: 12, fontWeight: 800, color: '#475569', textTransform: 'uppercase', marginBottom: 8, display: 'block' }}>Regra do Ciclo</label>
+                 <label style={{ fontSize: 12, fontWeight: 800, color: '#475569', textTransform: 'uppercase', marginBottom: 8, display: 'block' }}>Nova Regra de Escala</label>
                  <select 
                    value={edicaoCiclo.regra} 
                    onChange={e => setEdicaoCiclo({...edicaoCiclo, regra: e.target.value})}
@@ -346,13 +349,27 @@ export default function CalendarioPage() {
                  </select>
                </div>
 
+               {/* Campos Condicionais para Personalizado */}
+               {edicaoCiclo.regra === 'custom' && (
+                 <div style={{ display: 'flex', gap: 12, animation: 'fadeIn 0.3s ease' }}>
+                    <div style={{ flex: 1 }}>
+                      <label style={{ fontSize: 10, fontWeight: 800, color: '#475569', textTransform: 'uppercase', marginBottom: 8, display: 'block' }}>Horas Trabalhadas</label>
+                      <input type="number" value={edicaoCiclo.horasTrabalho} onChange={e => setEdicaoCiclo({...edicaoCiclo, horasTrabalho: e.target.value})} placeholder="ex: 12" style={{ background: 'rgba(30, 41, 59, 0.4)', border: '1px solid #1e293b', color: '#fff', borderRadius: 12, width: '100%', padding: '12px' }} />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <label style={{ fontSize: 10, fontWeight: 800, color: '#475569', textTransform: 'uppercase', marginBottom: 8, display: 'block' }}>Horas Descanso</label>
+                      <input type="number" value={edicaoCiclo.horasDescanso} onChange={e => setEdicaoCiclo({...edicaoCiclo, horasDescanso: e.target.value})} placeholder="ex: 36" style={{ background: 'rgba(30, 41, 59, 0.4)', border: '1px solid #1e293b', color: '#fff', borderRadius: 12, width: '100%', padding: '12px' }} />
+                    </div>
+                 </div>
+               )}
+
                <div style={{ display: 'flex', gap: 12 }}>
                  <div style={{ flex: 1 }}>
-                   <label style={{ fontSize: 12, fontWeight: 800, color: '#475569', textTransform: 'uppercase', marginBottom: 8, display: 'block' }}>Início</label>
+                   <label style={{ fontSize: 12, fontWeight: 800, color: '#475569', textTransform: 'uppercase', marginBottom: 8, display: 'block' }}>Hora de Início (Entrada)</label>
                    <input type="time" value={edicaoCiclo.horaInicio} onChange={e => setEdicaoCiclo({...edicaoCiclo, horaInicio: e.target.value})} className="form-input" style={{ background: 'rgba(30, 41, 59, 0.4)', border: '1px solid #1e293b', color: '#fff', borderRadius: 12, width: '100%' }} />
                  </div>
                  <div style={{ flex: 1 }}>
-                   <label style={{ fontSize: 12, fontWeight: 800, color: '#475569', textTransform: 'uppercase', marginBottom: 8, display: 'block' }}>Fim</label>
+                   <label style={{ fontSize: 12, fontWeight: 800, color: '#475569', textTransform: 'uppercase', marginBottom: 8, display: 'block' }}>Hora de Término (Saída)</label>
                    <input type="time" value={edicaoCiclo.horaFim} onChange={e => setEdicaoCiclo({...edicaoCiclo, horaFim: e.target.value})} className="form-input" style={{ background: 'rgba(30, 41, 59, 0.4)', border: '1px solid #1e293b', color: '#fff', borderRadius: 12, width: '100%' }} />
                  </div>
                </div>
@@ -364,14 +381,15 @@ export default function CalendarioPage() {
                    setSalvandoCiclo(true);
                    try {
                      const dataNovaFormatada = edicaoCiclo.dataInicio + 'T' + edicaoCiclo.horaInicio + ':00';
-                     // Precisamos deletar a escala antiga e criar uma nova com os novos parâmetros
+                     const regraFinal = edicaoCiclo.regra === 'custom' ? `${edicaoCiclo.horasTrabalho}x${edicaoCiclo.horasDescanso}` : edicaoCiclo.regra;
+                     
                      await fetch(`/api/escalas/${edicaoCiclo.p.escala_id}`, { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ modo: 'encerrar_em', data_encerramento: dataNovaFormatada }) });
                      await fetch('/api/escalas', { 
                        method: 'POST', 
                        headers: { 'Content-Type': 'application/json' }, 
                        body: JSON.stringify({ 
                          local_id: edicaoCiclo.p.local_id, 
-                         regra: edicaoCiclo.regra, 
+                         regra: regraFinal, 
                          data_inicio: dataNovaFormatada, 
                          hora_fim: edicaoCiclo.horaFim 
                        }) 
@@ -382,7 +400,7 @@ export default function CalendarioPage() {
                      setDiaSelecionado(null);
                    } catch (e) { alert('Erro ao recalcular ciclo.'); }
                    setSalvandoCiclo(false);
-                 }} style={{ flex: 1, padding: 16, background: 'var(--accent-blue)', border: 'none', borderRadius: 14, color: '#fff', fontWeight: 800, cursor: 'pointer', fontSize: 15 }}>{salvandoCiclo ? '...' : 'Aplicar'}</button>
+                 }} style={{ flex: 1, padding: 16, background: 'var(--accent-blue)', border: 'none', borderRadius: 14, color: '#fff', fontWeight: 800, cursor: 'pointer', fontSize: 15 }}>{salvandoCiclo ? '...' : 'Aplicar Regra'}</button>
              </div>
           </div>
         </div>
