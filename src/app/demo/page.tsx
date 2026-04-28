@@ -241,7 +241,7 @@ export default function DemoPage() {
               <div style={{ maxWidth: 540 }}>
                 <div className="card">
                   <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }}
-                    onClick={() => // alert('🛡️ DEMO: Sistema verificou conflitos — nenhum conflito encontrado! Plantão extra salvo.')}>
+                    onClick={() => {}}>
                     🔍 Verificar e Adicionar
                   </button>
                 </div>
@@ -259,7 +259,7 @@ export default function DemoPage() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.4fr', gap: 24 }}>
                 <div className="card" style={{ height: 'fit-content' }}>
                   <h2 style={{ fontWeight: 700, marginBottom: 20, fontSize: 16 }}>Novo Local (Demo)</h2>
-                  <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }} onClick={() => // alert('DEMO: Local salvo no Supabase!')}>➕ Adicionar Local</button>
+                  <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }} onClick={() => {}}>➕ Adicionar Local</button>
                 </div>
                 <div className="card">
                   <h2 style={{ fontWeight: 700, marginBottom: 16, fontSize: 16 }}>Locais Cadastrados ({LOCAIS_MOCK.length})</h2>

@@ -1,5 +1,5 @@
-import { toast } from 'sonner';
 'use client';
+import { toast } from 'sonner';
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
