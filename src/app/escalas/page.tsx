@@ -254,21 +254,39 @@ export default function EscalasPage() {
       setEditingId(e.id);
       setLocalId(e.local_id || '');
       
-      // Mapear tipo de jornada para os valores aceitos pelo estado
       const tipo = e.tipo_jornada === 'Diarista' ? 'Diarista' : 'Plantonista';
       setTipoJornada(tipo);
       
-      if (e.modo_jornada) {
-        setModoJornada(e.modo_jornada);
-      }
-      
-      if (e.regra && e.regra.includes('x')) {
-        const parts = e.regra.split('x');
-        setRegra('Outro');
-        setHorasTrabalhoOutro(parts[0] || '');
-        setHorasDescansoOutro(parts[1] || '');
-      } else if (e.regra) {
-        setRegra(e.regra);
+      if (tipo === 'Diarista' && e.modo_jornada) {
+        setTipoDiarista(e.modo_jornada as 'semana' | 'corridos');
+        if (e.modo_jornada === 'semana') {
+          const dias = (e.regra || '').split(',');
+          const novosDias = { d0: false, d1: false, d2: false, d3: false, d4: false, d5: false, d6: false };
+          dias.forEach((d: string) => {
+            if (d) (novosDias as any)[`d${d.trim()}`] = true;
+          });
+          setDiasDiarista(novosDias);
+        } else {
+          if (e.regra && e.regra.includes('x')) {
+            setRegraDiarista('Outro');
+            const [trabalho, descanso] = e.regra.split('x');
+            setDiasTrabalhoOutro(trabalho);
+            setDiasDescansoOutro(descanso);
+          } else {
+            setRegraDiarista(e.regra);
+          }
+        }
+      } else {
+        if (e.regra && e.regra.includes('x')) {
+          setRegra('Outro');
+          setIsCustomRule(true);
+          const [trabalho, descanso] = e.regra.split('x');
+          setHorasTrabalhoOutro(trabalho);
+          setHorasDescansoOutro(descanso);
+        } else {
+          setRegra(e.regra || '12x36');
+          setIsCustomRule(false);
+        }
       }
       
       if (e.data_inicio) {
@@ -572,7 +590,7 @@ export default function EscalasPage() {
       <div className="mobile-stack" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
         {/* Formulário */}
         <div className="card">
-          <h2 style={{ fontWeight: 700, marginBottom: 20, fontSize: 16 }}>Nova Escala</h2>
+          <h2 style={{ fontWeight: 700, marginBottom: 20, fontSize: 16 }}>{editingId ? 'Editar Escala' : 'Nova Escala'}</h2>
 
           <div className="form-group">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
