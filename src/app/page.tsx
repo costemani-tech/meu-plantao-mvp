@@ -34,7 +34,7 @@ async function getSupabase() {
 
 // Lógica de Saudação Premium e Inclusiva
 function formatGreeting(fullName: string | null | undefined) {
-  if (!fullName || fullName.trim() === '') {
+  if (!fullName || fullName.trim() === '' || fullName.toLowerCase().includes('médico')) {
     return { isFallback: true, text: "Olá, bem-vindo(a) ao Meu Plantão!" };
   }
   
@@ -50,7 +50,7 @@ function formatGreeting(fullName: string | null | undefined) {
 }
 
 // Sub-componente: Resumo de Ganhos e Plantões
-async function StatsSection({ userId, isPro }: { userId: string, isPro: boolean }) {
+async function StatsSection({ userId, isPro, greeting }: { userId: string, isPro: boolean, greeting: { isFallback: boolean, text: string } }) {
   const supabase = await getSupabase();
   const inicioMes = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
   const fimMes = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0, 23, 59, 59).toISOString();
@@ -66,19 +66,11 @@ async function StatsSection({ userId, isPro }: { userId: string, isPro: boolean 
     supabase.from('locais_trabalho').select('*', { count: 'exact', head: true }).eq('usuario_id', userId).eq('ativo', true)
   ]);
 
-  const { data: profile } = await supabase.from('profiles').select('nome').eq('id', userId).single();
-  const greeting = formatGreeting(profile?.nome);
-
   if (locaisAtivos === 0) {
     return (
-    <>
-      <div className="page-header">
-        <h1>{greeting.text}</h1>
-        <p>Acompanhe sua escala e ganhos para o mês de {new Date().toLocaleDateString("pt-BR", { month: "long" })}.</p>
-      </div>
       <div style={{ 
         display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', 
-        padding: '80px 24px', minHeight: '80vh', justifyContent: 'center'
+        padding: '60px 24px', minHeight: '60vh', justifyContent: 'center'
       }}>
         <div style={{ fontSize: 64, marginBottom: 24, animation: 'cardEntrance 0.8s ease' }}>👋</div>
         <h2 style={{ fontSize: 28, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 12 }}>
@@ -93,7 +85,6 @@ async function StatsSection({ userId, isPro }: { userId: string, isPro: boolean 
           </button>
         </Link>
       </div>
-    </>
     );
   }
 
@@ -118,46 +109,40 @@ async function StatsSection({ userId, isPro }: { userId: string, isPro: boolean 
   }
 
   return (
-    <>
-      <div className="page-header">
-        <h1>{greeting.text}</h1>
-        <p>Acompanhe sua escala e ganhos para o mês de {new Date().toLocaleDateString("pt-BR", { month: "long" })}.</p>
-      </div>
-      <div className="card" style={{ marginBottom: 24, position: "relative", overflow: "hidden" }}>
-        <div style={{ position: 'absolute', top: 0, right: 0, width: '100px', height: '100px', background: 'radial-gradient(circle, var(--accent-blue-light) 0%, transparent 70%)', opacity: 0.5, zIndex: 0 }} />
-        
-        <div style={{ position: 'relative', zIndex: 1 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-muted)', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 12 }}>
-            <TrendingUp size={14} color="var(--accent-blue)" />
-            Resumo do Mês
-          </div>
-          
-          <div style={{ fontSize: 32, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 20 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>{totalMes || 0} <span style={{ fontSize: 18, color: "var(--text-secondary)", fontWeight: 600 }}>plantões este mês</span></div>
-          </div>
-
-          <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: 36, marginBottom: 20 }}>
-            <EarningsPrivacyWrapper total={totalGanhos} isPro={isPro} />
-          </div>
-
-          <Link href="/locais" style={{ textDecoration: 'none' }}>
-            <div style={{ 
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between', 
-              borderTop: '1px solid var(--border-subtle)', paddingTop: 20,
-              cursor: 'pointer', transition: 'opacity 0.2s'
-            }} className="hover-opacity">
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700, fontSize: 14, color: 'var(--text-primary)' }}>
-                <span style={{ fontSize: 16 }}><Plus size={16} color="var(--accent-blue)" /></span>
-                {locaisAtivos || 0} locais ativos
-              </div>
-              <div style={{ color: 'var(--accent-blue)', display: 'flex', alignItems: 'center' }}>
-                <ChevronRight size={18} />
-              </div>
-            </div>
-          </Link>
+    <div className="card" style={{ marginBottom: 24, position: "relative", overflow: "hidden" }}>
+      <div style={{ position: 'absolute', top: 0, right: 0, width: '100px', height: '100px', background: 'radial-gradient(circle, var(--accent-blue-light) 0%, transparent 70%)', opacity: 0.5, zIndex: 0 }} />
+      
+      <div style={{ position: 'relative', zIndex: 1 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-muted)', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 12 }}>
+          <TrendingUp size={14} color="var(--accent-blue)" />
+          Resumo do Mês
         </div>
+        
+        <div style={{ fontSize: 32, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 20 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>{totalMes || 0} <span style={{ fontSize: 18, color: "var(--text-secondary)", fontWeight: 600 }}>plantões este mês</span></div>
+        </div>
+
+        <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: 36, marginBottom: 20 }}>
+          <EarningsPrivacyWrapper total={totalGanhos} isPro={isPro} />
+        </div>
+
+        <Link href="/locais" style={{ textDecoration: 'none' }}>
+          <div style={{ 
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between', 
+            borderTop: '1px solid var(--border-subtle)', paddingTop: 20,
+            cursor: 'pointer', transition: 'opacity 0.2s'
+          }} className="hover-opacity">
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700, fontSize: 14, color: 'var(--text-primary)' }}>
+              <span style={{ fontSize: 16 }}><Plus size={16} color="var(--accent-blue)" /></span>
+              {locaisAtivos || 0} locais ativos
+            </div>
+            <div style={{ color: 'var(--accent-blue)', display: 'flex', alignItems: 'center' }}>
+              <ChevronRight size={18} />
+            </div>
+          </div>
+        </Link>
       </div>
-    </>
+    </div>
   );
 }
 
@@ -230,9 +215,12 @@ export default async function DashboardPage() {
     .eq('id', user.id)
     .single();
 
-  const fullName = profile?.nome || user.user_metadata?.full_name || user.user_metadata?.name || '';
+  const rawName = profile?.nome || user.user_metadata?.full_name || user.user_metadata?.name || '';
+  const fallbackFromEmail = user.email ? user.email.split('@')[0].split(/[._-]/).map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' ') : '';
+  const fullName = rawName || fallbackFromEmail || 'Usuário';
+  
   const greeting = formatGreeting(fullName);
-  const userName = greeting.isFallback ? 'Usuário' : greeting.text.replace('Olá, ', '').replace('!', '');
+  const userName = greeting.isFallback ? 'Doutor(a)' : greeting.text.replace('Olá, ', '').replace('!', '');
 
   const isPro = isUserPro(user.email) || (profile?.is_pro === true);
 
@@ -275,21 +263,17 @@ export default async function DashboardPage() {
   const hasLocations = (locaisCount || 0) > 0;
 
   return (
-    <div style={{ padding: "16px 16px 120px 16px", maxWidth: "600px", margin: "0 auto" }}>
+    <div style={{ padding: "0 16px 120px 16px", maxWidth: "600px", margin: "0 auto" }}>
       
-      {/* HEADER (Carrega Instantaneamente) */}
-      <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontSize: 24, fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
-          Meu Plantão
-        </h1>
-        <p style={{ fontSize: 14, color: 'var(--text-secondary)', margin: '4px 0 0 0' }}>
-          Organize seus plantões. Tenha tudo sob controle.
-        </p>
+      {/* HEADER (Instantâneo) */}
+      <div className="page-header" style={{ paddingTop: 16 }}>
+        <h1>{greeting.text}</h1>
+        <p>Acompanhe sua escala e ganhos para o mês de {new Date().toLocaleDateString("pt-BR", { month: "long" })}.</p>
       </div>
 
       {/* CARD PRINCIPAL (Assíncrono) */}
       <Suspense fallback={<StatsSkeleton />}>
-        <StatsSection userId={user.id} isPro={isPro} />
+        <StatsSection userId={user.id} isPro={isPro} greeting={greeting} />
       </Suspense>
 
       {/* PRÓXIMOS PLANTÕES (Assíncrono) */}

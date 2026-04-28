@@ -359,13 +359,13 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               className="mobile-only"
               style={{
                 background: 'var(--bg-secondary)', padding: 10, borderRadius: '50%',
-                boxShadow: 'var(--shadow-sm)', alignItems: 'center', justifyContent: 'center',
+                boxShadow: 'var(--shadow-sm)', display: 'flex', alignItems: 'center', justifyContent: 'center',
                 color: 'var(--text-primary)', border: '1px solid var(--border-subtle)', cursor: 'pointer',
-                transition: 'all 0.2s', width: 44, height: 44
+                transition: 'all 0.2s', width: 40, height: 40
               }}
               title="Trocar Tema"
             >
-              {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
+              {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
             </button>
 
             <button 
@@ -375,13 +375,13 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 boxShadow: 'var(--shadow-sm)', display: 'flex', alignItems: 'center', justifyContent: 'center',
                 color: notificationPermission === 'granted' ? 'var(--accent-blue)' : 'var(--text-primary)', 
                 border: '1px solid var(--border-subtle)', transition: 'all 0.2s',
-                cursor: 'pointer', width: 44, height: 44, position: 'relative'
+                cursor: 'pointer', width: 40, height: 40, position: 'relative'
               }}
               title="Notificações e Alertas"
             >
               <div style={{ position: 'relative', display: 'flex' }}>
-                <Bell size={20} fill={notificationPermission === 'granted' ? 'currentColor' : 'none'} style={{ opacity: notificationPermission === 'granted' ? 0.2 : 1 }} />
-                <Bell size={20} style={{ position: 'absolute', top: 0, left: 0 }} />
+                <Bell size={18} fill={notificationPermission === 'granted' ? 'currentColor' : 'none'} style={{ opacity: notificationPermission === 'granted' ? 0.2 : 1 }} />
+                <Bell size={18} style={{ position: 'absolute', top: 0, left: 0 }} />
                 
                 {notificationPermission === 'granted' && (
                   <div style={{

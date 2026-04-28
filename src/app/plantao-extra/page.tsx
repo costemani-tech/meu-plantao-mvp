@@ -173,7 +173,7 @@ export default function PlantaoExtraPage() {
   }
 
   return (
-    <>
+    <div style={{ padding: "0 16px 120px 16px", maxWidth: "600px", margin: "0 auto" }}>
       <div className="page-header">
         <h1>Plantão Extra <PlusCircle size={24} style={{ marginLeft: 8, display: "inline", verticalAlign: "middle" }} /></h1>
         <p>Registre seus plantões fora da escala regular e gerencie seus ganhos.</p>
@@ -357,6 +357,6 @@ export default function PlantaoExtraPage() {
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }

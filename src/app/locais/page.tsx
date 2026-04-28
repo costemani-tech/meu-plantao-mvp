@@ -155,7 +155,7 @@ export default function LocaisPage() {
   }
 
   return (
-    <>
+    <div style={{ padding: "0 16px 120px 16px", maxWidth: "800px", margin: "0 auto" }}>
       <div className="page-header">
         <h1>Locais de Trabalho <span style={{ marginLeft: 8 }}><Plus size={24} /></span></h1>
         <p>Gerencie os hospitais, clínicas e atendimentos Home Care</p>
@@ -437,6 +437,6 @@ export default function LocaisPage() {
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }

@@ -572,7 +572,7 @@ export default function EscalasPage() {
   };
 
   return (
-    <>
+    <div style={{ padding: "0 16px 120px 16px", maxWidth: "800px", margin: "0 auto" }}>
       <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <h1>Escalas <ClipboardList size={24} style={{ marginLeft: 8, display: "inline" }} /></h1>
@@ -1229,6 +1229,6 @@ export default function EscalasPage() {
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }
