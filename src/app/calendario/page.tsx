@@ -2,10 +2,9 @@
 
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { supabase, Plantao, LocalTrabalho, isUserPro } from '../../lib/supabase';
-import { Clock, MoreVertical, ChevronLeft, ChevronRight, Info, AlertTriangle, Star } from 'lucide-react';
+import { Clock, MoreVertical, ChevronLeft, ChevronRight, Info, Edit2, Trash2, Bell } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { ShareAgendaModal } from '../../components/ShareAgendaModal';
-import Link from 'next/link';
 
 interface PlantaoComLocal extends Plantao {
   local?: LocalTrabalho;
@@ -95,6 +94,51 @@ export default function CalendarioPage() {
     return () => window.removeEventListener('plantoes-atualizados', handleUpdate);
   }, [fetchPlantoes]);
 
+  const removerSomenteEste = async () => {
+    if (!modalExclusao) return;
+    setExcluindo(true);
+    const id = modalExclusao.id;
+    setPlantoes(prev => prev.filter(p => p.id !== id));
+    setModalExclusao(null);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    const { error } = await supabase.from('plantoes').delete().eq('usuario_id', user.id).eq('id', id);
+    if (error) {
+      fetchPlantoes();
+    } else {
+      localStorage.removeItem(`calendario_cache_${ano}_${mes}`);
+      window.dispatchEvent(new CustomEvent('plantoes-atualizados'));
+    }
+    setExcluindo(false);
+  };
+
+  const removerEstEFuturos = async () => {
+    if (!modalExclusao) return;
+    const p = modalExclusao;
+    if (!p.escala_id) {
+      await removerSomenteEste();
+      return;
+    }
+    setExcluindo(true);
+    setModalExclusao(null);
+    try {
+      const response = await fetch(`/api/escalas/${p.escala_id}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          modo: 'encerrar_em',
+          data_encerramento: p.data_hora_inicio,
+        }),
+      });
+      if (response.ok) {
+        localStorage.removeItem(`calendario_cache_${ano}_${mes}`);
+        fetchPlantoes();
+        window.dispatchEvent(new CustomEvent('plantoes-atualizados'));
+      }
+    } catch { /* silencioso */ }
+    setExcluindo(false);
+  };
+
   const plantoesNoDia = (dia: number): PlantaoComLocal[] =>
     plantoes.filter(p => {
       const dInicio = new Date(p.data_hora_inicio);
@@ -136,12 +180,15 @@ export default function CalendarioPage() {
   for (let d = 1; d <= diasNoMes; d++) cells.push({ dia: d, mesAtual: true });
   while (cells.length % 7 !== 0) cells.push({ dia: cells.length - diasNoMes - primeiroDiaMes + 1, mesAtual: false });
 
-  const renderCellBackground = (ps: PlantaoComLocal[]) => {
+  const renderCellBackground = (ps: PlantaoComLocal[], dia: number) => {
     if (ps.length === 0) return null;
     const getCor = (p: PlantaoComLocal) => p.is_extra ? '#8b5cf6' : (p.local?.cor_calendario ?? '#4f8ef7');
     
-    // Garantir cores únicas se possível para evitar repetição visual se houver 2 plantões no mesmo local
-    const displayPs = ps.slice(0, 4);
+    // Filtrar para mostrar primeiro os plantões que COMEÇAM no dia (regra de cross-day visual)
+    const starts = ps.filter(p => new Date(p.data_hora_inicio).getDate() === dia);
+    const ends = ps.filter(p => new Date(p.data_hora_inicio).getDate() !== dia);
+    
+    const displayPs = [...starts, ...ends].slice(0, 4);
     
     return (
       <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column' }}>
@@ -201,7 +248,7 @@ export default function CalendarioPage() {
                 }}
               >
                 {/* Background do dia (Divisões) */}
-                {renderCellBackground(ps)}
+                {renderCellBackground(ps, cell.dia)}
 
                 {/* Camada de conteúdo */}
                 <div style={{ position: 'relative', zIndex: 5, height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -252,7 +299,7 @@ export default function CalendarioPage() {
         </div>
       )}
 
-      {/* Modais (Mantidos da versão anterior) */}
+      {/* Modais */}
       {diaSelecionado !== null && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }} onClick={() => setDiaSelecionado(null)}>
           <div className="card" style={{ width: '100%', maxWidth: 400, background: '#0f172a', border: '1px solid #1e293b', borderRadius: 24 }} onClick={e => e.stopPropagation()}>
@@ -262,14 +309,100 @@ export default function CalendarioPage() {
             </div>
             {plantoesNoDia(diaSelecionado).length === 0 ? (<p style={{ color: '#94a3b8', fontSize: 14 }}>Dia de folga livre!</p>) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                {plantoesNoDia(diaSelecionado).map(p => (
-                  <div key={p.id} style={{ padding: 16, background: 'rgba(30, 41, 59, 0.3)', border: '1px solid #1e293b', borderRadius: 16, borderLeft: `4px solid ${p.local?.cor_calendario ?? '#4f8ef7'}` }}>
-                    <div style={{ fontWeight: 800, fontSize: 15, color: '#fff', marginBottom: 4 }}>{p.local?.nome ?? 'Local Indefinido'}</div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#94a3b8' }}><Clock size={14} /> {new Date(p.data_hora_inicio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} às {new Date(p.data_hora_fim).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</div>
-                  </div>
-                ))}
+                {plantoesNoDia(diaSelecionado).map(p => {
+                  const dInicio = new Date(p.data_hora_inicio);
+                  const isExitOnly = dInicio.getDate() !== diaSelecionado || dInicio.getMonth() !== mes || dInicio.getFullYear() !== ano;
+                  
+                  return (
+                    <div key={p.id} style={{ padding: 16, background: 'rgba(30, 41, 59, 0.3)', border: '1px solid #1e293b', borderRadius: 16, borderLeft: `4px solid ${p.local?.cor_calendario ?? '#4f8ef7'}` }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <div>
+                          <div style={{ fontWeight: 800, fontSize: 15, color: '#fff', marginBottom: 4 }}>{p.local?.nome ?? 'Local Indefinido'}</div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#94a3b8' }}><Clock size={14} /> {new Date(p.data_hora_inicio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} às {new Date(p.data_hora_fim).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</div>
+                        </div>
+                        
+                        {/* CRUD Actions */}
+                        {!isExitOnly && (
+                          <div style={{ display: 'flex', gap: 8 }}>
+                             <button 
+                               onClick={() => {
+                                 if (!isPro) { setShowUpgradeModal(true); return; }
+                                 setEdicaoCiclo({p, regra: p.escala?.regra || '12x36', dataInicio: p.data_hora_inicio.substring(0, 10), horaInicio: new Date(p.data_hora_inicio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }), horaFim: new Date(p.data_hora_fim).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })});
+                               }} 
+                               style={{ background: 'rgba(30, 41, 59, 0.5)', border: 'none', color: '#fff', padding: 8, borderRadius: 8, cursor: 'pointer' }}
+                               title="Editar"
+                             >
+                               <Edit2 size={16} />
+                             </button>
+                             <button 
+                               onClick={() => setModalExclusao(p)} 
+                               style={{ background: 'rgba(239, 68, 68, 0.1)', border: 'none', color: '#ef4444', padding: 8, borderRadius: 8, cursor: 'pointer' }}
+                               title="Excluir"
+                             >
+                               <Trash2 size={16} />
+                             </button>
+                          </div>
+                        )}
+                      </div>
+                      
+                      {isExitOnly && (
+                        <div style={{ marginTop: 12, padding: '8px 12px', background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.2)', borderRadius: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <Info size={14} color="#60a5fa" />
+                          <span style={{ fontSize: 11, fontWeight: 600, color: '#60a5fa' }}>Plantão iniciado no dia anterior. Edição apenas no dia de início.</span>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {modalExclusao && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', zIndex: 100000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }} onClick={() => setModalExclusao(null)}>
+          <div className="card" style={{ maxWidth: 380, width: '100%', background: '#0f172a', border: '1px solid #1e293b', borderRadius: 24 }} onClick={e => e.stopPropagation()}>
+            <h2 style={{ fontSize: 18, fontWeight: 800, color: '#fff', marginBottom: 12 }}>Remover Plantão</h2>
+            <p style={{ fontSize: 14, color: '#94a3b8', marginBottom: 24 }}><strong>{modalExclusao.local?.nome}</strong><br />{new Date(modalExclusao.data_hora_inicio).toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })}</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <button onClick={removerSomenteEste} disabled={excluindo} style={{ padding: 14, background: 'rgba(30, 41, 59, 0.5)', border: '1px solid #1e293b', borderRadius: 12, color: '#fff', fontWeight: 700, cursor: 'pointer' }}>Remover só este</button>
+              {!modalExclusao.is_extra && modalExclusao.escala_id && (
+                <button onClick={removerEstEFuturos} disabled={excluindo} style={{ padding: 14, background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: 12, color: '#ef4444', fontWeight: 700, cursor: 'pointer' }}>Remover este e futuros</button>
+              )}
+              <button onClick={() => setModalExclusao(null)} style={{ padding: 14, background: 'transparent', border: 'none', color: '#64748b', fontWeight: 700, cursor: 'pointer' }}>Cancelar</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {edicaoCiclo && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', zIndex: 100001, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+          <div className="card" style={{ maxWidth: 400, width: '100%', background: '#0f172a', border: '1px solid #1e293b', borderRadius: 24 }}>
+             <h2 style={{ fontSize: 18, fontWeight: 800, color: '#fff', marginBottom: 16 }}>Editar Ciclo</h2>
+             <label style={{ fontSize: 12, fontWeight: 700, color: '#475569', textTransform: 'uppercase', marginBottom: 8, display: 'block' }}>Data de Início</label>
+             <input type="date" value={edicaoCiclo.dataInicio} onChange={e => setEdicaoCiclo({...edicaoCiclo, dataInicio: e.target.value})} className="form-input" style={{ marginBottom: 24, background: 'rgba(30, 41, 59, 0.3)', border: '1px solid #1e293b', color: '#fff' }} />
+             <div style={{ display: 'flex', gap: 12 }}>
+                 <button onClick={() => setEdicaoCiclo(null)} style={{ flex: 1, padding: 14, background: 'transparent', border: 'none', color: '#64748b', fontWeight: 700, cursor: 'pointer' }}>Cancelar</button>
+                 <button 
+                   onClick={async () => {
+                     setSalvandoCiclo(true);
+                     try {
+                       const dataNovaFormatada = edicaoCiclo.dataInicio + 'T' + edicaoCiclo.horaInicio + ':00';
+                       await fetch(`/api/escalas/${edicaoCiclo.p.escala_id}`, { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ modo: 'encerrar_em', data_encerramento: dataNovaFormatada }) });
+                       await fetch('/api/escalas', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ local_id: edicaoCiclo.p.local_id, regra: edicaoCiclo.regra, data_inicio: dataNovaFormatada, hora_fim: edicaoCiclo.horaFim }) });
+                       localStorage.removeItem(`calendario_cache_${ano}_${mes}`);
+                       fetchPlantoes();
+                       setEdicaoCiclo(null);
+                       setDiaSelecionado(null);
+                     } catch (e) { alert('Erro ao recalcular ciclo.'); }
+                     setSalvandoCiclo(false);
+                   }} 
+                   style={{ flex: 1, padding: 14, background: 'var(--accent-blue)', border: 'none', borderRadius: 12, color: '#fff', fontWeight: 700, cursor: 'pointer' }}
+                 >
+                   {salvandoCiclo ? '...' : 'Aplicar'}
+                 </button>
+             </div>
           </div>
         </div>
       )}
