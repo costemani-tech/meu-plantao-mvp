@@ -215,9 +215,9 @@ export function DashboardInteractive({ isPro, hasLocations = true }: { isPro: bo
             {/* Minicards de Benefícios */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 32, textAlign: 'left' }}>
               {[
-                { icon: '💰', title: 'Previsão Financeira', desc: 'Veja quanto vai receber no mês.' },
-                { icon: '📄', title: 'Escalas Premium', desc: 'Gere PDF profissional para envio.' },
-                { icon: '⚡', title: 'Controle Ilimitado', desc: 'Gestão total das suas escalas.' }
+                { icon: <TrendingUp size={18} />, title: 'Previsão Financeira', desc: 'Veja quanto vai receber no mês.' },
+                { icon: <FileText size={18} />, title: 'Escalas Premium', desc: 'Gere PDF profissional para envio.' },
+                { icon: <Activity size={18} />, title: 'Controle Ilimitado', desc: 'Gestão total das suas escalas.' }
               ].map((b, i) => (
                 <div key={i} style={{ 
                   background: '#eff6ff', // blue-50
@@ -228,7 +228,7 @@ export function DashboardInteractive({ isPro, hasLocations = true }: { isPro: bo
                   alignItems: 'flex-start',
                   gap: 12
                 }}>
-                  <div style={{ fontSize: 18, marginTop: 2 }}>{b.icon}</div>
+                  <div style={{ color: "var(--accent-blue)", marginTop: 2 }}>{b.icon}</div>
                   <div>
                     <div style={{ fontWeight: 800, fontSize: 14, color: '#1e3a8a' }}>{b.title}</div>
                     <div style={{ fontSize: 12, color: '#60a5fa' }}>{b.desc}</div>
@@ -238,7 +238,7 @@ export function DashboardInteractive({ isPro, hasLocations = true }: { isPro: bo
             </div>
 
             <p style={{ fontSize: 18, fontWeight: 700, color: '#1e293b', marginBottom: 24, lineHeight: 1.4 }}>
-              🚀 Usado por profissionais para organizar plantões com mais controle.
+              Utilizado por profissionais para organizar plantões com mais controle.
             </p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -253,7 +253,7 @@ export function DashboardInteractive({ isPro, hasLocations = true }: { isPro: bo
                 }} 
                 onClick={() => setShowProModal('')}
               >
-                🚀 Desbloquear agora
+                Desbloquear agora
               </button>
               
               <button 
@@ -384,7 +384,7 @@ export function ShareAgendaButton({ proximos: initialProximos, userName, totalGa
   return (
     <>
       <button onClick={() => setShowModal(true)} style={{ background: 'none', border: 'none', color: 'var(--accent-blue)', fontSize: '12px', fontWeight: 700, cursor: 'pointer', padding: 0 }}>
-        [ Compartilhar ]
+        <span style={{ display: "flex", alignItems: "center", gap: 4 }}><Share2 size={12} /> Compartilhar</span>
       </button>
 
       <ShareAgendaModal 
@@ -411,7 +411,7 @@ export function UpcomingShiftsClient({ proximos, isPro, userName, totalGanhos }:
         <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0, whiteSpace: 'nowrap' }}>
           <Link href="/calendario" style={{ textDecoration: 'none' }}>
             <span style={{ color: 'var(--accent-blue)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
-              [ Ver agenda ]
+              <span style={{ display: "flex", alignItems: "center", gap: 4 }}><CalendarIcon size={12} /> Ver agenda</span>
             </span>
           </Link>
           <ShareAgendaButton proximos={proximos || []} userName={userName} totalGanhos={totalGanhos} isPro={isPro} />
@@ -432,19 +432,11 @@ export function UpcomingShiftsClient({ proximos, isPro, userName, totalGanhos }:
                 onClick={() => router.push('/calendario')} // Redireciona para o calendário (onde o modal de edição existe)
                 style={{ textDecoration: 'none', cursor: 'pointer' }}
               >
-                <div className="shift-item" style={{ 
-                  border: '1px solid var(--border-subtle)', 
-                  borderRadius: '16px', 
-                  display: 'flex', 
-                  alignItems: 'center',
-                  background: 'var(--bg-secondary)',
-                  transition: 'transform 0.1s'
-                }}>
+                <div className="shift-item card" style={{ display: "flex", alignItems: "center", padding: 0, borderRadius: "18px", marginBottom: 0, border: "1px solid var(--border-subtle)" }}>
                   <div className="shift-color-bar" style={{ 
                     backgroundColor: localObj?.cor_calendario || 'var(--accent-blue)', 
                     width: '6px', 
-                    height: '64px', 
-                    borderRadius: '16px 0 0 16px' 
+                    height: "64px", borderRadius: "18px 0 0 18px" 
                   }} />
                   <div className="shift-info" style={{ padding: '16px', flex: 1 }}>
                     <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 4 }}>

@@ -92,11 +92,7 @@ async function StatsSection({ userId, isPro }: { userId: string, isPro: boolean 
   }
 
   return (
-    <div className="card" style={{ 
-      padding: '24px', borderRadius: '24px', background: 'var(--bg-secondary)', 
-      border: '1px solid var(--border-subtle)', boxShadow: 'var(--shadow-md)',
-      marginBottom: 32, position: 'relative', overflow: 'hidden'
-    }}>
+    <div className="card" style={{ marginBottom: 24, position: "relative", overflow: "hidden" }}>
       <div style={{ position: 'absolute', top: 0, right: 0, width: '100px', height: '100px', background: 'radial-gradient(circle, var(--accent-blue-light) 0%, transparent 70%)', opacity: 0.5, zIndex: 0 }} />
       
       <div style={{ position: 'relative', zIndex: 1 }}>
@@ -106,7 +102,7 @@ async function StatsSection({ userId, isPro }: { userId: string, isPro: boolean 
         </div>
         
         <div style={{ fontSize: 32, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 20 }}>
-          📅 {totalMes || 0} <span style={{ fontSize: 18, color: 'var(--text-secondary)', fontWeight: 600 }}>plantões este mês</span>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>{totalMes || 0} <span style={{ fontSize: 18, color: "var(--text-secondary)", fontWeight: 600 }}>plantões este mês</span></div>
         </div>
 
         <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: 36, marginBottom: 20 }}>
@@ -120,7 +116,7 @@ async function StatsSection({ userId, isPro }: { userId: string, isPro: boolean 
             cursor: 'pointer', transition: 'opacity 0.2s'
           }} className="hover-opacity">
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700, fontSize: 14, color: 'var(--text-primary)' }}>
-              <span style={{ fontSize: 16 }}>🏥</span>
+              <span style={{ fontSize: 16 }}><Plus size={16} color="var(--accent-blue)" /></span>
               {locaisAtivos || 0} locais ativos
             </div>
             <div style={{ color: 'var(--accent-blue)', display: 'flex', alignItems: 'center' }}>
@@ -174,7 +170,7 @@ function StatsSkeleton() {
 
 function ShiftsSkeleton() {
   return (
-    <div style={{ marginBottom: 24 }}>
+    <div style={{ marginBottom: 20 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <h3 style={{ fontSize: 16, fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
           Próximos Plantões
@@ -253,12 +249,12 @@ export default async function DashboardPage() {
   const hasLocations = (locaisCount || 0) > 0;
 
   return (
-    <div style={{ padding: '24px 16px 100px 16px', maxWidth: '600px', margin: '0 auto' }}>
+    <div style={{ padding: "16px 16px 120px 16px", maxWidth: "600px", margin: "0 auto" }}>
       
       {/* HEADER (Carrega Instantaneamente) */}
       <div style={{ marginBottom: 24 }}>
         <h1 style={{ fontSize: 24, fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
-          Meu Plantão 👋
+          Meu Plantão
         </h1>
         <p style={{ fontSize: 14, color: 'var(--text-secondary)', margin: '4px 0 0 0' }}>
           Organize seus plantões. Tenha tudo sob controle.

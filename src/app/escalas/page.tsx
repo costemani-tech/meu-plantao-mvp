@@ -575,7 +575,7 @@ export default function EscalasPage() {
     <>
       <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <h1>Escalas</h1>
+          <h1>Escalas <ClipboardList size={24} style={{ marginLeft: 8, display: "inline" }} /></h1>
           <p>Organize seus plantões de forma simples</p>
         </div>
         {!showForm && (
@@ -683,7 +683,7 @@ export default function EscalasPage() {
                   <option value="">Selecione um local...</option>
                   {locais.map(l => <option key={l.id} value={l.id}>{l.nome}</option>)}
                 </select>
-                <button type="button" onClick={() => setIsCreatingLocal(true)} style={{ background: "none", border: "none", color: "var(--accent-blue)", fontSize: 13, fontWeight: 600, cursor: "pointer", padding: "8px 0 0 0", display: "flex", alignItems: "center", gap: 4 }}>+ Novo local</button>
+                <button type="button" onClick={() => setIsCreatingLocal(true)} style={{ background: "none", border: "none", color: "var(--accent-blue)", fontSize: 13, fontWeight: 600, cursor: "pointer", padding: "8px 0 0 0", display: "flex", alignItems: "center", gap: 4 }}><Plus size={14} /> Novo local</button>
                 {locais.length === 0 && (
                   <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6 }}>
                     Ainda não há locais. Clique em &quot;Criar Novo&quot; acima.

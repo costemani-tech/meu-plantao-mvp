@@ -531,7 +531,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         {overCapacity && !loading ? (
           <div style={{ height: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <div className="card" style={{ maxWidth: 440, width: '100%', textAlign: 'center', borderColor: '#EF4444' }}>
-              <span style={{ fontSize: 48, display: 'block', marginBottom: 16 }}>⚠️</span>
+              <div style={{ display: "flex", justifyContent: "center", marginBottom: 20 }}><AlertTriangle size={64} color="#EF4444" /></div>
               <h2 style={{ fontSize: 20, fontWeight: 800, marginBottom: 8, color: 'var(--text-primary)' }}>Conta Bloqueada</h2>
               <p style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 24, lineHeight: 1.5 }}>
                 Seu plano Pro expirou e você possui <strong>mais de 2 hospitais</strong> configurados na sua conta. <br/><br/>
@@ -543,7 +543,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                   style={{ width: '100%', justifyContent: 'center', background: 'linear-gradient(135deg, #f59e0b, #d97706)' }}
                   onClick={() => {}}
                 >
-                  ⭐ Assinar Versão Pro
+                  <Star size={18} fill="currentColor" /> Assinar Versão Pro
                 </button>
                 <Link 
                   href="/locais" 

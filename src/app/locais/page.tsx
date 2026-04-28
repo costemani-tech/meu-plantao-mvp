@@ -1,3 +1,4 @@
+import { Plus, Trash2, Home, MapPin, Edit3, Star } from 'lucide-react';
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
@@ -156,7 +157,7 @@ export default function LocaisPage() {
   return (
     <>
       <div className="page-header">
-        <h1>Locais de Trabalho 🏥</h1>
+        <h1>Locais de Trabalho <span style={{ marginLeft: 8 }}><Plus size={24} /></span></h1>
         <p>Gerencie os hospitais, clínicas e atendimentos Home Care</p>
       </div>
 
@@ -184,7 +185,7 @@ export default function LocaisPage() {
             style={{ padding: '14px 40px', fontSize: 16, borderRadius: 12 }}
             onClick={() => setForceShowForm(true)}
           >
-            ➕ Adicionar Local
+            <Plus size={18} /> Adicionar Local
           </button>
         </div>
       ) : (
@@ -254,7 +255,7 @@ export default function LocaisPage() {
                     style={{ width: 16, height: 16, accentColor: 'var(--accent-teal)' }}
                   />
                   <label htmlFor="homecareCheckbox" style={{ fontSize: 13, color: 'var(--text-secondary)', cursor: 'pointer' }}>
-                    Este local é de atendimento <strong>Home Care</strong> 🏠
+                    Este local é de atendimento <strong>Home Care</strong>
                   </label>
                 </div>
 
@@ -334,11 +335,11 @@ export default function LocaisPage() {
                     <div className="shift-info" style={{ flex: 1 }}>
                       <div className="shift-local" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                         {l.nome}
-                        {l.is_home_care && <span style={{ fontSize: 11, background: 'rgba(34,211,181,0.1)', color: 'var(--accent-teal)', padding: '2px 6px', borderRadius: 4 }}>🏠 Home Care</span>}
+                        {l.is_home_care && <span style={{ fontSize: 11, background: 'rgba(34,211,181,0.1)', color: 'var(--accent-teal)', padding: '2px 6px', borderRadius: 4 }}><span style={{ display: "flex", alignItems: "center", gap: 4 }}><Home size={12} /> Home Care</span></span>}
                       </div>
                       {l.endereco && !l.is_home_care && (
                         <div className="shift-time" style={{ marginTop: 4, display: 'flex', alignItems: 'center', gap: 4 }}>
-                          📍 <span style={{ opacity: 0.8 }}>{l.endereco}</span>
+                          <MapPin size={14} /> <span style={{ opacity: 0.8 }}>{l.endereco}</span>
                           <a 
                             href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(l.endereco)}`} 
                             target="_blank" 
@@ -363,7 +364,7 @@ export default function LocaisPage() {
                       onClick={(e) => { e.stopPropagation(); excluirLocal(l.id, l.nome); }}
                       title="Excluir"
                     >
-                      🗑️
+                      <Trash2 size={16} />
                     </button>
                   </div>
                 ))}

@@ -1,4 +1,8 @@
 
+const fs = require('fs');
+
+// 1. Update globals.css
+let css = `
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 
 :root {
@@ -203,3 +207,7 @@ h1, h2, h3, h4 {
   .sidebar { display: none !important; }
   .main-content { padding: 24px 20px 100px 20px; }
 }
+`;
+
+fs.writeFileSync('src/app/globals.css', css, 'utf8');
+console.log('globals.css updated');
