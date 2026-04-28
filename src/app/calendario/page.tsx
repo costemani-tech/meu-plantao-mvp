@@ -5,6 +5,7 @@ import { supabase, Plantao, LocalTrabalho, isUserPro } from '../../lib/supabase'
 import { Clock, MoreVertical, ChevronLeft, ChevronRight, Info, Edit2, Trash2, Calendar as CalendarIcon, Settings } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { ShareAgendaModal } from '../../components/ShareAgendaModal';
+import { ShiftEditScreen } from '../../components/ShiftEditScreen';
 
 interface PlantaoComLocal extends Plantao {
   local?: LocalTrabalho;
@@ -14,14 +15,6 @@ interface PlantaoComLocal extends Plantao {
 
 const DIAS_SEMANA = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-const REGRAS_PRESETS = [
-  { id: '12x36', label: '12x36 (Dia Sim/Dia Não)' },
-  { id: '24x72', label: '24x72 (Um dia por três)' },
-  { id: '5x2', label: '5x2 (Segunda a Sexta)' },
-  { id: '12x60', label: '12x60' },
-  { id: 'fixo', label: 'Dia Fixo da Semana' },
-  { id: 'custom', label: 'Outro (Personalizado)' }
-];
 
 export default function CalendarioPage() {
   const [plantoes, setPlantoes] = useState<PlantaoComLocal[]>([]);
@@ -33,7 +26,7 @@ export default function CalendarioPage() {
   const [excluindo, setExcluindo] = useState(false);
   
   const [menuAberto, setMenuAberto] = useState(false);
-  const [edicaoCiclo, setEdicaoCiclo] = useState<{p: PlantaoComLocal, regra: string, dataInicio: string, horaInicio: string, horaFim: string, horasTrabalho?: string, horasDescanso?: string} | null>(null);
+  const [shiftParaEditar, setShiftParaEditar] = useState<PlantaoComLocal | null>(null);
   const [salvandoCiclo, setSalvandoCiclo] = useState(false);
   
   const [showExportModal, setShowExportModal] = useState(false);
@@ -201,6 +194,55 @@ export default function CalendarioPage() {
     );
   };
 
+  const handleSaveShift = async (data: any) => {
+    if (!shiftParaEditar) return;
+    setSalvandoCiclo(true);
+    try {
+      const { regra, horaInicio, horaFim, cor, dataInicio } = data;
+      const dataNovaFormatada = dataInicio + 'T' + horaInicio + ':00';
+      
+      // 1. Atualizar cor do hospital se mudou
+      if (shiftParaEditar.local_id && cor !== shiftParaEditar.local?.cor_calendario) {
+        await supabase.from('locais_trabalho').update({ cor_calendario: cor }).eq('id', shiftParaEditar.local_id);
+      }
+
+      // 2. Se tiver escala, atualizar ciclo
+      if (shiftParaEditar.escala_id) {
+        await fetch(`/api/escalas/${shiftParaEditar.escala_id}`, { 
+          method: 'DELETE', 
+          headers: { 'Content-Type': 'application/json' }, 
+          body: JSON.stringify({ modo: 'encerrar_em', data_encerramento: dataNovaFormatada }) 
+        });
+        
+        await fetch('/api/escalas', { 
+          method: 'POST', 
+          headers: { 'Content-Type': 'application/json' }, 
+          body: JSON.stringify({ 
+            local_id: shiftParaEditar.local_id, 
+            regra: regra, 
+            data_inicio: dataNovaFormatada, 
+            hora_fim: horaFim 
+          }) 
+        });
+      } else {
+        // Se for plantão avulso, atualizar apenas este
+        await supabase.from('plantoes').update({
+           data_hora_inicio: dataNovaFormatada,
+           data_hora_fim: dataInicio + 'T' + horaFim + ':00' // Simplificação para o mesmo dia
+        }).eq('id', shiftParaEditar.id);
+      }
+
+      localStorage.removeItem(`calendario_cache_${ano}_${mes}`);
+      fetchPlantoes();
+      setShiftParaEditar(null);
+      setDiaSelecionado(null);
+    } catch (e) {
+      alert('Erro ao salvar alterações.');
+    } finally {
+      setSalvandoCiclo(false);
+    }
+  };
+
   return (
     <div className="page-container" style={{ background: '#020617', minHeight: '100vh', paddingBottom: '120px' }}>
       <div style={{ textAlign: 'center', marginBottom: 32, paddingTop: 20 }}>
@@ -280,20 +322,7 @@ export default function CalendarioPage() {
                         </div>
                         {!isExitOnly && (
                           <div style={{ display: 'flex', gap: 10 }}>
-                             <button onClick={() => { 
-                               if (!isPro) { setShowUpgradeModal(true); return; } 
-                               const d = new Date(p.data_hora_inicio);
-                               const f = new Date(p.data_hora_fim);
-                               setEdicaoCiclo({
-                                 p, 
-                                 regra: p.escala?.regra || '12x36', 
-                                 dataInicio: p.data_hora_inicio.substring(0, 10), 
-                                 horaInicio: d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }), 
-                                 horaFim: f.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-                                 horasTrabalho: '12',
-                                 horasDescanso: '36'
-                               }); 
-                             }} style={{ background: 'rgba(30, 41, 59, 0.6)', border: 'none', color: '#fff', padding: 10, borderRadius: 10, cursor: 'pointer' }}><Edit2 size={18} /></button>
+                             <button onClick={() => { if (!isPro) { setShowUpgradeModal(true); return; } setShiftParaEditar(p); }} style={{ background: 'rgba(30, 41, 59, 0.6)', border: 'none', color: '#fff', padding: 10, borderRadius: 10, cursor: 'pointer' }}><Edit2 size={18} /></button>
                              <button onClick={() => setModalExclusao(p)} style={{ background: 'rgba(239, 68, 68, 0.15)', border: 'none', color: '#ef4444', padding: 10, borderRadius: 10, cursor: 'pointer' }}><Trash2 size={18} /></button>
                           </div>
                         )}
@@ -327,83 +356,12 @@ export default function CalendarioPage() {
         </div>
       )}
 
-      {edicaoCiclo && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)', zIndex: 100001, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-          <div className="card" style={{ maxWidth: 420, width: '100%', background: '#0f172a', border: '1px solid #1e293b', borderRadius: 28, padding: 32 }}>
-             <h2 style={{ fontSize: 20, fontWeight: 900, color: '#fff', marginBottom: 20 }}>Editar Ciclo</h2>
-             
-             <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 24 }}>
-               <div>
-                 <label style={{ fontSize: 12, fontWeight: 800, color: '#475569', textTransform: 'uppercase', marginBottom: 8, display: 'block' }}>Data de Início</label>
-                 <input type="date" value={edicaoCiclo.dataInicio} onChange={e => setEdicaoCiclo({...edicaoCiclo, dataInicio: e.target.value})} className="form-input" style={{ background: 'rgba(30, 41, 59, 0.4)', border: '1px solid #1e293b', color: '#fff', borderRadius: 12, width: '100%' }} />
-               </div>
-
-               <div>
-                 <label style={{ fontSize: 12, fontWeight: 800, color: '#475569', textTransform: 'uppercase', marginBottom: 8, display: 'block' }}>Nova Regra de Escala</label>
-                 <select 
-                   value={edicaoCiclo.regra} 
-                   onChange={e => setEdicaoCiclo({...edicaoCiclo, regra: e.target.value})}
-                   style={{ background: 'rgba(30, 41, 59, 0.4)', border: '1px solid #1e293b', color: '#fff', borderRadius: 12, width: '100%', padding: '12px', outline: 'none' }}
-                 >
-                   {REGRAS_PRESETS.map(r => <option key={r.id} value={r.id} style={{ background: '#0f172a' }}>{r.label}</option>)}
-                 </select>
-               </div>
-
-               {/* Campos Condicionais para Personalizado */}
-               {edicaoCiclo.regra === 'custom' && (
-                 <div style={{ display: 'flex', gap: 12, animation: 'fadeIn 0.3s ease' }}>
-                    <div style={{ flex: 1 }}>
-                      <label style={{ fontSize: 10, fontWeight: 800, color: '#475569', textTransform: 'uppercase', marginBottom: 8, display: 'block' }}>Horas Trabalhadas</label>
-                      <input type="number" value={edicaoCiclo.horasTrabalho} onChange={e => setEdicaoCiclo({...edicaoCiclo, horasTrabalho: e.target.value})} placeholder="ex: 12" style={{ background: 'rgba(30, 41, 59, 0.4)', border: '1px solid #1e293b', color: '#fff', borderRadius: 12, width: '100%', padding: '12px' }} />
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <label style={{ fontSize: 10, fontWeight: 800, color: '#475569', textTransform: 'uppercase', marginBottom: 8, display: 'block' }}>Horas Descanso</label>
-                      <input type="number" value={edicaoCiclo.horasDescanso} onChange={e => setEdicaoCiclo({...edicaoCiclo, horasDescanso: e.target.value})} placeholder="ex: 36" style={{ background: 'rgba(30, 41, 59, 0.4)', border: '1px solid #1e293b', color: '#fff', borderRadius: 12, width: '100%', padding: '12px' }} />
-                    </div>
-                 </div>
-               )}
-
-               <div style={{ display: 'flex', gap: 12 }}>
-                 <div style={{ flex: 1 }}>
-                   <label style={{ fontSize: 12, fontWeight: 800, color: '#475569', textTransform: 'uppercase', marginBottom: 8, display: 'block' }}>Hora de Início (Entrada)</label>
-                   <input type="time" value={edicaoCiclo.horaInicio} onChange={e => setEdicaoCiclo({...edicaoCiclo, horaInicio: e.target.value})} className="form-input" style={{ background: 'rgba(30, 41, 59, 0.4)', border: '1px solid #1e293b', color: '#fff', borderRadius: 12, width: '100%' }} />
-                 </div>
-                 <div style={{ flex: 1 }}>
-                   <label style={{ fontSize: 12, fontWeight: 800, color: '#475569', textTransform: 'uppercase', marginBottom: 8, display: 'block' }}>Hora de Término (Saída)</label>
-                   <input type="time" value={edicaoCiclo.horaFim} onChange={e => setEdicaoCiclo({...edicaoCiclo, horaFim: e.target.value})} className="form-input" style={{ background: 'rgba(30, 41, 59, 0.4)', border: '1px solid #1e293b', color: '#fff', borderRadius: 12, width: '100%' }} />
-                 </div>
-               </div>
-             </div>
-
-             <div style={{ display: 'flex', gap: 14 }}>
-                 <button onClick={() => setEdicaoCiclo(null)} style={{ flex: 1, padding: 16, background: 'transparent', border: 'none', color: '#64748b', fontWeight: 800, cursor: 'pointer', fontSize: 15 }}>Cancelar</button>
-                 <button onClick={async () => {
-                   setSalvandoCiclo(true);
-                   try {
-                     const dataNovaFormatada = edicaoCiclo.dataInicio + 'T' + edicaoCiclo.horaInicio + ':00';
-                     const regraFinal = edicaoCiclo.regra === 'custom' ? `${edicaoCiclo.horasTrabalho}x${edicaoCiclo.horasDescanso}` : edicaoCiclo.regra;
-                     
-                     await fetch(`/api/escalas/${edicaoCiclo.p.escala_id}`, { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ modo: 'encerrar_em', data_encerramento: dataNovaFormatada }) });
-                     await fetch('/api/escalas', { 
-                       method: 'POST', 
-                       headers: { 'Content-Type': 'application/json' }, 
-                       body: JSON.stringify({ 
-                         local_id: edicaoCiclo.p.local_id, 
-                         regra: regraFinal, 
-                         data_inicio: dataNovaFormatada, 
-                         hora_fim: edicaoCiclo.horaFim 
-                       }) 
-                     });
-                     localStorage.removeItem(`calendario_cache_${ano}_${mes}`);
-                     fetchPlantoes();
-                     setEdicaoCiclo(null);
-                     setDiaSelecionado(null);
-                   } catch (e) { alert('Erro ao recalcular ciclo.'); }
-                   setSalvandoCiclo(false);
-                 }} style={{ flex: 1, padding: 16, background: 'var(--accent-blue)', border: 'none', borderRadius: 14, color: '#fff', fontWeight: 800, cursor: 'pointer', fontSize: 15 }}>{salvandoCiclo ? '...' : 'Aplicar Regra'}</button>
-             </div>
-          </div>
-        </div>
+      {shiftParaEditar && (
+        <ShiftEditScreen 
+          shift={shiftParaEditar} 
+          onSave={handleSaveShift} 
+          onCancel={() => setShiftParaEditar(null)} 
+        />
       )}
 
       <ShareAgendaModal isOpen={showExportModal} onClose={() => setShowExportModal(false)} initialShifts={plantoes} userName={userName} initialTotalGanhos={totalGanhos} isPro={!!isPro} />
