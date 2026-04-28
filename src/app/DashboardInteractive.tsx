@@ -53,7 +53,7 @@ export function EarningsPrivacyWrapper({ total, isPro }: { total: number, isPro:
         onClick={toggle}
         style={{ 
           position: 'absolute',
-          top: -30,
+          top: -38,
           right: 0,
           background: 'rgba(255,255,255,0.06)', 
           border: '1px solid var(--border-subtle)', 

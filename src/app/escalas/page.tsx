@@ -42,6 +42,7 @@ interface EscalaAtiva {
   tipo_jornada?: string;
   modo_jornada?: string;
   data_inicio: string;
+  local_id?: string;
   local?: { nome: string; cor_calendario: string };
   plantoes?: { data_hora_inicio: string; data_hora_fim: string }[];
 }
@@ -1056,7 +1057,7 @@ export default function EscalasPage() {
                                 style={{ width: '100%', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 10, background: 'none', border: 'none', color: 'var(--text-primary)', cursor: 'pointer', fontSize: 13, textAlign: 'left' }}
                                 className="hover-bg"
                               >
-                                <Edit2 size={16} /> Editar Ciclo
+                                <Edit2 size={16} /> Editar Plantões
                               </button>
                               <button 
                                 onClick={(event) => { event.stopPropagation(); setModalAlertas(e); setMenuEscalaId(null); }}
