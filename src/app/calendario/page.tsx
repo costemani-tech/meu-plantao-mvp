@@ -25,7 +25,7 @@ export default function CalendarioPage() {
   const [excluindo, setExcluindo] = useState(false);
   const [showProModal, setShowProModal] = useState(false);
   const [menuAberto, setMenuAberto] = useState(false);
-  const [edicaoCiclo, setEdicaoCiclo] = useState<{p: PlantaoComLocal, regra: string, dataInicio: string, horaFim: string} | null>(null);
+  const [edicaoCiclo, setEdicaoCiclo] = useState<{p: PlantaoComLocal, regra: string, dataInicio: string, horaInicio: string, horaFim: string} | null>(null);
   const [salvandoCiclo, setSalvandoCiclo] = useState(false);
   const [isCustomCicloRule, setIsCustomCicloRule] = useState(false);
   const [cicloHorasTrabalho, setCicloHorasTrabalho] = useState('');
@@ -480,6 +480,7 @@ export default function CalendarioPage() {
                                     p, 
                                     regra: r, 
                                     dataInicio: p.data_hora_inicio.substring(0, 10),
+                                    horaInicio: new Date(p.data_hora_inicio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
                                     horaFim: new Date(p.data_hora_fim).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
                                   });
                                   setIsCustomCicloRule(isCustom);
@@ -607,18 +608,28 @@ export default function CalendarioPage() {
                    <option value="Outro">Outro (Personalizado)</option>
               </select>
 
-              {(edicaoCiclo!.regra === '5x2' || edicaoCiclo!.regra === '6x1' || isCustomCicloRule) && (
-                 <div style={{ marginBottom: 20 }}>
-                   <label style={{ fontSize: 13, fontWeight: 700, marginBottom: 6, display: 'block' }}>Hora de Término (Saída):</label>
-                   <input 
-                     type="time"
-                     value={edicaoCiclo!.horaFim}
-                     onChange={e => setEdicaoCiclo({...edicaoCiclo!, horaFim: e.target.value})}
-                     className="input-field"
-                     style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-subtle)', background: 'var(--bg-primary)', color: 'var(--text-primary)' }}
-                   />
-                 </div>
-               )}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 20 }}>
+               <div>
+                 <label style={{ fontSize: 13, fontWeight: 700, marginBottom: 6, display: 'block' }}>Hora de Início (Entrada):</label>
+                 <input 
+                   type="time"
+                   value={edicaoCiclo!.horaInicio}
+                   onChange={e => setEdicaoCiclo({...edicaoCiclo!, horaInicio: e.target.value})}
+                   className="input-field"
+                   style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-subtle)', background: 'var(--bg-primary)', color: 'var(--text-primary)' }}
+                 />
+               </div>
+               <div>
+                 <label style={{ fontSize: 13, fontWeight: 700, marginBottom: 6, display: 'block' }}>Hora de Término (Saída):</label>
+                 <input 
+                   type="time"
+                   value={edicaoCiclo!.horaFim}
+                   onChange={e => setEdicaoCiclo({...edicaoCiclo!, horaFim: e.target.value})}
+                   className="input-field"
+                   style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-subtle)', background: 'var(--bg-primary)', color: 'var(--text-primary)' }}
+                 />
+               </div>
+             </div>
 
               {isCustomCicloRule && (
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 24, padding: 14, background: 'var(--bg-secondary)', borderRadius: 10, border: '1px solid var(--border-subtle)', animation: 'fadeInDown 0.2s ease' }}>
@@ -639,7 +650,7 @@ export default function CalendarioPage() {
                    onClick={async () => {
                      setSalvandoCiclo(true);
                      try {
-                        const dataNovaFormatada = edicaoCiclo.dataInicio + edicaoCiclo.p.data_hora_inicio.substring(10);
+                        const dataNovaFormatada = edicaoCiclo.dataInicio + 'T' + edicaoCiclo.horaInicio + ':00';
                         
                         // 1. Apaga plantoes futuros da escala antiga
                         await fetch('/api/escalas/' + edicaoCiclo.p.escala_id, { 
