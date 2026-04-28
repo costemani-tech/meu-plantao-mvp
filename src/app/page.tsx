@@ -13,10 +13,9 @@ import {
   EyeOff
 } from 'lucide-react';
 import { 
-  DashboardInteractive, 
-  DesbloquearGanhosBtn, 
   ShareAgendaButton,
-  EarningsPrivacyWrapper 
+  EarningsPrivacyWrapper,
+  UpcomingShiftsClient 
 } from './DashboardInteractive';
 import { isUserPro } from '../lib/supabase';
 import { formatRelativeShiftDate } from '../lib/date-utils';
@@ -134,7 +133,8 @@ async function StatsSection({ userId, isPro }: { userId: string, isPro: boolean 
 }
 
 // Sub-componente: Próximos Plantões
-async function UpcomingShifts({ userId, userName, totalGanhos, isPro }: { userId: string, userName: string, totalGanhos: number, isPro: boolean }) {
+// Sub-componente: Próximos Plantões (Wrapper para Client Component)
+async function UpcomingShiftsWrapper({ userId, userName, totalGanhos, isPro }: { userId: string, userName: string, totalGanhos: number, isPro: boolean }) {
   const supabase = await getSupabase();
 
   const { data: proximos } = await supabase
@@ -147,66 +147,12 @@ async function UpcomingShifts({ userId, userName, totalGanhos, isPro }: { userId
     .limit(5);
 
   return (
-    <div style={{ marginBottom: 24 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, gap: 10 }}>
-        <h3 style={{ fontSize: 16, fontWeight: 800, color: 'var(--text-primary)', margin: 0, flexShrink: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          Próximos Plantões
-        </h3>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0, whiteSpace: 'nowrap' }}>
-          <Link href="/calendario" style={{ textDecoration: 'none' }}>
-            <span style={{ color: 'var(--accent-blue)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
-              [ Ver agenda ]
-            </span>
-          </Link>
-          <ShareAgendaButton proximos={proximos || []} userName={userName} totalGanhos={totalGanhos} isPro={isPro} />
-        </div>
-      </div>
-
-      {(!proximos || proximos.length === 0) ? (
-        <div style={{ padding: '32px', textAlign: 'center', background: 'var(--bg-primary)', borderRadius: '16px', border: '1px dashed var(--border-subtle)' }}>
-          <p style={{ fontSize: 14, color: 'var(--text-muted)', margin: 0 }}>Nenhum plantão agendado para os próximos dias.</p>
-        </div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {proximos.map(p => {
-            const localObj = Array.isArray(p.local) ? p.local[0] : p.local;
-            return (
-            <Link href="/calendario" key={p.id} style={{ textDecoration: 'none' }}>
-              <div className="shift-item" style={{ 
-                border: '1px solid var(--border-subtle)', 
-                borderRadius: '16px', 
-                display: 'flex', 
-                alignItems: 'center',
-                background: 'var(--bg-secondary)',
-                transition: 'transform 0.1s'
-              }}>
-                <div className="shift-color-bar" style={{ 
-                  backgroundColor: localObj?.cor_calendario || 'var(--accent-blue)', 
-                  width: '6px', 
-                  height: '64px', 
-                  borderRadius: '16px 0 0 16px' 
-                }} />
-                <div className="shift-info" style={{ padding: '16px', flex: 1 }}>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 4 }}>
-                    {localObj?.nome || 'Local de Trabalho'}
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--text-secondary)' }}>
-                    <Calendar size={13} />
-                    <span style={{ textTransform: 'capitalize' }}>
-                      {formatRelativeShiftDate(p.data_hora_inicio)}
-                    </span>
-                  </div>
-                </div>
-                <div style={{ padding: '0 16px', display: 'flex', alignItems: 'center' }}>
-                  <ChevronRight size={18} color="var(--text-muted)" />
-                </div>
-              </div>
-            </Link>
-            );
-          })}
-        </div>
-      )}
-    </div>
+    <UpcomingShiftsClient 
+      proximos={proximos || []} 
+      isPro={isPro} 
+      userName={userName} 
+      totalGanhos={totalGanhos} 
+    />
   );
 }
 
@@ -325,7 +271,7 @@ export default async function DashboardPage() {
 
       {/* PRÓXIMOS PLANTÕES (Assíncrono) */}
       <Suspense fallback={<ShiftsSkeleton />}>
-        <UpcomingShifts
+        <UpcomingShiftsWrapper
           userId={user.id}
           userName={userName}
           totalGanhos={totalGanhosGlobal}

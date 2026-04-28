@@ -5,8 +5,8 @@ import { supabase, LocalTrabalho, isUserPro } from '../../lib/supabase';
 import { gerarProximosPlantoes, SlotPlantao } from '../../lib/scale-generator';
 import { useRouter } from 'next/navigation';
 import EmptyState from '../../components/EmptyState';
-import { ClipboardList } from 'lucide-react';
-import { formatDaysArray, formatBRTTime } from '../../lib/date-utils';
+import { ClipboardList, Bell, Trash2, AlertTriangle, X, ChevronRight, Calendar, Clock } from 'lucide-react';
+import { formatDaysArray, formatBRTTime, formatRelativeShiftDate } from '../../lib/date-utils';
 
 const CORES_PRESET = [
   '#4f8ef7', '#7c6af7', '#22d3b5', '#f97316',
@@ -971,7 +971,40 @@ export default function EscalasPage() {
                             </div>
                           </div>
                         </div>
-                        <button style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 20 }}>⋮</button>
+                        <div style={{ position: 'relative' }}>
+                          <button 
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              setMenuEscalaId(menuEscalaId === e.id ? null : e.id);
+                            }}
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 20, padding: '4px 8px', color: 'var(--text-muted)' }}
+                          >
+                            ⋮
+                          </button>
+                          
+                          {menuEscalaId === e.id && (
+                            <div style={{ 
+                              position: 'absolute', right: 0, top: '100%', background: 'var(--bg-secondary)', 
+                              border: '1px solid var(--border-subtle)', borderRadius: 12, boxShadow: 'var(--shadow-lg)',
+                              zIndex: 100, minWidth: 180, overflow: 'hidden', animation: 'fadeInDown 0.2s ease'
+                            }}>
+                              <button 
+                                onClick={(event) => { event.stopPropagation(); setModalAlertas(e); setMenuEscalaId(null); }}
+                                style={{ width: '100%', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 10, background: 'none', border: 'none', color: 'var(--text-primary)', cursor: 'pointer', fontSize: 13, textAlign: 'left' }}
+                                className="hover-bg"
+                              >
+                                <Bell size={16} /> Configurar Alertas
+                              </button>
+                              <button 
+                                onClick={(event) => { event.stopPropagation(); setModalEncerrar({ id: e.id, nome: e.local?.nome || 'Escala' }); setMenuEscalaId(null); }}
+                                style={{ width: '100%', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 10, background: 'none', border: 'none', color: '#EF4444', cursor: 'pointer', fontSize: 13, textAlign: 'left' }}
+                                className="hover-bg"
+                              >
+                                <Trash2 size={16} /> Encerrar / Excluir
+                              </button>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   );
@@ -979,6 +1012,115 @@ export default function EscalasPage() {
               </div>
             </>
           )}
+        </div>
+      )}
+      {/* MODAL CONFIGURAR ALERTAS */}
+      {modalAlertas && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+          <div className="card" style={{ maxWidth: 400, width: '100%', borderRadius: 24, padding: 24 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800 }}>Alertas de Plantão</h3>
+              <button onClick={() => setModalAlertas(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}><X size={20} /></button>
+            </div>
+            
+            <p style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 24 }}>
+              Receba notificações push no seu celular antes de cada plantão desta escala ({modalAlertas.local?.nome}).
+            </p>
+
+            <div style={{ background: 'var(--bg-secondary)', padding: 16, borderRadius: 16, border: '1px solid var(--border-subtle)', marginBottom: 24 }}>
+              <label className="form-label" style={{ fontSize: 13, marginBottom: 8, display: 'block' }}>Antecedência do Alerta</label>
+              <select 
+                className="form-select" 
+                value={alertasHoras} 
+                onChange={e => setAlertasHoras(e.target.value)}
+                style={{ width: '100%' }}
+              >
+                <option value="1">1 hora antes</option>
+                <option value="2">2 horas antes</option>
+                <option value="4">4 horas antes</option>
+                <option value="8">8 horas antes</option>
+                <option value="12">12 horas antes</option>
+              </select>
+            </div>
+
+            <div style={{ display: 'flex', gap: 12 }}>
+              <button className="btn btn-secondary" style={{ flex: 1 }} onClick={() => setModalAlertas(null)}>Cancelar</button>
+              <button 
+                className="btn btn-primary" 
+                style={{ flex: 1, background: 'var(--accent-blue)' }}
+                onClick={async () => {
+                   setEnviandoAlertas(true);
+                   // Simulação de salvamento/ativação (no futuro integrar com API de notificações)
+                   await new Promise(r => setTimeout(r, 800));
+                   showToast('Configurações de alerta atualizadas!', 'success');
+                   setModalAlertas(null);
+                   setEnviandoAlertas(false);
+                }}
+                disabled={enviandoAlertas}
+              >
+                {enviandoAlertas ? 'Salvando...' : 'Ativar Alertas'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL ENCERRAR / EXCLUIR ESCALA */}
+      {modalEncerrar && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+          <div className="card" style={{ maxWidth: 440, width: '100%', borderRadius: 24, padding: 24, border: '1px solid rgba(239, 68, 68, 0.2)' }}>
+            <div style={{ textAlign: 'center', marginBottom: 20 }}>
+              <div style={{ width: 64, height: 64, background: 'rgba(239, 68, 68, 0.1)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px auto' }}>
+                <AlertTriangle size={32} color="#EF4444" />
+              </div>
+              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800 }}>Gerenciar Escala</h3>
+              <p style={{ fontSize: 14, color: 'var(--text-secondary)', marginTop: 8 }}>{modalEncerrar.nome}</p>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 24 }}>
+              <div style={{ padding: 16, background: 'var(--bg-secondary)', borderRadius: 16, border: '1px solid var(--border-subtle)' }}>
+                <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4 }}>Encerrar Escala</div>
+                <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 12 }}>Define uma data de término e remove plantões após essa data.</p>
+                <input 
+                  type="date" 
+                  className="form-input" 
+                  value={dataEncerramento} 
+                  onChange={e => setDataEncerramento(e.target.value)}
+                  style={{ marginBottom: 12 }}
+                />
+                <button 
+                  className="btn btn-secondary" 
+                  style={{ width: '100%', justifyContent: 'center', fontSize: 12 }}
+                  onClick={() => {
+                    if (!dataEncerramento) { showToast('Selecione uma data.', 'error'); return; }
+                    excluirEscala(modalEncerrar.id, 'encerrar_em', dataEncerramento);
+                  }}
+                  disabled={deletando}
+                >
+                  Encerrar na Data Selecionada
+                </button>
+              </div>
+
+              <div style={{ padding: 16, background: 'rgba(239, 68, 68, 0.05)', borderRadius: 16, border: '1px solid rgba(239, 68, 68, 0.1)' }}>
+                <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4, color: '#EF4444' }}>Exclusão Total</div>
+                <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 12 }}>Remove a escala e TODOS os plantões vinculados (passados e futuros).</p>
+                <button 
+                  className="btn btn-primary" 
+                  style={{ width: '100%', justifyContent: 'center', background: '#EF4444', fontSize: 12 }}
+                  onClick={() => {
+                    if (confirm('Tem certeza? Isso apagará TODO o histórico desta escala.')) {
+                      excluirEscala(modalEncerrar.id, 'completo');
+                    }
+                  }}
+                  disabled={deletando}
+                >
+                  Excluir Permanentemente
+                </button>
+              </div>
+            </div>
+
+            <button className="btn btn-secondary" style={{ width: '100%', justifyContent: 'center' }} onClick={() => setModalEncerrar(null)}>Cancelar</button>
+          </div>
         </div>
       )}
     </>

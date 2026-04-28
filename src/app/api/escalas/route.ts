@@ -107,6 +107,8 @@ export async function POST(req: NextRequest) {
       forcar_conflito?: boolean;
       tipo_jornada?: string;
       hora_fim?: string;
+      data_fim?: string;
+      antecedencia?: string | number;
     };
     try {
       body = await req.json();

@@ -48,8 +48,12 @@ export function EarningsPrivacyWrapper({ total, isPro }: { total: number, isPro:
   if (!mounted) return <div style={{ height: 40 }} />;
 
   return (
-    <div style={{ position: 'relative', marginBottom: 12 }}>
-      <div style={{ position: 'absolute', top: -38, right: 0 }}>
+    <div style={{ position: 'relative', marginBottom: 20 }}>
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'flex-end', 
+        marginBottom: 10
+      }}>
          <button 
            onClick={toggle}
            style={{ 
@@ -57,8 +61,8 @@ export function EarningsPrivacyWrapper({ total, isPro }: { total: number, isPro:
              border: '1px solid var(--border-subtle)', 
              cursor: 'pointer', 
              color: 'var(--text-muted)', 
-             padding: '4px 10px', 
-             borderRadius: 12, 
+             padding: '6px 12px', 
+             borderRadius: 14, 
              display: 'flex', 
              alignItems: 'center', 
              gap: 6, 
@@ -67,31 +71,28 @@ export function EarningsPrivacyWrapper({ total, isPro }: { total: number, isPro:
              transition: 'all 0.2s' 
            }}
          >
-           {hidden ? <Eye size={16} /> : <EyeOff size={16} />}
-           {hidden ? 'Mostrar' : 'Ocultar'}
+           {hidden ? <Eye size={14} /> : <EyeOff size={14} />}
+           {hidden ? 'Mostrar Saldo' : 'Ocultar Saldo'}
          </button>
       </div>
 
       {isPro ? (
-        <Link href="/extras" style={{ textDecoration: 'none', color: 'inherit' }}>
-          <div style={{ cursor: 'pointer' }}>
-            <div style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 600, marginBottom: 4 }}>Extras do mês</div>
-            {total > 0 ? (
-              <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--accent-teal)', display: 'flex', alignItems: 'center', gap: 10, transition: 'all 0.3s' }}>
-                💰 <span style={{ filter: hidden ? 'blur(8px)' : 'none' }}>
-                  {hidden ? 'R$ 0.000,00' : total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                </span>
-                {!hidden && <ChevronRight size={18} />}
+        <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '20px', border: '1px solid var(--border-subtle)' }}>
+          <div style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 600, marginBottom: 4 }}>Extras do mês</div>
+          {total > 0 ? (
+            <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--accent-teal)', display: 'flex', alignItems: 'center', gap: 10, transition: 'all 0.3s' }}>
+              💰 <span style={{ filter: hidden ? 'blur(8px)' : 'none' }}>
+                {hidden ? 'R$ 0.000,00' : total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+              </span>
+            </div>
+          ) : (
+            <div>
+              <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: 10 }}>
+                💰 Nenhum extra
               </div>
-            ) : (
-              <div>
-                <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: 10 }}>
-                  💰 Nenhum extra
-                </div>
-              </div>
-            )}
-          </div>
-        </Link>
+            </div>
+          )}
+        </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)' }}>
@@ -624,5 +625,77 @@ export function ShareAgendaButton({ proximos: initialProximos, userName, totalGa
         </div>
       )}
     </>
+  );
+}
+
+// NOVO: Componente Cliente para os Próximos Plantões (com Interatividade)
+export function UpcomingShiftsClient({ proximos, isPro, userName, totalGanhos }: { proximos: any[], isPro: boolean, userName: string, totalGanhos: number }) {
+  const router = useRouter();
+
+  return (
+    <div style={{ marginBottom: 24 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, gap: 10 }}>
+        <h3 style={{ fontSize: 16, fontWeight: 800, color: 'var(--text-primary)', margin: 0, flexShrink: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          Próximos Plantões
+        </h3>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0, whiteSpace: 'nowrap' }}>
+          <Link href="/calendario" style={{ textDecoration: 'none' }}>
+            <span style={{ color: 'var(--accent-blue)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+              [ Ver agenda ]
+            </span>
+          </Link>
+          <ShareAgendaButton proximos={proximos || []} userName={userName} totalGanhos={totalGanhos} isPro={isPro} />
+        </div>
+      </div>
+
+      {(!proximos || proximos.length === 0) ? (
+        <div style={{ padding: '32px', textAlign: 'center', background: 'var(--bg-primary)', borderRadius: '16px', border: '1px dashed var(--border-subtle)' }}>
+          <p style={{ fontSize: 14, color: 'var(--text-muted)', margin: 0 }}>Nenhum plantão agendado para os próximos dias.</p>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {proximos.map(p => {
+            const localObj = Array.isArray(p.local) ? p.local[0] : p.local;
+            return (
+              <div 
+                key={p.id} 
+                onClick={() => router.push('/calendario')} // Redireciona para o calendário (onde o modal de edição existe)
+                style={{ textDecoration: 'none', cursor: 'pointer' }}
+              >
+                <div className="shift-item" style={{ 
+                  border: '1px solid var(--border-subtle)', 
+                  borderRadius: '16px', 
+                  display: 'flex', 
+                  alignItems: 'center',
+                  background: 'var(--bg-secondary)',
+                  transition: 'transform 0.1s'
+                }}>
+                  <div className="shift-color-bar" style={{ 
+                    backgroundColor: localObj?.cor_calendario || 'var(--accent-blue)', 
+                    width: '6px', 
+                    height: '64px', 
+                    borderRadius: '16px 0 0 16px' 
+                  }} />
+                  <div className="shift-info" style={{ padding: '16px', flex: 1 }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 4 }}>
+                      {localObj?.nome || 'Local de Trabalho'}
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--text-secondary)' }}>
+                      <CalendarIcon size={13} />
+                      <span style={{ textTransform: 'capitalize' }}>
+                        {formatRelativeShiftDate(p.data_hora_inicio)}
+                      </span>
+                    </div>
+                  </div>
+                  <div style={{ padding: '0 16px', display: 'flex', alignItems: 'center' }}>
+                    <ChevronRight size={18} color="var(--text-muted)" />
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
   );
 }
