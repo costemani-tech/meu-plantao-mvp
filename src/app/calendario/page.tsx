@@ -6,6 +6,7 @@ import { Clock, MoreVertical, ChevronLeft, ChevronRight, Info, Edit2, Trash2, Ca
 import { useRouter } from 'next/navigation';
 import { ShareAgendaModal } from '../../components/ShareAgendaModal';
 import { ShiftEditScreen } from '../../components/ShiftEditScreen';
+import { formatDaysArray } from '../../lib/date-utils';
 
 interface PlantaoComLocal extends Plantao {
   local?: LocalTrabalho;
@@ -201,12 +202,10 @@ export default function CalendarioPage() {
       const { regra, horaInicio, horaFim, cor, dataInicio } = data;
       const dataNovaFormatada = dataInicio + 'T' + horaInicio + ':00';
       
-      // 1. Atualizar cor do hospital se mudou
       if (shiftParaEditar.local_id && cor !== shiftParaEditar.local?.cor_calendario) {
         await supabase.from('locais_trabalho').update({ cor_calendario: cor }).eq('id', shiftParaEditar.local_id);
       }
 
-      // 2. Se tiver escala, atualizar ciclo
       if (shiftParaEditar.escala_id) {
         await fetch(`/api/escalas/${shiftParaEditar.escala_id}`, { 
           method: 'DELETE', 
@@ -225,10 +224,9 @@ export default function CalendarioPage() {
           }) 
         });
       } else {
-        // Se for plantão avulso, atualizar apenas este
         await supabase.from('plantoes').update({
            data_hora_inicio: dataNovaFormatada,
-           data_hora_fim: dataInicio + 'T' + horaFim + ':00' // Simplificação para o mesmo dia
+           data_hora_fim: dataInicio + 'T' + horaFim + ':00'
         }).eq('id', shiftParaEditar.id);
       }
 
@@ -289,7 +287,7 @@ export default function CalendarioPage() {
                 <div style={{ width: 14, height: 14, borderRadius: '50%', background: h.cor }} />
                 <div>
                   <div style={{ fontSize: 14, fontWeight: 800, color: '#f8fafc' }}>{h.nome}</div>
-                  <div style={{ fontSize: 12, color: '#64748b', fontWeight: 500 }}>{h.regra} • {h.turno}</div>
+                  <div style={{ fontSize: 12, color: '#64748b', fontWeight: 500 }}>{formatDaysArray(h.regra)} • {h.turno}</div>
                 </div>
               </div>
             ))}
