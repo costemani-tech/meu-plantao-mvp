@@ -48,36 +48,34 @@ export function EarningsPrivacyWrapper({ total, isPro }: { total: number, isPro:
   if (!mounted) return <div style={{ height: 40 }} />;
 
   return (
-    <div style={{ position: 'relative', marginBottom: 20 }}>
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'flex-end', 
-        marginBottom: 10
-      }}>
-         <button 
-           onClick={toggle}
-           style={{ 
-             background: 'rgba(255,255,255,0.08)', 
-             border: '1px solid var(--border-subtle)', 
-             cursor: 'pointer', 
-             color: 'var(--text-muted)', 
-             padding: '6px 12px', 
-             borderRadius: 14, 
-             display: 'flex', 
-             alignItems: 'center', 
-             gap: 6, 
-             fontSize: 11, 
-             fontWeight: 700, 
-             transition: 'all 0.2s' 
-           }}
-         >
-           {hidden ? <Eye size={14} /> : <EyeOff size={14} />}
-           {hidden ? 'Mostrar Saldo' : 'Ocultar Saldo'}
-         </button>
-      </div>
+    <div style={{ position: 'relative', marginBottom: 12 }}>
+      <button 
+        onClick={toggle}
+        style={{ 
+          position: 'absolute',
+          top: -30,
+          right: 0,
+          background: 'rgba(255,255,255,0.06)', 
+          border: '1px solid var(--border-subtle)', 
+          cursor: 'pointer', 
+          color: 'var(--text-muted)', 
+          padding: '6px 14px', 
+          borderRadius: 20, 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: 6, 
+          fontSize: 12, 
+          fontWeight: 700, 
+          transition: 'all 0.2s',
+          zIndex: 10
+        }}
+      >
+        {hidden ? <Eye size={14} /> : <EyeOff size={14} />}
+        {hidden ? 'Mostrar' : 'Ocultar'}
+      </button>
 
       {isPro ? (
-        <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '20px', border: '1px solid var(--border-subtle)' }}>
+        <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '20px', border: '1px solid var(--border-subtle)', marginTop: 8 }}>
           <div style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 600, marginBottom: 4 }}>Extras do mês</div>
           {total > 0 ? (
             <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--accent-teal)', display: 'flex', alignItems: 'center', gap: 10, transition: 'all 0.3s' }}>

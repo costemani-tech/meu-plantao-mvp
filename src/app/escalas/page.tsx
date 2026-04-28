@@ -5,7 +5,7 @@ import { supabase, LocalTrabalho, isUserPro } from '../../lib/supabase';
 import { gerarProximosPlantoes, SlotPlantao } from '../../lib/scale-generator';
 import { useRouter } from 'next/navigation';
 import EmptyState from '../../components/EmptyState';
-import { ClipboardList, Bell, Trash2, AlertTriangle, X, ChevronRight, Calendar, Clock } from 'lucide-react';
+import { ClipboardList, Bell, Trash2, AlertTriangle, X, ChevronRight, Calendar, Clock, Edit2 } from 'lucide-react';
 import { formatDaysArray, formatBRTTime, formatRelativeShiftDate } from '../../lib/date-utils';
 
 const CORES_PRESET = [
@@ -99,6 +99,7 @@ export default function EscalasPage() {
   const [alertasAtivo, setAlertasAtivo] = useState(false);
   const [alertasHoras, setAlertasHoras] = useState('2');
   const [enviandoAlertas, setEnviandoAlertas] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   
   const [showProModal, setShowProModal] = useState(false);
   const [showForm, setShowForm] = useState(false);
@@ -247,6 +248,29 @@ export default function EscalasPage() {
     setSavingLocal(false);
   };
 
+  const handleEditar = (e: any) => {
+    setEditingId(e.id);
+    setLocalId(e.local_id);
+    setTipoJornada(e.tipo_jornada || 'Escala Fixa');
+    setModoJornada(e.modo_jornada || 'Trabalho/Descanso');
+    
+    if (e.regra.includes('x')) {
+      const parts = e.regra.split('x');
+      setRegra('Outro');
+      setHorasTrabalhoOutro(parts[0]);
+      setHorasDescansoOutro(parts[1]);
+    } else {
+      setRegra(e.regra);
+    }
+    
+    if (e.data_inicio) {
+      setDataInicioSo(e.data_inicio);
+    }
+    
+    setShowForm(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const salvarEscala = async () => {
     if (!localId || !dataInicioSo || !horaInicio) {
       showToast('Preencha o Local, o Dia e a Hora do plantão.', 'error');
@@ -259,6 +283,16 @@ export default function EscalasPage() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Usuário não autenticado. Faça login novamente.');
+
+      // Se for edição, limpar plantões futuros da escala anterior
+      if (editingId) {
+        const now = new Date().toISOString();
+        await supabase
+          .from('plantoes')
+          .delete()
+          .eq('escala_id', editingId)
+          .gte('data_hora_inicio', now);
+      }
 
       const parts = regraFinal.split('x');
       const trabalho = parseInt(parts[0], 10) || 12;
@@ -281,20 +315,41 @@ export default function EscalasPage() {
         }
       }
 
-      const { data: escalaCriada, error: erroEscala } = await supabase
-        .from('escalas')
-        .insert({
-          usuario_id: user.id,
-          local_id: localId,
-          data_inicio: dataInicioSo,
-          regra: regraParaSalvar,
-          tipo_jornada: tipoJornada,
-          modo_jornada: modoJornada
-        })
-        .select()
-        .single();
+      let escalaCriada;
+      
+      if (editingId) {
+        const { data: updated, error: erroUpdate } = await supabase
+          .from('escalas')
+          .update({
+            local_id: localId,
+            data_inicio: dataInicioSo,
+            regra: regraParaSalvar,
+            tipo_jornada: tipoJornada,
+            modo_jornada: modoJornada
+          })
+          .eq('id', editingId)
+          .select()
+          .single();
+          
+        if (erroUpdate) throw erroUpdate;
+        escalaCriada = updated;
+      } else {
+        const { data: inserted, error: erroEscala } = await supabase
+          .from('escalas')
+          .insert({
+            usuario_id: user.id,
+            local_id: localId,
+            data_inicio: dataInicioSo,
+            regra: regraParaSalvar,
+            tipo_jornada: tipoJornada,
+            modo_jornada: modoJornada
+          })
+          .select()
+          .single();
 
-      if (erroEscala) throw erroEscala;
+        if (erroEscala) throw erroEscala;
+        escalaCriada = inserted;
+      }
 
       const arrayDePlantoes = [];
       const dataTerminoSegura = dataTerminoSo || `${anoAtual}-12-31`;
@@ -425,15 +480,23 @@ export default function EscalasPage() {
         }
       }
 
-      showToast('Escala gerada com sucesso!', 'success');
+      showToast(editingId ? 'Escala atualizada com sucesso!' : 'Escala gerada com sucesso!', 'success');
       window.dispatchEvent(new CustomEvent('plantoes-atualizados'));
+      
+      if (!editingId) {
+        setLocalId('');
+        setDataInicioSo('');
+        setRegra('12x36');
+      }
+
+      setEditingId(null);
       
       setTimeout(() => {
         router.push('/calendario');
       }, 1500);
 
     } catch (err: any) {
-      showToast('Erro: ' + (err?.message || 'Falha ao criar escala.'), 'error');
+      showToast('Erro: ' + (err?.message || 'Falha ao processar escala.'), 'error');
     } finally {
       setSaving(false);
     }
@@ -988,6 +1051,13 @@ export default function EscalasPage() {
                               border: '1px solid var(--border-subtle)', borderRadius: 12, boxShadow: 'var(--shadow-lg)',
                               zIndex: 100, minWidth: 180, overflow: 'hidden', animation: 'fadeInDown 0.2s ease'
                             }}>
+                              <button 
+                                onClick={(event) => { event.stopPropagation(); handleEditar(e); setMenuEscalaId(null); }}
+                                style={{ width: '100%', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 10, background: 'none', border: 'none', color: 'var(--text-primary)', cursor: 'pointer', fontSize: 13, textAlign: 'left' }}
+                                className="hover-bg"
+                              >
+                                <Edit2 size={16} /> Editar Ciclo
+                              </button>
                               <button 
                                 onClick={(event) => { event.stopPropagation(); setModalAlertas(e); setMenuEscalaId(null); }}
                                 style={{ width: '100%', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 10, background: 'none', border: 'none', color: 'var(--text-primary)', cursor: 'pointer', fontSize: 13, textAlign: 'left' }}
