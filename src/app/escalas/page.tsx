@@ -599,7 +599,7 @@ export default function EscalasPage() {
             ← Voltar para lista
           </button>
 
-      <div className="mobile-stack" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24 }}>
+      <div className="mobile-stack" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 24 }}>
         {/* Formulário */}
         <div className="card">
           <h2 style={{ fontWeight: 700, marginBottom: 20, fontSize: 16 }}>{editingId ? 'Editar Escala' : 'Nova Escala'}</h2>
@@ -980,7 +980,7 @@ export default function EscalasPage() {
         </div>
 
         {/* Preview */}
-        <div className="desktop-only">
+        <div>
           <div className="card" style={{ height: 'fit-content' }}>
             <h2 style={{ fontWeight: 700, marginBottom: 4, fontSize: 16 }}>Preview das Próximas Datas</h2>
             <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 16 }}>

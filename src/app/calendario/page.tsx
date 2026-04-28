@@ -182,7 +182,7 @@ export default function CalendarioPage() {
       const cor1 = getCor(ps[0]);
       const pDiferente = ps.find(p => getCor(p) !== cor1);
       const cor2 = pDiferente ? getCor(pDiferente) : cor1;
-      return `linear-gradient(to bottom right, ${cor1} 50%, ${cor2} 50%)`;
+      return `linear-gradient(135deg, ${cor1} 50%, ${cor2} 50%)`;
     }
     return 'transparent';
   };
@@ -236,7 +236,7 @@ export default function CalendarioPage() {
                   position: 'relative', overflow: 'hidden' }}
                 className={`cal-day ${cell.mesAtual ? '' : 'other-month'} ${cell.mesAtual && isHoje(cell.dia) ? 'today' : ''}`}
               >
-                <div className="cal-day-num" style={{ position: 'relative', zIndex: 2, color: ps.some(p => p.status_conflito) ? '#ef4444' : (ps.length > 0 ? '#ffffff' : '#94a3b8'), textShadow: ps.length > 0 && !ps.some(p => p.status_conflito) ? '0 1px 3px rgba(0,0,0,0.8)' : 'none', fontWeight: 'bold' }}>{cell.dia}</div>
+                <div className="cal-day-num" style={{ position: 'relative', zIndex: 2, color: ps.length > 0 ? '#ffffff' : '#94a3b8', textShadow: ps.length > 0 ? '0 1px 3px rgba(0,0,0,0.5)' : 'none', fontWeight: 'bold' }}>{cell.dia}</div>
                 {ps.length > 2 && (<span style={{ position: 'absolute', bottom: 4, right: 4, fontSize: '9px', fontWeight: 800, color: '#ffffff', textShadow: '0 1px 2px rgba(0,0,0,0.8)', zIndex: 2 }}>+{ps.length - 2}</span>)}
               </div>
             );
