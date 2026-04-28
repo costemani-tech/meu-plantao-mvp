@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { supabase, Plantao, LocalTrabalho, isUserPro } from '../../lib/supabase';
-import { Clock, MoreVertical, ChevronLeft, ChevronRight, Info, Edit2, Trash2, Bell } from 'lucide-react';
+import { Clock, MoreVertical, ChevronLeft, ChevronRight, Info, Edit2, Trash2, Calendar as CalendarIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { ShareAgendaModal } from '../../components/ShareAgendaModal';
 
@@ -80,7 +80,7 @@ export default function CalendarioPage() {
       setPlantoes(freshData);
       localStorage.setItem(cachedKey, JSON.stringify(freshData));
     } catch (e) {
-      console.warn("Modo offline ou erro ao buscar plantões", e);
+      console.warn("Offline/Error fetching", e);
     } finally {
       setLoading(false);
     }
@@ -125,17 +125,14 @@ export default function CalendarioPage() {
       const response = await fetch(`/api/escalas/${p.escala_id}`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          modo: 'encerrar_em',
-          data_encerramento: p.data_hora_inicio,
-        }),
+        body: JSON.stringify({ modo: 'encerrar_em', data_encerramento: p.data_hora_inicio }),
       });
       if (response.ok) {
         localStorage.removeItem(`calendario_cache_${ano}_${mes}`);
         fetchPlantoes();
         window.dispatchEvent(new CustomEvent('plantoes-atualizados'));
       }
-    } catch { /* silencioso */ }
+    } catch { /* silence */ }
     setExcluindo(false);
   };
 
@@ -149,18 +146,21 @@ export default function CalendarioPage() {
       return isStartDay || isEndDay;
     });
 
-  // ── Lógica da Legenda Dinâmica
   const hospitaisNoMes = useMemo(() => {
-    const unique = new Map<string, { nome: string, cor: string, tipo?: string }>();
+    const unique = new Map<string, { nome: string, cor: string, regra: string, turno: string }>();
     plantoes.forEach(p => {
       if (p.local) {
+        const h = new Date(p.data_hora_inicio).getHours();
+        const turno = (h >= 18 || h < 6) ? 'Noturno' : 'Diurno';
+        const regra = p.escala?.regra || 'Ocasional';
         unique.set(p.local.id, { 
           nome: p.local.nome, 
           cor: p.local.cor_calendario || '#4f8ef7',
-          tipo: p.local.is_home_care ? 'Home Care' : 'Hospital'
+          regra,
+          turno
         });
       } else if (p.is_extra) {
-        unique.set('extra', { nome: 'Plantão Extra', cor: '#8b5cf6', tipo: 'Ocasional' });
+        unique.set('extra', { nome: 'Plantão Extra', cor: '#8b5cf6', regra: 'Ad-hoc', turno: 'Ocasional' });
       }
     });
     return Array.from(unique.values());
@@ -183,172 +183,104 @@ export default function CalendarioPage() {
   const renderCellBackground = (ps: PlantaoComLocal[], dia: number) => {
     if (ps.length === 0) return null;
     const getCor = (p: PlantaoComLocal) => p.is_extra ? '#8b5cf6' : (p.local?.cor_calendario ?? '#4f8ef7');
-    
-    // Filtrar para mostrar primeiro os plantões que COMEÇAM no dia (regra de cross-day visual)
     const starts = ps.filter(p => new Date(p.data_hora_inicio).getDate() === dia);
     const ends = ps.filter(p => new Date(p.data_hora_inicio).getDate() !== dia);
-    
-    const displayPs = [...starts, ...ends].slice(0, 4);
-    
+    const displayPs = [...starts, ...ends].slice(0, 3);
     return (
       <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column' }}>
-        {displayPs.map((p, i) => (
-          <div key={i} style={{ flex: 1, background: getCor(p) }} />
-        ))}
+        {displayPs.map((p, i) => (<div key={i} style={{ flex: 1, background: getCor(p) }} />))}
       </div>
     );
   };
 
   return (
-    <div className="page-container" style={{ background: '#020617', minHeight: '100vh', paddingBottom: '100px' }}>
-      {/* Header Premium 2.0 */}
+    <div className="page-container" style={{ background: '#020617', minHeight: '100vh', paddingBottom: '120px' }}>
       <div style={{ textAlign: 'center', marginBottom: 32, paddingTop: 20 }}>
         <h1 style={{ fontSize: 28, fontWeight: 900, color: '#fff', marginBottom: 4 }}>Calendário</h1>
         <p style={{ color: '#94a3b8', fontSize: 14 }}>Visualize seus plantões — {loading && 'carregando...'}</p>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 24, marginBottom: 24 }}>
-        <button onClick={mesAnterior} style={{ background: 'rgba(30, 41, 59, 0.5)', border: '1px solid #1e293b', color: '#fff', padding: 10, borderRadius: '50%', cursor: 'pointer' }}><ChevronLeft size={20} /></button>
-        <span style={{ fontSize: 18, fontWeight: 800, color: '#fff', minWidth: 140, textAlign: 'center' }}>{MESES[mes]} {ano}</span>
-        <button onClick={proximoMes} style={{ background: 'rgba(30, 41, 59, 0.5)', border: '1px solid #1e293b', color: '#fff', padding: 10, borderRadius: '50%', cursor: 'pointer' }}><ChevronRight size={20} /></button>
-        
-        <div style={{ position: 'relative' }}>
-          <button onClick={() => setMenuAberto(!menuAberto)} style={{ background: 'rgba(30, 41, 59, 0.5)', border: '1px solid #1e293b', color: '#fff', padding: 10, borderRadius: '50%', cursor: 'pointer' }}><MoreVertical size={20} /></button>
-          {menuAberto && (
-            <div style={{ position: 'absolute', top: 50, right: 0, background: "#0f172a", border: '1px solid #1e293b', boxShadow: '0 10px 40px rgba(0,0,0,0.5)', borderRadius: 16, overflow: 'hidden', minWidth: 200, zIndex: 100 }}>
-              <button onClick={() => { setMenuAberto(false); setShowExportModal(true); }} style={{ width: '100%', padding: '16px', background: 'transparent', border: 'none', textAlign: 'left', fontWeight: 700, color:'#fff', cursor: 'pointer' }}>Compartilhar Escala</button>
-            </div>
-          )}
-        </div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 24, marginBottom: 32 }}>
+        <button onClick={mesAnterior} style={{ background: 'rgba(30, 41, 59, 0.5)', border: '1px solid #1e293b', color: '#fff', padding: 12, borderRadius: '50%', cursor: 'pointer' }}><ChevronLeft size={20} /></button>
+        <span style={{ fontSize: 20, fontWeight: 900, color: '#fff', minWidth: 160, textAlign: 'center' }}>{MESES[mes]} {ano}</span>
+        <button onClick={proximoMes} style={{ background: 'rgba(30, 41, 59, 0.5)', border: '1px solid #1e293b', color: '#fff', padding: 12, borderRadius: '50%', cursor: 'pointer' }}><ChevronRight size={20} /></button>
       </div>
 
-      {/* Grid Principal */}
       <div className="card" style={{ background: 'transparent', border: 'none', padding: 0, boxShadow: 'none' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 8, marginBottom: 12 }}>
-          {DIAS_SEMANA.map(d => (
-            <div key={d} style={{ textAlign: 'center', fontSize: 11, fontWeight: 900, color: '#475569', textTransform: 'uppercase' }}>{d}</div>
-          ))}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 10, marginBottom: 12 }}>
+          {DIAS_SEMANA.map(d => (<div key={d} style={{ textAlign: 'center', fontSize: 11, fontWeight: 900, color: '#475569', textTransform: 'uppercase' }}>{d}</div>))}
         </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 8 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 10 }}>
           {cells.map((cell, idx) => {
             const ps = cell.mesAtual ? plantoesNoDia(cell.dia) : [];
             const hojeCell = cell.mesAtual && isHoje(cell.dia);
-            
             return (
-              <div 
-                key={idx} 
-                onClick={() => { if (!cell.mesAtual) return; setDiaSelecionado(cell.dia); }}
+              <div key={idx} onClick={() => { if (!cell.mesAtual) return; setDiaSelecionado(cell.dia); }}
                 className={`aspect-square rounded-2xl overflow-hidden ${hojeCell ? 'border-neon-blue' : ''}`}
-                style={{ 
-                  position: 'relative',
-                  background: cell.mesAtual ? 'rgba(15, 23, 42, 0.5)' : 'transparent',
-                  cursor: cell.mesAtual ? 'pointer' : 'default',
-                  border: !hojeCell && cell.mesAtual ? '1px solid #1e293b' : 'none'
-                }}
-              >
-                {/* Background do dia (Divisões) */}
+                style={{ position: 'relative', background: cell.mesAtual ? 'rgba(15, 23, 42, 0.5)' : 'transparent', cursor: cell.mesAtual ? 'pointer' : 'default', border: !hojeCell && cell.mesAtual ? '1px solid #1e293b' : 'none' }}>
                 {renderCellBackground(ps, cell.dia)}
-
-                {/* Camada de conteúdo */}
                 <div style={{ position: 'relative', zIndex: 5, height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <span style={{ 
-                    fontSize: 14, 
-                    fontWeight: 800, 
-                    color: ps.length > 0 ? '#fff' : (cell.mesAtual ? '#64748b' : '#334155'),
-                    textShadow: ps.length > 0 ? '0 1px 4px rgba(0,0,0,0.4)' : 'none'
-                  }}>
-                    {cell.dia}
-                  </span>
+                  <span style={{ fontSize: 15, fontWeight: 900, color: ps.length > 0 ? '#fff' : (cell.mesAtual ? '#64748b' : '#334155'), textShadow: ps.length > 0 ? '0 1px 4px rgba(0,0,0,0.5)' : 'none' }}>{cell.dia}</span>
                 </div>
-
-                {/* Badges */}
-                {hojeCell && (
-                  <div style={{ position: 'absolute', top: 4, right: 4, background: '#3b82f6', color: '#fff', fontSize: 8, fontWeight: 900, padding: '2px 4px', borderRadius: 4, zIndex: 10 }}>HOJE</div>
-                )}
-                {ps.length > 4 && (
-                  <div style={{ position: 'absolute', bottom: 4, right: 4, background: 'rgba(0,0,0,0.5)', color: '#fff', fontSize: 9, fontWeight: 900, padding: '2px 4px', borderRadius: 4, zIndex: 10 }}>+{ps.length - 4}</div>
-                )}
+                {hojeCell && (<div style={{ position: 'absolute', top: 4, left: 4, background: '#3b82f6', color: '#fff', fontSize: 7, fontWeight: 900, padding: '2px 4px', borderRadius: 4, zIndex: 10 }}>HOJE</div>)}
+                {ps.length > 3 && (<div style={{ position: 'absolute', bottom: 4, right: 4, background: 'rgba(0,0,0,0.6)', color: '#fff', fontSize: 8, fontWeight: 900, padding: '2px 4px', borderRadius: 4, zIndex: 10 }}>+{ps.length - 3}</div>)}
               </div>
             );
           })}
         </div>
       </div>
 
-      {/* Legenda Dinâmica */}
       {hospitaisNoMes.length > 0 && (
-        <div className="card" style={{ marginTop: 24, background: 'rgba(15, 23, 42, 0.5)', border: '1px solid #1e293b', borderRadius: 24, padding: 20 }}>
-          <h3 style={{ fontSize: 11, fontWeight: 900, color: '#475569', textTransform: 'uppercase', marginBottom: 16 }}>Legenda</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 16, marginBottom: 20 }}>
+        <div className="card" style={{ marginTop: 32, background: 'rgba(15, 23, 42, 0.5)', border: '1px solid #1e293b', borderRadius: 24, padding: 24 }}>
+          <h3 style={{ fontSize: 12, fontWeight: 900, color: '#475569', textTransform: 'uppercase', marginBottom: 20 }}>Legenda</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 20, marginBottom: 24 }}>
             {hospitaisNoMes.map((h, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div style={{ width: 12, height: 12, borderRadius: '50%', background: h.cor }} />
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{ width: 14, height: 14, borderRadius: '50%', background: h.cor }} />
                 <div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: '#f8fafc' }}>{h.nome}</div>
-                  <div style={{ fontSize: 11, color: '#64748b' }}>{h.tipo}</div>
+                  <div style={{ fontSize: 14, fontWeight: 800, color: '#f8fafc' }}>{h.nome}</div>
+                  <div style={{ fontSize: 12, color: '#64748b', fontWeight: 500 }}>{h.regra} • {h.turno}</div>
                 </div>
               </div>
             ))}
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, paddingTop: 16, borderTop: '1px solid #1e293b' }}>
-            <Info size={16} color="#64748b" />
-            <p style={{ fontSize: 12, color: '#64748b', margin: 0 }}>
-              As cores representam os locais de trabalho. Toque em um dia para ver os detalhes.
-            </p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, paddingTop: 20, borderTop: '1px solid #1e293b' }}>
+            <Info size={16} color="#475569" />
+            <p style={{ fontSize: 13, color: '#64748b', margin: 0, fontWeight: 500 }}>As cores representam os locais de trabalho. Toque em um dia para ver os detalhes.</p>
           </div>
         </div>
       )}
 
-      {/* Modais */}
       {diaSelecionado !== null && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }} onClick={() => setDiaSelecionado(null)}>
-          <div className="card" style={{ width: '100%', maxWidth: 400, background: '#0f172a', border: '1px solid #1e293b', borderRadius: 24 }} onClick={e => e.stopPropagation()}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-              <h2 style={{ fontSize: 18, fontWeight: 800, color: '#fff' }}>{diaSelecionado} de {MESES[mes]}</h2>
-              <button onClick={() => setDiaSelecionado(null)} style={{ background: 'rgba(30, 41, 59, 0.5)', border: 'none', color: '#fff', padding: 8, borderRadius: '50%', cursor: 'pointer' }}>X</button>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }} onClick={() => setDiaSelecionado(null)}>
+          <div className="card" style={{ width: '100%', maxWidth: 420, background: '#0f172a', border: '1px solid #1e293b', borderRadius: 28, padding: 28 }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+              <h2 style={{ fontSize: 20, fontWeight: 900, color: '#fff' }}>{diaSelecionado} de {MESES[mes]}</h2>
+              <button onClick={() => setDiaSelecionado(null)} style={{ background: 'rgba(30, 41, 59, 0.5)', border: 'none', color: '#fff', padding: 10, borderRadius: '50%', cursor: 'pointer' }}>X</button>
             </div>
-            {plantoesNoDia(diaSelecionado).length === 0 ? (<p style={{ color: '#94a3b8', fontSize: 14 }}>Dia de folga livre!</p>) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {plantoesNoDia(diaSelecionado).length === 0 ? (<p style={{ color: '#94a3b8', fontSize: 15, textAlign: 'center', padding: '20px 0' }}>Dia de folga livre! 🏖️</p>) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                 {plantoesNoDia(diaSelecionado).map(p => {
                   const dInicio = new Date(p.data_hora_inicio);
                   const isExitOnly = dInicio.getDate() !== diaSelecionado || dInicio.getMonth() !== mes || dInicio.getFullYear() !== ano;
-                  
                   return (
-                    <div key={p.id} style={{ padding: 16, background: 'rgba(30, 41, 59, 0.3)', border: '1px solid #1e293b', borderRadius: 16, borderLeft: `4px solid ${p.local?.cor_calendario ?? '#4f8ef7'}` }}>
+                    <div key={p.id} style={{ padding: 20, background: 'rgba(30, 41, 59, 0.4)', border: '1px solid #1e293b', borderRadius: 20, borderLeft: `5px solid ${p.local?.cor_calendario ?? '#4f8ef7'}` }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                         <div>
-                          <div style={{ fontWeight: 800, fontSize: 15, color: '#fff', marginBottom: 4 }}>{p.local?.nome ?? 'Local Indefinido'}</div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#94a3b8' }}><Clock size={14} /> {new Date(p.data_hora_inicio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} às {new Date(p.data_hora_fim).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</div>
+                          <div style={{ fontWeight: 900, fontSize: 16, color: '#fff', marginBottom: 6 }}>{p.local?.nome ?? 'Local Indefinido'}</div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, color: '#94a3b8', fontWeight: 500 }}><Clock size={16} /> {new Date(p.data_hora_inicio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} às {new Date(p.data_hora_fim).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</div>
                         </div>
-                        
-                        {/* CRUD Actions */}
                         {!isExitOnly && (
-                          <div style={{ display: 'flex', gap: 8 }}>
-                             <button 
-                               onClick={() => {
-                                 if (!isPro) { setShowUpgradeModal(true); return; }
-                                 setEdicaoCiclo({p, regra: p.escala?.regra || '12x36', dataInicio: p.data_hora_inicio.substring(0, 10), horaInicio: new Date(p.data_hora_inicio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }), horaFim: new Date(p.data_hora_fim).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })});
-                               }} 
-                               style={{ background: 'rgba(30, 41, 59, 0.5)', border: 'none', color: '#fff', padding: 8, borderRadius: 8, cursor: 'pointer' }}
-                               title="Editar"
-                             >
-                               <Edit2 size={16} />
-                             </button>
-                             <button 
-                               onClick={() => setModalExclusao(p)} 
-                               style={{ background: 'rgba(239, 68, 68, 0.1)', border: 'none', color: '#ef4444', padding: 8, borderRadius: 8, cursor: 'pointer' }}
-                               title="Excluir"
-                             >
-                               <Trash2 size={16} />
-                             </button>
+                          <div style={{ display: 'flex', gap: 10 }}>
+                             <button onClick={() => { if (!isPro) { setShowUpgradeModal(true); return; } setEdicaoCiclo({p, regra: p.escala?.regra || '12x36', dataInicio: p.data_hora_inicio.substring(0, 10), horaInicio: new Date(p.data_hora_inicio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }), horaFim: new Date(p.data_hora_fim).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}); }} style={{ background: 'rgba(30, 41, 59, 0.6)', border: 'none', color: '#fff', padding: 10, borderRadius: 10, cursor: 'pointer' }}><Edit2 size={18} /></button>
+                             <button onClick={() => setModalExclusao(p)} style={{ background: 'rgba(239, 68, 68, 0.15)', border: 'none', color: '#ef4444', padding: 10, borderRadius: 10, cursor: 'pointer' }}><Trash2 size={18} /></button>
                           </div>
                         )}
                       </div>
-                      
                       {isExitOnly && (
-                        <div style={{ marginTop: 12, padding: '8px 12px', background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.2)', borderRadius: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <Info size={14} color="#60a5fa" />
-                          <span style={{ fontSize: 11, fontWeight: 600, color: '#60a5fa' }}>Plantão iniciado no dia anterior. Edição apenas no dia de início.</span>
+                        <div style={{ marginTop: 16, padding: '10px 14px', background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.2)', borderRadius: 12, display: 'flex', alignItems: 'center', gap: 10 }}>
+                          <Info size={16} color="#60a5fa" />
+                          <span style={{ fontSize: 12, fontWeight: 600, color: '#60a5fa' }}>Plantão iniciado no dia anterior. Edição apenas no dia de início.</span>
                         </div>
                       )}
                     </div>
@@ -361,47 +293,40 @@ export default function CalendarioPage() {
       )}
 
       {modalExclusao && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', zIndex: 100000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }} onClick={() => setModalExclusao(null)}>
-          <div className="card" style={{ maxWidth: 380, width: '100%', background: '#0f172a', border: '1px solid #1e293b', borderRadius: 24 }} onClick={e => e.stopPropagation()}>
-            <h2 style={{ fontSize: 18, fontWeight: 800, color: '#fff', marginBottom: 12 }}>Remover Plantão</h2>
-            <p style={{ fontSize: 14, color: '#94a3b8', marginBottom: 24 }}><strong>{modalExclusao.local?.nome}</strong><br />{new Date(modalExclusao.data_hora_inicio).toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })}</p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <button onClick={removerSomenteEste} disabled={excluindo} style={{ padding: 14, background: 'rgba(30, 41, 59, 0.5)', border: '1px solid #1e293b', borderRadius: 12, color: '#fff', fontWeight: 700, cursor: 'pointer' }}>Remover só este</button>
-              {!modalExclusao.is_extra && modalExclusao.escala_id && (
-                <button onClick={removerEstEFuturos} disabled={excluindo} style={{ padding: 14, background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: 12, color: '#ef4444', fontWeight: 700, cursor: 'pointer' }}>Remover este e futuros</button>
-              )}
-              <button onClick={() => setModalExclusao(null)} style={{ padding: 14, background: 'transparent', border: 'none', color: '#64748b', fontWeight: 700, cursor: 'pointer' }}>Cancelar</button>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)', zIndex: 100000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }} onClick={() => setModalExclusao(null)}>
+          <div className="card" style={{ maxWidth: 400, width: '100%', background: '#0f172a', border: '1px solid #1e293b', borderRadius: 28, padding: 32 }} onClick={e => e.stopPropagation()}>
+            <h2 style={{ fontSize: 20, fontWeight: 900, color: '#fff', marginBottom: 12 }}>Remover Plantão</h2>
+            <p style={{ fontSize: 15, color: '#94a3b8', marginBottom: 28 }}><strong>{modalExclusao.local?.nome}</strong><br />{new Date(modalExclusao.data_hora_inicio).toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })}</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <button onClick={removerSomenteEste} disabled={excluindo} style={{ padding: 16, background: 'rgba(30, 41, 59, 0.6)', border: '1px solid #1e293b', borderRadius: 14, color: '#fff', fontWeight: 800, cursor: 'pointer', fontSize: 15 }}>Remover só este</button>
+              {!modalExclusao.is_extra && modalExclusao.escala_id && (<button onClick={removerEstEFuturos} disabled={excluindo} style={{ padding: 16, background: 'rgba(239, 68, 68, 0.15)', border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: 14, color: '#ef4444', fontWeight: 800, cursor: 'pointer', fontSize: 15 }}>Remover este e futuros</button>)}
+              <button onClick={() => setModalExclusao(null)} style={{ padding: 16, background: 'transparent', border: 'none', color: '#64748b', fontWeight: 800, cursor: 'pointer', fontSize: 15 }}>Cancelar</button>
             </div>
           </div>
         </div>
       )}
 
       {edicaoCiclo && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', zIndex: 100001, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-          <div className="card" style={{ maxWidth: 400, width: '100%', background: '#0f172a', border: '1px solid #1e293b', borderRadius: 24 }}>
-             <h2 style={{ fontSize: 18, fontWeight: 800, color: '#fff', marginBottom: 16 }}>Editar Ciclo</h2>
-             <label style={{ fontSize: 12, fontWeight: 700, color: '#475569', textTransform: 'uppercase', marginBottom: 8, display: 'block' }}>Data de Início</label>
-             <input type="date" value={edicaoCiclo.dataInicio} onChange={e => setEdicaoCiclo({...edicaoCiclo, dataInicio: e.target.value})} className="form-input" style={{ marginBottom: 24, background: 'rgba(30, 41, 59, 0.3)', border: '1px solid #1e293b', color: '#fff' }} />
-             <div style={{ display: 'flex', gap: 12 }}>
-                 <button onClick={() => setEdicaoCiclo(null)} style={{ flex: 1, padding: 14, background: 'transparent', border: 'none', color: '#64748b', fontWeight: 700, cursor: 'pointer' }}>Cancelar</button>
-                 <button 
-                   onClick={async () => {
-                     setSalvandoCiclo(true);
-                     try {
-                       const dataNovaFormatada = edicaoCiclo.dataInicio + 'T' + edicaoCiclo.horaInicio + ':00';
-                       await fetch(`/api/escalas/${edicaoCiclo.p.escala_id}`, { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ modo: 'encerrar_em', data_encerramento: dataNovaFormatada }) });
-                       await fetch('/api/escalas', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ local_id: edicaoCiclo.p.local_id, regra: edicaoCiclo.regra, data_inicio: dataNovaFormatada, hora_fim: edicaoCiclo.horaFim }) });
-                       localStorage.removeItem(`calendario_cache_${ano}_${mes}`);
-                       fetchPlantoes();
-                       setEdicaoCiclo(null);
-                       setDiaSelecionado(null);
-                     } catch (e) { alert('Erro ao recalcular ciclo.'); }
-                     setSalvandoCiclo(false);
-                   }} 
-                   style={{ flex: 1, padding: 14, background: 'var(--accent-blue)', border: 'none', borderRadius: 12, color: '#fff', fontWeight: 700, cursor: 'pointer' }}
-                 >
-                   {salvandoCiclo ? '...' : 'Aplicar'}
-                 </button>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)', zIndex: 100001, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+          <div className="card" style={{ maxWidth: 420, width: '100%', background: '#0f172a', border: '1px solid #1e293b', borderRadius: 28, padding: 32 }}>
+             <h2 style={{ fontSize: 20, fontWeight: 900, color: '#fff', marginBottom: 20 }}>Editar Ciclo</h2>
+             <label style={{ fontSize: 13, fontWeight: 800, color: '#475569', textTransform: 'uppercase', marginBottom: 10, display: 'block' }}>Data de Início</label>
+             <input type="date" value={edicaoCiclo.dataInicio} onChange={e => setEdicaoCiclo({...edicaoCiclo, dataInicio: e.target.value})} className="form-input" style={{ marginBottom: 28, background: 'rgba(30, 41, 59, 0.4)', border: '1px solid #1e293b', color: '#fff', height: 54, borderRadius: 14 }} />
+             <div style={{ display: 'flex', gap: 14 }}>
+                 <button onClick={() => setEdicaoCiclo(null)} style={{ flex: 1, padding: 16, background: 'transparent', border: 'none', color: '#64748b', fontWeight: 800, cursor: 'pointer', fontSize: 15 }}>Cancelar</button>
+                 <button onClick={async () => {
+                   setSalvandoCiclo(true);
+                   try {
+                     const dataNovaFormatada = edicaoCiclo.dataInicio + 'T' + edicaoCiclo.horaInicio + ':00';
+                     await fetch(`/api/escalas/${edicaoCiclo.p.escala_id}`, { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ modo: 'encerrar_em', data_encerramento: dataNovaFormatada }) });
+                     await fetch('/api/escalas', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ local_id: edicaoCiclo.p.local_id, regra: edicaoCiclo.regra, data_inicio: dataNovaFormatada, hora_fim: edicaoCiclo.horaFim }) });
+                     localStorage.removeItem(`calendario_cache_${ano}_${mes}`);
+                     fetchPlantoes();
+                     setEdicaoCiclo(null);
+                     setDiaSelecionado(null);
+                   } catch (e) { alert('Erro ao recalcular ciclo.'); }
+                   setSalvandoCiclo(false);
+                 }} style={{ flex: 1, padding: 16, background: 'var(--accent-blue)', border: 'none', borderRadius: 14, color: '#fff', fontWeight: 800, cursor: 'pointer', fontSize: 15 }}>{salvandoCiclo ? '...' : 'Aplicar'}</button>
              </div>
           </div>
         </div>
