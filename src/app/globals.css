@@ -66,7 +66,7 @@ h1, h2, h3, h4 {
 }
 
 .page-container {
-  padding: 0 var(--page-padding) 120px var(--page-padding);
+  padding: 0 var(--page-padding) 100px var(--page-padding);
   max-width: 800px;
   margin: 0 auto;
   width: 100%;
@@ -74,7 +74,7 @@ h1, h2, h3, h4 {
 
 @media (max-width: 768px) {
   .page-container {
-    padding: 0 var(--page-padding-mobile) 100px var(--page-padding-mobile);
+    padding: 0 var(--page-padding-mobile) 80px var(--page-padding-mobile);
   }
 }
 
@@ -310,14 +310,14 @@ h1, h2, h3, h4 {
 
 .cal-day {
   aspect-ratio: 1;
-  background: var(--bg-secondary);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 4px;
   min-height: 50px;
-  min-width: 0; /* important for grid */
+  min-width: 0;
+  border: none !important;
 }
 
 .cal-day.other-month {

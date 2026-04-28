@@ -231,8 +231,8 @@ export default function CalendarioPage() {
             return (
               <div key={idx} onClick={() => { if (!cell.mesAtual) return; setDiaSelecionado(cell.dia); }}
                 style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "60px", cursor: cell.mesAtual ? 'pointer' : 'default',
-                  background: cell.mesAtual ? getCellBackground(ps, cell.dia) : 'transparent',
-                  border: ps.some(p => p.status_conflito) ? '2px solid #ef4444' : '1px solid var(--border-subtle)',
+                  background: cell.mesAtual ? getCellBackground(ps, cell.dia) : 'var(--bg-secondary)',
+                  border: ps.some(p => p.status_conflito) ? '2px solid #ef4444' : 'none',
                   position: 'relative', overflow: 'hidden' }}
                 className={`cal-day ${cell.mesAtual ? '' : 'other-month'} ${cell.mesAtual && isHoje(cell.dia) ? 'today' : ''}`}
               >
