@@ -32,6 +32,22 @@ async function getSupabase() {
   );
 }
 
+// Lógica de Saudação Premium e Inclusiva
+function formatGreeting(fullName: string | null | undefined) {
+  if (!fullName || fullName.trim() === '') {
+    return { isFallback: true, text: "Olá, bem-vindo(a) ao Meu Plantão!" };
+  }
+  
+  const parts = fullName.trim().split(/\s+/);
+  if (parts.length <= 1) {
+    return { isFallback: false, text: `Olá, ${parts[0]}!` };
+  }
+  
+  // Primeiro + Último Nome
+  const firstName = parts[0];
+  const lastName = parts[parts.length - 1];
+  return { isFallback: false, text: `Olá, ${firstName} ${lastName}!` };
+}
 
 // Sub-componente: Resumo de Ganhos e Plantões
 async function StatsSection({ userId, isPro }: { userId: string, isPro: boolean }) {
@@ -39,7 +55,7 @@ async function StatsSection({ userId, isPro }: { userId: string, isPro: boolean 
   const inicioMes = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
   const fimMes = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0, 23, 59, 59).toISOString();
 
-  // Executar requests em paralelo (Promise.all) para zero payload / máximo desempenho
+  // Executar requests em paralelo
   const [
     { count: totalMes },
     { data: plantoesComValor },
@@ -50,16 +66,14 @@ async function StatsSection({ userId, isPro }: { userId: string, isPro: boolean 
     supabase.from('locais_trabalho').select('*', { count: 'exact', head: true }).eq('usuario_id', userId).eq('ativo', true)
   ]);
 
-  // Formatação Premium do Nome para o Header
-  const { data: profileHeader } = await supabase.from('profiles').select('nome').eq('id', userId).single();
-  const getFirstName = (fullName: string) => fullName?.trim().split(/\s+/)[0] || 'Médico';
-  const userNameHeader = getFirstName(profileHeader?.nome || 'Médico');
+  const { data: profile } = await supabase.from('profiles').select('nome').eq('id', userId).single();
+  const greeting = formatGreeting(profile?.nome);
 
   if (locaisAtivos === 0) {
     return (
     <>
       <div className="page-header">
-        <h1>Olá, {userNameHeader}!</h1>
+        <h1>{greeting.text}</h1>
         <p>Acompanhe sua escala e ganhos para o mês de {new Date().toLocaleDateString("pt-BR", { month: "long" })}.</p>
       </div>
       <div style={{ 
@@ -106,7 +120,7 @@ async function StatsSection({ userId, isPro }: { userId: string, isPro: boolean 
   return (
     <>
       <div className="page-header">
-        <h1>Olá, {userNameHeader}!</h1>
+        <h1>{greeting.text}</h1>
         <p>Acompanhe sua escala e ganhos para o mês de {new Date().toLocaleDateString("pt-BR", { month: "long" })}.</p>
       </div>
       <div className="card" style={{ marginBottom: 24, position: "relative", overflow: "hidden" }}>
@@ -148,7 +162,6 @@ async function StatsSection({ userId, isPro }: { userId: string, isPro: boolean 
 }
 
 // Sub-componente: Próximos Plantões
-// Sub-componente: Próximos Plantões (Wrapper para Client Component)
 async function UpcomingShiftsWrapper({ userId, userName, totalGanhos, isPro }: { userId: string, userName: string, totalGanhos: number, isPro: boolean }) {
   const supabase = await getSupabase();
 
@@ -217,14 +230,9 @@ export default async function DashboardPage() {
     .eq('id', user.id)
     .single();
 
-  // Formatação Premium do Nome (Primeiro e Último)
-  const getShortName = (fullName: string) => {
-    const parts = fullName?.trim().split(/\s+/) || [];
-    if (parts.length <= 1) return parts[0] || 'Médico';
-    return `${parts[0]} ${parts[parts.length - 1]}`;
-  };
-
-  const userName = getShortName(profile?.nome || user.user_metadata?.full_name || user.user_metadata?.name || 'Médico');
+  const fullName = profile?.nome || user.user_metadata?.full_name || user.user_metadata?.name || '';
+  const greeting = formatGreeting(fullName);
+  const userName = greeting.isFallback ? 'Usuário' : greeting.text.replace('Olá, ', '').replace('!', '');
 
   const isPro = isUserPro(user.email) || (profile?.is_pro === true);
 
