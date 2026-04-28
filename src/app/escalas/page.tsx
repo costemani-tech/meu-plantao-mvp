@@ -249,11 +249,28 @@ export default function EscalasPage() {
     setSavingLocal(false);
   };
 
-  const handleEditar = (e: any) => {
+  const handleEditar = async (e: any) => {
     try {
       setEditingId(e.id);
       setLocalId(e.local_id || '');
       
+      // Buscar horários do primeiro plantão para preencher o formulário
+      const { data: primeiro } = await supabase
+        .from('plantoes')
+        .select('data_hora_inicio, data_hora_fim')
+        .eq('escala_id', e.id)
+        .order('data_hora_inicio', { ascending: true })
+        .limit(1)
+        .single();
+
+      if (primeiro) {
+        const dIn = new Date(primeiro.data_hora_inicio);
+        const dFi = new Date(primeiro.data_hora_fim);
+        const pad = (n: number) => n.toString().padStart(2, '0');
+        setHoraInicio(`${pad(dIn.getHours())}:${pad(dIn.getMinutes())}`);
+        setHoraFim(`${pad(dFi.getHours())}:${pad(dFi.getMinutes())}`);
+      }
+
       const tipo = e.tipo_jornada === 'Diarista' ? 'Diarista' : 'Plantonista';
       setTipoJornada(tipo);
       

@@ -631,7 +631,7 @@ export default function CalendarioPage() {
                </div>
              </div>
 
-              {isCustomCicloRule && (
+              {edicaoCiclo!.regra === 'Outro' && (
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 24, padding: 14, background: 'var(--bg-secondary)', borderRadius: 10, border: '1px solid var(--border-subtle)', animation: 'fadeInDown 0.2s ease' }}>
                   <div>
                     <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 4 }}>Horas Trabalhadas</label>
@@ -661,7 +661,7 @@ export default function CalendarioPage() {
                         
                         // 2. Determinar o tipo de jornada
                         let tipo_jornada = 'Plantonista';
-                        const regraFinal = isCustomCicloRule ? `${cicloHorasTrabalho}x${cicloHorasDescanso}` : edicaoCiclo!.regra;
+                        const regraFinal = edicaoCiclo!.regra === 'Outro' ? `${cicloHorasTrabalho}x${cicloHorasDescanso}` : edicaoCiclo!.regra;
                         
                         if (regraFinal === '5x2' || regraFinal === '6x1') {
                           tipo_jornada = 'Diarista-Corridos';
