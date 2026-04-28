@@ -13,6 +13,7 @@ import {
   EyeOff
 } from 'lucide-react';
 import { 
+  DashboardInteractive,
   ShareAgendaButton,
   EarningsPrivacyWrapper,
   UpcomingShiftsClient 
