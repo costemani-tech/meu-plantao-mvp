@@ -160,6 +160,11 @@ export default function PlantaoExtraPage() {
 
   if (isPro === null) {
     return (
+    <>
+      <div className="page-header">
+        <h1>Plantão Extra <PlusCircle size={24} style={{ marginLeft: 8, display: "inline", verticalAlign: "middle" }} /></h1>
+        <p>Registre seus plantões fora da escala regular e gerencie seus ganhos.</p>
+      </div>
       <div style={{ padding: 24, display: 'flex', justifyContent: 'center' }}>
         <div className="skeleton" style={{ width: 40, height: 40, borderRadius: '50%' }} />
       </div>
@@ -170,13 +175,7 @@ export default function PlantaoExtraPage() {
     <>
       <div className="mobile-stack" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 500px)', justifyContent: 'start' }}>
         <div className="card">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-            <div style={{ background: 'rgba(34,211,181,0.1)', color: 'var(--accent-teal)', width: 48, height: 48, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}>
-              🚑
-            </div>
-            <div>
-              <h2 style={{ fontWeight: 800, fontSize: 20, margin: 0, color: 'var(--text-primary)' }}>Adicione plantões extras e acompanhe seus ganhos</h2>
-            </div>
+          
           </div>
 
           <div className="form-group">

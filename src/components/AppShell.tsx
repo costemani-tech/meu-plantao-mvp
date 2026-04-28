@@ -351,9 +351,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </nav>
       </aside>
-      <main className="main-content" style={{ position: 'relative' }}>
+      <main className="main-content">
         {pathname !== '/login' && (
-          <div style={{ position: 'absolute', top: 24, right: 24, zIndex: 50, display: 'flex', gap: 12 }}>
+          <div className="top-actions-bar">
             <button 
               onClick={toggleTheme} 
               className="mobile-only"

@@ -294,3 +294,36 @@ h1, h2, h3, h4 {
 [data-theme='dark'] .cal-day {
   background: var(--bg-secondary) !important;
 }
+
+.page-header {
+  margin-bottom: 32px;
+}
+
+.page-header h1 {
+  font-size: 28px;
+  margin-bottom: 4px;
+}
+
+.page-header p {
+  color: var(--text-secondary);
+  font-size: 15px;
+  font-weight: 500;
+}
+
+@media (max-width: 768px) {
+  .page-header h1 { font-size: 24px; }
+  .page-header p { font-size: 14px; }
+}
+
+/* Fix for top overlapping */
+.top-actions-bar {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 12px 20px;
+  position: sticky;
+  top: 0;
+  background: var(--bg-primary);
+  z-index: 100;
+  margin-bottom: 8px;
+}

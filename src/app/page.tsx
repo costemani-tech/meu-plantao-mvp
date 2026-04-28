@@ -52,6 +52,11 @@ async function StatsSection({ userId, isPro }: { userId: string, isPro: boolean 
 
   if (locaisAtivos === 0) {
     return (
+    <>
+      <div className="page-header">
+        <h1>Olá, {userName}!</h1>
+        <p>Acompanhe sua escala e ganhos para o mês de {new Date().toLocaleDateString("pt-BR", { month: "long" })}.</p>
+      </div>
       <div style={{ 
         display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', 
         padding: '80px 24px', minHeight: '80vh', justifyContent: 'center'
