@@ -202,7 +202,7 @@ export default function CalendarioPage() {
   while (cells.length % 7 !== 0) cells.push({ dia: cells.length - diasNoMes - primeiroDiaMes + 2, mesAtual: false });
 
   return (
-    <div style={{ padding: "0 16px 120px 16px", maxWidth: "800px", margin: "0 auto" }}>
+    <div className="page-container">
       <div className="page-header mobile-col" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
           <h1>Calendário</h1>
