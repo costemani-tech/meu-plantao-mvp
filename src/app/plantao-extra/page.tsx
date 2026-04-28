@@ -168,15 +168,18 @@ export default function PlantaoExtraPage() {
       <div style={{ padding: 24, display: 'flex', justifyContent: 'center' }}>
         <div className="skeleton" style={{ width: 40, height: 40, borderRadius: '50%' }} />
       </div>
+    </>
     );
   }
 
   return (
     <>
+      <div className="page-header">
+        <h1>Plantão Extra <PlusCircle size={24} style={{ marginLeft: 8, display: "inline", verticalAlign: "middle" }} /></h1>
+        <p>Registre seus plantões fora da escala regular e gerencie seus ganhos.</p>
+      </div>
       <div className="mobile-stack" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 500px)', justifyContent: 'start' }}>
         <div className="card">
-          
-          </div>
 
           <div className="form-group">
             <label className="form-label">Local de Trabalho</label>
@@ -265,26 +268,24 @@ export default function PlantaoExtraPage() {
               <div 
                 onClick={() => setShowUpgradeModal(true)}
                 style={{ 
-                  background: '#f8fafc', 
+                  background: 'var(--bg-primary)', 
                   padding: '16px', 
                   borderRadius: '12px', 
-                  border: '1px solid #e2e8f0',
+                  border: '1px solid var(--border-subtle)',
                   cursor: 'pointer',
                   transition: 'all 0.2s'
                 }}
                 className="hover-card"
               >
-                <div style={{ fontSize: 14, fontWeight: 700, color: '#1e293b', display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
+                <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
                   🔒 Disponível no Plano Pro
                 </div>
-                <div style={{ fontSize: 12, color: '#64748b' }}>
+                <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
                   📊 Veja seus ganhos extras automaticamente
                 </div>
               </div>
             </div>
           )}
-
-          
 
           <button
             className="btn btn-primary"
@@ -333,18 +334,18 @@ export default function PlantaoExtraPage() {
           <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', zIndex: -1 }} onClick={() => setShowUpgradeModal(false)} />
           <div className="card" style={{ maxWidth: 420, width: '100%', textAlign: 'center', borderRadius: '32px', padding: '40px 32px', border: 'none', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)' }}>
             <div style={{ fontSize: 14, fontWeight: 900, color: 'var(--accent-blue)', textTransform: 'uppercase', letterSpacing: 2, marginBottom: 8 }}>Meu Plantão</div>
-            <h2 style={{ fontSize: 24, fontWeight: 900, marginBottom: 24, color: '#001a41', lineHeight: 1.2 }}>💎 Leve seu controle para outro nível</h2>
+            <h2 style={{ fontSize: 24, fontWeight: 900, marginBottom: 24, color: 'var(--text-primary)', lineHeight: 1.2 }}>💎 Leve seu controle para outro nível</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 32, textAlign: 'left' }}>
               {[
                 { icon: '💰', title: 'Previsão Financeira', desc: 'Veja quanto vai receber no mês.' },
                 { icon: '📄', title: 'Escalas Premium', desc: 'Gere PDF profissional para envio.' },
                 { icon: '⚡', title: 'Controle Ilimitado', desc: 'Gestão total das suas escalas.' }
               ].map((b, i) => (
-                <div key={i} style={{ background: '#eff6ff', padding: '16px', borderRadius: '16px', borderLeft: '4px solid #3b82f6', display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                <div key={i} style={{ background: 'var(--accent-blue-light)', padding: '16px', borderRadius: '16px', borderLeft: '4px solid var(--accent-blue)', display: 'flex', alignItems: 'flex-start', gap: 12 }}>
                   <div style={{ fontSize: 18, marginTop: 2 }}>{b.icon}</div>
                   <div>
-                    <div style={{ fontWeight: 800, fontSize: 14, color: '#1e3a8a' }}>{b.title}</div>
-                    <div style={{ fontSize: 12, color: '#60a5fa' }}>{b.desc}</div>
+                    <div style={{ fontWeight: 800, fontSize: 14, color: 'var(--accent-blue)' }}>{b.title}</div>
+                    <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{b.desc}</div>
                   </div>
                 </div>
               ))}
@@ -356,6 +357,6 @@ export default function PlantaoExtraPage() {
           </div>
         </div>
       )}
-</>
+    </>
   );
 }
