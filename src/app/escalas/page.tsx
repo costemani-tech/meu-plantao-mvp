@@ -250,26 +250,36 @@ export default function EscalasPage() {
   };
 
   const handleEditar = (e: any) => {
-    setEditingId(e.id);
-    setLocalId(e.local_id);
-    setTipoJornada(e.tipo_jornada || 'Escala Fixa');
-    setModoJornada(e.modo_jornada || 'Trabalho/Descanso');
-    
-    if (e.regra.includes('x')) {
-      const parts = e.regra.split('x');
-      setRegra('Outro');
-      setHorasTrabalhoOutro(parts[0]);
-      setHorasDescansoOutro(parts[1]);
-    } else {
-      setRegra(e.regra);
+    try {
+      setEditingId(e.id);
+      setLocalId(e.local_id || '');
+      
+      // Mapear tipo de jornada para os valores aceitos pelo estado
+      const tipo = e.tipo_jornada === 'Diarista' ? 'Diarista' : 'Plantonista';
+      setTipoJornada(tipo);
+      
+      if (e.modo_jornada) {
+        setModoJornada(e.modo_jornada);
+      }
+      
+      if (e.regra && e.regra.includes('x')) {
+        const parts = e.regra.split('x');
+        setRegra('Outro');
+        setHorasTrabalhoOutro(parts[0] || '');
+        setHorasDescansoOutro(parts[1] || '');
+      } else if (e.regra) {
+        setRegra(e.regra);
+      }
+      
+      if (e.data_inicio) {
+        setDataInicioSo(e.data_inicio);
+      }
+      
+      setShowForm(true);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (err) {
+      console.error('Erro ao preparar edição:', err);
     }
-    
-    if (e.data_inicio) {
-      setDataInicioSo(e.data_inicio);
-    }
-    
-    setShowForm(true);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const salvarEscala = async () => {
@@ -1054,21 +1064,21 @@ export default function EscalasPage() {
                             }}>
                               <button 
                                 onClick={(event) => { event.stopPropagation(); handleEditar(e); setMenuEscalaId(null); }}
-                                style={{ width: '100%', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 10, background: 'none', border: 'none', color: 'var(--text-primary)', cursor: 'pointer', fontSize: 13, textAlign: 'left' }}
+                                style={{ width: '100%', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 10, background: 'none', border: 'none', color: 'var(--text-primary)', cursor: 'pointer', fontSize: 13, textAlign: 'left', userSelect: 'none' }}
                                 className="hover-bg"
                               >
                                 <Edit2 size={16} /> Editar Plantões
                               </button>
                               <button 
                                 onClick={(event) => { event.stopPropagation(); setModalAlertas(e); setMenuEscalaId(null); }}
-                                style={{ width: '100%', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 10, background: 'none', border: 'none', color: 'var(--text-primary)', cursor: 'pointer', fontSize: 13, textAlign: 'left' }}
+                                style={{ width: '100%', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 10, background: 'none', border: 'none', color: 'var(--text-primary)', cursor: 'pointer', fontSize: 13, textAlign: 'left', userSelect: 'none' }}
                                 className="hover-bg"
                               >
                                 <Bell size={16} /> Configurar Alertas
                               </button>
                               <button 
                                 onClick={(event) => { event.stopPropagation(); setModalEncerrar({ id: e.id, nome: e.local?.nome || 'Escala' }); setMenuEscalaId(null); }}
-                                style={{ width: '100%', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 10, background: 'none', border: 'none', color: '#EF4444', cursor: 'pointer', fontSize: 13, textAlign: 'left' }}
+                                style={{ width: '100%', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 10, background: 'none', border: 'none', color: '#EF4444', cursor: 'pointer', fontSize: 13, textAlign: 'left', userSelect: 'none' }}
                                 className="hover-bg"
                               >
                                 <Trash2 size={16} /> Encerrar / Excluir
