@@ -32,7 +32,7 @@ function RelatorioContent() {
       setIsPro(userIsPro);
 
       if (!userIsPro) {
-        alert('Este recurso é exclusivo para assinantes PRO.');
+        // Redirecting without alert
         router.push('/');
         return;
       }

@@ -1,3 +1,4 @@
+import { toast } from 'sonner';
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
@@ -48,32 +49,38 @@ export function EarningsPrivacyWrapper({ total, isPro }: { total: number, isPro:
 
   if (!mounted) return <div style={{ height: 40 }} />;
 
+  const onUpgradeClick = () => {
+    window.dispatchEvent(new CustomEvent('open-upgrade-modal'));
+  };
+
   return (
     <div style={{ position: 'relative', marginBottom: 12 }}>
-      <button 
-        onClick={toggle}
-        style={{ 
-          position: 'absolute',
-          top: -38,
-          right: 0,
-          background: 'rgba(255,255,255,0.06)', 
-          border: '1px solid var(--border-subtle)', 
-          cursor: 'pointer', 
-          color: 'var(--text-muted)', 
-          padding: '6px 14px', 
-          borderRadius: 20, 
-          display: 'flex', 
-          alignItems: 'center', 
-          gap: 6, 
-          fontSize: 12, 
-          fontWeight: 700, 
-          transition: 'all 0.2s',
-          zIndex: 10
-        }}
-      >
-        {hidden ? <Eye size={14} /> : <EyeOff size={14} />}
-        {hidden ? 'Mostrar' : 'Ocultar'}
-      </button>
+      {isPro && (
+        <button 
+          onClick={toggle}
+          style={{ 
+            position: 'absolute',
+            top: -38,
+            right: 0,
+            background: 'rgba(255,255,255,0.06)', 
+            border: '1px solid var(--border-subtle)', 
+            cursor: 'pointer', 
+            color: 'var(--text-muted)', 
+            padding: '6px 14px', 
+            borderRadius: 20, 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: 6, 
+            fontSize: 12, 
+            fontWeight: 700, 
+            transition: 'all 0.2s',
+            zIndex: 10
+          }}
+        >
+          {hidden ? <Eye size={14} /> : <EyeOff size={14} />}
+          {hidden ? 'Mostrar' : 'Ocultar'}
+        </button>
+      )}
 
       {isPro ? (
         <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '20px', border: '1px solid var(--border-subtle)', marginTop: 8 }}>
@@ -93,11 +100,24 @@ export function EarningsPrivacyWrapper({ total, isPro }: { total: number, isPro:
           )}
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)' }}>
-            💰 Ver meus ganhos reais
+        <div 
+          onClick={onUpgradeClick}
+          style={{ 
+            background: '#f8fafc', 
+            padding: '20px', 
+            borderRadius: '20px', 
+            border: '1px solid #e2e8f0',
+            cursor: 'pointer',
+            transition: 'all 0.2s'
+          }}
+          className="hover-card"
+        >
+          <div style={{ fontSize: 15, fontWeight: 700, color: '#1e293b', display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+            🔒 Disponível no Plano Pro
           </div>
-          <DesbloquearGanhosBtn />
+          <div style={{ fontSize: 13, color: '#64748b', display: 'flex', alignItems: 'center', gap: 6 }}>
+            📊 Veja seus ganhos extras automaticamente
+          </div>
         </div>
       )}
     </div>
@@ -108,16 +128,20 @@ export function DashboardInteractive({ isPro, hasLocations = true }: { isPro: bo
   const [showProModal, setShowProModal] = useState('');
   const router = useRouter();
 
-  // Auto-open Paywall para usuários Free
+  // Auto-open Paywall para usuários Free + Listeners
   useEffect(() => {
     if (!isPro) {
       setShowProModal('Onload');
     }
+
+    const handleOpen = () => setShowProModal('Event');
+    window.addEventListener('open-upgrade-modal', handleOpen);
+    return () => window.removeEventListener('open-upgrade-modal', handleOpen);
   }, [isPro]);
 
   const handleFabClick = () => {
     if (!hasLocations) {
-      alert("Ops! Primeiro você precisa cadastrar um Hospital ou Clínica em 'Início'.");
+      toast.error("Ops! Primeiro você precisa cadastrar um local em 'Início'.");
       return;
     }
     router.push('/plantao-extra');
