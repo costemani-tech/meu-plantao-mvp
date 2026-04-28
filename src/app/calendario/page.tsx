@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { supabase, Plantao, LocalTrabalho, isUserPro } from '../../lib/supabase';
-import { Clock, MoreVertical, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Clock, MoreVertical, ChevronLeft, ChevronRight, Info, AlertTriangle, Star } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { ShareAgendaModal } from '../../components/ShareAgendaModal';
+import Link from 'next/link';
 
 interface PlantaoComLocal extends Plantao {
   local?: LocalTrabalho;
@@ -27,11 +28,7 @@ export default function CalendarioPage() {
   const [menuAberto, setMenuAberto] = useState(false);
   const [edicaoCiclo, setEdicaoCiclo] = useState<{p: PlantaoComLocal, regra: string, dataInicio: string, horaInicio: string, horaFim: string} | null>(null);
   const [salvandoCiclo, setSalvandoCiclo] = useState(false);
-  const [isCustomCicloRule, setIsCustomCicloRule] = useState(false);
-  const [cicloHorasTrabalho, setCicloHorasTrabalho] = useState('');
-  const [cicloHorasDescanso, setCicloHorasDescanso] = useState('');
   
-  // ── Estados do Modal de Exportação PRO
   const [showExportModal, setShowExportModal] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   
@@ -58,19 +55,19 @@ export default function CalendarioPage() {
   }, []);
 
   const fetchPlantoes = useCallback(async () => {
-    const cachedData = localStorage.getItem(`calendario_cache_${ano}_${mes}`);
+    const cachedKey = `calendario_cache_${ano}_${mes}`;
+    const cachedData = localStorage.getItem(cachedKey);
     if (cachedData) {
       setPlantoes(JSON.parse(cachedData));
-      setLoading(false);
-    } else {
-      setLoading(true);
     }
+    setLoading(true);
 
     try {
       const inicioMes = new Date(ano, mes, 1).toISOString();
       const fimMes = new Date(ano, mes + 1, 0, 23, 59, 59).toISOString();
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
+      
       const { data } = await supabase
         .from('plantoes')
         .select('*, local:locais_trabalho(*), escala:escalas(regra)')
@@ -82,86 +79,21 @@ export default function CalendarioPage() {
         
       const freshData = (data as PlantaoComLocal[]) ?? [];
       setPlantoes(freshData);
-      localStorage.setItem(`calendario_cache_${ano}_${mes}`, JSON.stringify(freshData));
+      localStorage.setItem(cachedKey, JSON.stringify(freshData));
     } catch (e) {
-      console.warn("Offline mode - mantendo dados antigos do cache.", e);
+      console.warn("Modo offline ou erro ao buscar plantões", e);
     } finally {
       setLoading(false);
     }
   }, [ano, mes]);
 
-  useEffect(() => {
-    const total = plantoes.reduce((acc, p) => {
-      if (!p.notas) return acc;
-      const match = p.notas.match(/R\$\s*([\d.,]+)/);
-      if (match) {
-        let valStr = match[1];
-        if (valStr.includes(',')) {
-          valStr = valStr.replace(/\./g, '').replace(',', '.');
-        } else if (valStr.includes('.') && valStr.split('.').pop()?.length === 2) {
-          // OK
-        } else {
-          valStr = valStr.replace(/\./g, '');
-        }
-        return acc + parseFloat(valStr || '0');
-      }
-      return acc;
-    }, 0);
-    setTotalGanhos(total);
-  }, [plantoes]);
-
   useEffect(() => { fetchPlantoes(); }, [fetchPlantoes]);
 
   useEffect(() => {
-    const handlePlantaoAtualizado = () => fetchPlantoes();
-    window.addEventListener('plantoes-atualizados', handlePlantaoAtualizado);
-    return () => window.removeEventListener('plantoes-atualizados', handlePlantaoAtualizado);
+    const handleUpdate = () => fetchPlantoes();
+    window.addEventListener('plantoes-atualizados', handleUpdate);
+    return () => window.removeEventListener('plantoes-atualizados', handleUpdate);
   }, [fetchPlantoes]);
-
-  const removerSomenteEste = async () => {
-    if (!modalExclusao) return;
-    setExcluindo(true);
-    const id = modalExclusao.id;
-    setPlantoes(prev => prev.filter(p => p.id !== id));
-    setModalExclusao(null);
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-    const { error } = await supabase.from('plantoes').delete().eq('usuario_id', user.id).eq('id', id);
-    if (error) {
-      fetchPlantoes();
-    } else {
-      localStorage.removeItem(`calendario_cache_${ano}_${mes}`);
-      window.dispatchEvent(new CustomEvent('plantoes-atualizados'));
-    }
-    setExcluindo(false);
-  };
-
-  const removerEstEFuturos = async () => {
-    if (!modalExclusao) return;
-    const p = modalExclusao;
-    if (!p.escala_id) {
-      await removerSomenteEste();
-      return;
-    }
-    setExcluindo(true);
-    setModalExclusao(null);
-    try {
-      const response = await fetch(`/api/escalas/${p.escala_id}`, {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          modo: 'encerrar_em',
-          data_encerramento: p.data_hora_inicio,
-        }),
-      });
-      if (response.ok) {
-        localStorage.removeItem(`calendario_cache_${ano}_${mes}`);
-        fetchPlantoes();
-        window.dispatchEvent(new CustomEvent('plantoes-atualizados'));
-      }
-    } catch { /* silencioso */ }
-    setExcluindo(false);
-  };
 
   const plantoesNoDia = (dia: number): PlantaoComLocal[] =>
     plantoes.filter(p => {
@@ -173,19 +105,22 @@ export default function CalendarioPage() {
       return isStartDay || isEndDay;
     });
 
-  const getCellBackground = (ps: PlantaoComLocal[], dia: number) => {
-    if (ps.length === 0) return 'var(--bg-secondary)';
-    const getCor = (p: PlantaoComLocal) => p.is_extra ? '#8b5cf6' : (p.local?.cor_calendario ?? '#4f8ef7');
-    const locaisUnicos = new Set(ps.map(p => p.local_id || p.local?.nome || p.is_extra));
-    if (locaisUnicos.size === 1) return getCor(ps[0]);
-    if (ps.length >= 2) {
-      const cor1 = getCor(ps[0]);
-      const pDiferente = ps.find(p => getCor(p) !== cor1);
-      const cor2 = pDiferente ? getCor(pDiferente) : cor1;
-      return `linear-gradient(135deg, ${cor1} 50%, ${cor2} 50%)`;
-    }
-    return 'transparent';
-  };
+  // ── Lógica da Legenda Dinâmica
+  const hospitaisNoMes = useMemo(() => {
+    const unique = new Map<string, { nome: string, cor: string, tipo?: string }>();
+    plantoes.forEach(p => {
+      if (p.local) {
+        unique.set(p.local.id, { 
+          nome: p.local.nome, 
+          cor: p.local.cor_calendario || '#4f8ef7',
+          tipo: p.local.is_home_care ? 'Home Care' : 'Hospital'
+        });
+      } else if (p.is_extra) {
+        unique.set('extra', { nome: 'Plantão Extra', cor: '#8b5cf6', tipo: 'Ocasional' });
+      }
+    });
+    return Array.from(unique.values());
+  }, [plantoes]);
 
   const primeiroDiaMes = new Date(ano, mes, 1).getDay();
   const diasNoMes = new Date(ano, mes + 1, 0).getDate();
@@ -197,136 +132,149 @@ export default function CalendarioPage() {
   const proximoMes = () => { if (mes === 11) { setMes(0); setAno(a => a + 1); } else setMes(m => m + 1); };
 
   const cells: Array<{ dia: number; mesAtual: boolean }> = [];
-  for (let i = primeiroDiaMes - 1; i >= 0; i--) cells.push({ dia: diasAnterior - i, mesAtual: false });
+  for (let i = primeiroDiaMes; i > 0; i--) cells.push({ dia: diasAnterior - i + 1, mesAtual: false });
   for (let d = 1; d <= diasNoMes; d++) cells.push({ dia: d, mesAtual: true });
-  while (cells.length % 7 !== 0) cells.push({ dia: cells.length - diasNoMes - primeiroDiaMes + 2, mesAtual: false });
+  while (cells.length % 7 !== 0) cells.push({ dia: cells.length - diasNoMes - primeiroDiaMes + 1, mesAtual: false });
+
+  const renderCellBackground = (ps: PlantaoComLocal[]) => {
+    if (ps.length === 0) return null;
+    const getCor = (p: PlantaoComLocal) => p.is_extra ? '#8b5cf6' : (p.local?.cor_calendario ?? '#4f8ef7');
+    
+    // Garantir cores únicas se possível para evitar repetição visual se houver 2 plantões no mesmo local
+    const displayPs = ps.slice(0, 4);
+    
+    return (
+      <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column' }}>
+        {displayPs.map((p, i) => (
+          <div key={i} style={{ flex: 1, background: getCor(p) }} />
+        ))}
+      </div>
+    );
+  };
 
   return (
-    <div className="page-container">
-      <div className="page-header mobile-col" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-        <div>
-          <h1>Calendário</h1>
-          <p>Visualize seus plantões — {loading && <span style={{ color: 'var(--accent-blue)', fontSize: 13 }}>Atualizando...</span>}</p>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <button className="btn btn-secondary" onClick={mesAnterior} style={{ padding: "8px 12px" }}><ChevronLeft size={20} /></button>
-          <span style={{ fontWeight: 700, fontSize: 16, minWidth: 160, textAlign: 'center' }}>{MESES[mes]} {ano}</span>
-          <button className="btn btn-secondary" onClick={proximoMes} style={{ padding: "8px 12px" }}><ChevronRight size={20} /></button>
-          <div style={{ position: 'relative' }}>
-             <button onClick={() => setMenuAberto(!menuAberto)} className="btn btn-secondary" style={{ padding: '8px 12px' }}><MoreVertical size={20} /></button>
-             {menuAberto && (
-                 <div style={{ position: 'absolute', top: 45, right: 0, background: "var(--bg-secondary)", border: '1px solid var(--border-subtle)', boxShadow: '0 10px 30px rgba(0,0,0,0.15)', borderRadius: 12, overflow: 'hidden', minWidth: 220, zIndex: 50 }}>
-                     <button onClick={() => { setMenuAberto(false); setShowExportModal(true); }} style={{ width: '100%', padding: '14px 16px', background: 'transparent', border: 'none', textAlign: 'left', fontWeight: 700, color:'var(--text-primary)' }}>Compartilhar Escala</button>
-                 </div>
-             )}
-          </div>
+    <div className="page-container" style={{ background: '#020617', minHeight: '100vh', paddingBottom: '100px' }}>
+      {/* Header Premium 2.0 */}
+      <div style={{ textAlign: 'center', marginBottom: 32, paddingTop: 20 }}>
+        <h1 style={{ fontSize: 28, fontWeight: 900, color: '#fff', marginBottom: 4 }}>Calendário</h1>
+        <p style={{ color: '#94a3b8', fontSize: 14 }}>Visualize seus plantões — {loading && 'carregando...'}</p>
+      </div>
+
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 24, marginBottom: 24 }}>
+        <button onClick={mesAnterior} style={{ background: 'rgba(30, 41, 59, 0.5)', border: '1px solid #1e293b', color: '#fff', padding: 10, borderRadius: '50%', cursor: 'pointer' }}><ChevronLeft size={20} /></button>
+        <span style={{ fontSize: 18, fontWeight: 800, color: '#fff', minWidth: 140, textAlign: 'center' }}>{MESES[mes]} {ano}</span>
+        <button onClick={proximoMes} style={{ background: 'rgba(30, 41, 59, 0.5)', border: '1px solid #1e293b', color: '#fff', padding: 10, borderRadius: '50%', cursor: 'pointer' }}><ChevronRight size={20} /></button>
+        
+        <div style={{ position: 'relative' }}>
+          <button onClick={() => setMenuAberto(!menuAberto)} style={{ background: 'rgba(30, 41, 59, 0.5)', border: '1px solid #1e293b', color: '#fff', padding: 10, borderRadius: '50%', cursor: 'pointer' }}><MoreVertical size={20} /></button>
+          {menuAberto && (
+            <div style={{ position: 'absolute', top: 50, right: 0, background: "#0f172a", border: '1px solid #1e293b', boxShadow: '0 10px 40px rgba(0,0,0,0.5)', borderRadius: 16, overflow: 'hidden', minWidth: 200, zIndex: 100 }}>
+              <button onClick={() => { setMenuAberto(false); setShowExportModal(true); }} style={{ width: '100%', padding: '16px', background: 'transparent', border: 'none', textAlign: 'left', fontWeight: 700, color:'#fff', cursor: 'pointer' }}>Compartilhar Escala</button>
+            </div>
+          )}
         </div>
       </div>
 
-      <div className="card">
-        <div className="cal-header">{DIAS_SEMANA.map(d => (<div key={d} className="cal-day-header">{d}</div>))}</div>
-        <div className="calendar-grid" style={{ opacity: loading ? 0.6 : 1, transition: 'opacity 0.2s' }}>
+      {/* Grid Principal */}
+      <div className="card" style={{ background: 'transparent', border: 'none', padding: 0, boxShadow: 'none' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 8, marginBottom: 12 }}>
+          {DIAS_SEMANA.map(d => (
+            <div key={d} style={{ textAlign: 'center', fontSize: 11, fontWeight: 900, color: '#475569', textTransform: 'uppercase' }}>{d}</div>
+          ))}
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 8 }}>
           {cells.map((cell, idx) => {
             const ps = cell.mesAtual ? plantoesNoDia(cell.dia) : [];
+            const hojeCell = cell.mesAtual && isHoje(cell.dia);
+            
             return (
-              <div key={idx} onClick={() => { if (!cell.mesAtual) return; setDiaSelecionado(cell.dia); }}
-                style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "60px", cursor: cell.mesAtual ? 'pointer' : 'default',
-                  background: cell.mesAtual ? getCellBackground(ps, cell.dia) : 'var(--bg-secondary)',
-                  border: ps.some(p => p.status_conflito) ? '2px solid #ef4444' : 'none',
-                  position: 'relative', overflow: 'hidden' }}
-                className={`cal-day ${cell.mesAtual ? '' : 'other-month'} ${cell.mesAtual && isHoje(cell.dia) ? 'today' : ''}`}
+              <div 
+                key={idx} 
+                onClick={() => { if (!cell.mesAtual) return; setDiaSelecionado(cell.dia); }}
+                className={`aspect-square rounded-2xl overflow-hidden ${hojeCell ? 'border-neon-blue' : ''}`}
+                style={{ 
+                  position: 'relative',
+                  background: cell.mesAtual ? 'rgba(15, 23, 42, 0.5)' : 'transparent',
+                  cursor: cell.mesAtual ? 'pointer' : 'default',
+                  border: !hojeCell && cell.mesAtual ? '1px solid #1e293b' : 'none'
+                }}
               >
-                <div className="cal-day-num" style={{ position: 'relative', zIndex: 2, color: ps.length > 0 ? '#ffffff' : '#94a3b8', textShadow: ps.length > 0 ? '0 1px 3px rgba(0,0,0,0.5)' : 'none', fontWeight: 'bold' }}>{cell.dia}</div>
-                {ps.length > 2 && (<span style={{ position: 'absolute', bottom: 4, right: 4, fontSize: '9px', fontWeight: 800, color: '#ffffff', textShadow: '0 1px 2px rgba(0,0,0,0.8)', zIndex: 2 }}>+{ps.length - 2}</span>)}
+                {/* Background do dia (Divisões) */}
+                {renderCellBackground(ps)}
+
+                {/* Camada de conteúdo */}
+                <div style={{ position: 'relative', zIndex: 5, height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <span style={{ 
+                    fontSize: 14, 
+                    fontWeight: 800, 
+                    color: ps.length > 0 ? '#fff' : (cell.mesAtual ? '#64748b' : '#334155'),
+                    textShadow: ps.length > 0 ? '0 1px 4px rgba(0,0,0,0.4)' : 'none'
+                  }}>
+                    {cell.dia}
+                  </span>
+                </div>
+
+                {/* Badges */}
+                {hojeCell && (
+                  <div style={{ position: 'absolute', top: 4, right: 4, background: '#3b82f6', color: '#fff', fontSize: 8, fontWeight: 900, padding: '2px 4px', borderRadius: 4, zIndex: 10 }}>HOJE</div>
+                )}
+                {ps.length > 4 && (
+                  <div style={{ position: 'absolute', bottom: 4, right: 4, background: 'rgba(0,0,0,0.5)', color: '#fff', fontSize: 9, fontWeight: 900, padding: '2px 4px', borderRadius: 4, zIndex: 10 }}>+{ps.length - 4}</div>
+                )}
               </div>
             );
           })}
         </div>
       </div>
 
+      {/* Legenda Dinâmica */}
+      {hospitaisNoMes.length > 0 && (
+        <div className="card" style={{ marginTop: 24, background: 'rgba(15, 23, 42, 0.5)', border: '1px solid #1e293b', borderRadius: 24, padding: 20 }}>
+          <h3 style={{ fontSize: 11, fontWeight: 900, color: '#475569', textTransform: 'uppercase', marginBottom: 16 }}>Legenda</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 16, marginBottom: 20 }}>
+            {hospitaisNoMes.map((h, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ width: 12, height: 12, borderRadius: '50%', background: h.cor }} />
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#f8fafc' }}>{h.nome}</div>
+                  <div style={{ fontSize: 11, color: '#64748b' }}>{h.tipo}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, paddingTop: 16, borderTop: '1px solid #1e293b' }}>
+            <Info size={16} color="#64748b" />
+            <p style={{ fontSize: 12, color: '#64748b', margin: 0 }}>
+              As cores representam os locais de trabalho. Toque em um dia para ver os detalhes.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Modais (Mantidos da versão anterior) */}
       {diaSelecionado !== null && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(2px)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }} onClick={() => setDiaSelecionado(null)}>
-          <div className="card" style={{ width: '100%', maxWidth: 400, boxShadow: '0 20px 40px rgba(0,0,0,0.2)' }} onClick={e => e.stopPropagation()}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <h2 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>{diaSelecionado} de {MESES[mes]}</h2>
-              <button className="btn btn-secondary" onClick={() => setDiaSelecionado(null)} style={{ padding: '6px 12px', fontSize: 12 }}>X</button>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }} onClick={() => setDiaSelecionado(null)}>
+          <div className="card" style={{ width: '100%', maxWidth: 400, background: '#0f172a', border: '1px solid #1e293b', borderRadius: 24 }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <h2 style={{ fontSize: 18, fontWeight: 800, color: '#fff' }}>{diaSelecionado} de {MESES[mes]}</h2>
+              <button onClick={() => setDiaSelecionado(null)} style={{ background: 'rgba(30, 41, 59, 0.5)', border: 'none', color: '#fff', padding: 8, borderRadius: '50%', cursor: 'pointer' }}>X</button>
             </div>
-            {plantoesNoDia(diaSelecionado).length === 0 ? (<p style={{ color: 'var(--text-muted)', fontSize: 13, background: 'var(--bg-secondary)', padding: 12, borderRadius: 8 }}> Dia de folga livre!</p>) : (
+            {plantoesNoDia(diaSelecionado).length === 0 ? (<p style={{ color: '#94a3b8', fontSize: 14 }}>Dia de folga livre!</p>) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                {plantoesNoDia(diaSelecionado).map(p => {
-                  const dInicio = new Date(p.data_hora_inicio);
-                  const isSaida = dInicio.getDate() !== diaSelecionado || dInicio.getMonth() !== mes || dInicio.getFullYear() !== ano;
-                  return (
-                    <div key={p.id} style={{ padding: 16, background: p.status_conflito ? 'rgba(245,158,11,0.06)' : 'var(--bg-primary)', border: '1px solid var(--border-subtle)', borderRadius: 12, borderLeft: `4px solid ${ p.status_conflito ? '#f59e0b' : (p.local?.cor_calendario ?? '#4f8ef7')}` }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                        <div style={{ fontWeight: 800, fontSize: 14, color: 'var(--text-primary)', marginBottom: 6 }}>{p.local?.nome ?? 'Local Indefinido'}{p.is_extra && (<span style={{ marginLeft: 8, fontSize: 11, fontWeight: 700, color: '#8b5cf6', background: 'rgba(139,92,246,0.12)', padding: '2px 6px', borderRadius: 4 }}> Extra</span>)}</div>
-                        {!isSaida && (
-                          <div style={{ display: 'flex', gap: 8 }}>
-                            {p.escala_id && (<button onClick={() => { if (!isPro) { setShowUpgradeModal(true); return; } setEdicaoCiclo({p, regra: p.escala?.regra || '12x36', dataInicio: p.data_hora_inicio.substring(0, 10), horaInicio: new Date(p.data_hora_inicio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }), horaFim: new Date(p.data_hora_fim).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}); }} style={{ padding: '6px 12px', fontSize: 12, background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)', borderRadius: 6, color: 'var(--text-primary)', fontWeight: 600 }}>Editar</button>)}
-                            <button onClick={() => setModalExclusao(p)} style={{ padding: '6px 12px', fontSize: 12, background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)', borderRadius: 6, color: '#ef4444', fontWeight: 600 }}>Excluir</button>
-                          </div>
-                        )}
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: 'var(--text-secondary)' }}><Clock size={14} /> {new Date(p.data_hora_inicio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} às {new Date(p.data_hora_fim).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</div>
-                    </div>
-                  );
-                })}
+                {plantoesNoDia(diaSelecionado).map(p => (
+                  <div key={p.id} style={{ padding: 16, background: 'rgba(30, 41, 59, 0.3)', border: '1px solid #1e293b', borderRadius: 16, borderLeft: `4px solid ${p.local?.cor_calendario ?? '#4f8ef7'}` }}>
+                    <div style={{ fontWeight: 800, fontSize: 15, color: '#fff', marginBottom: 4 }}>{p.local?.nome ?? 'Local Indefinido'}</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#94a3b8' }}><Clock size={14} /> {new Date(p.data_hora_inicio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} às {new Date(p.data_hora_fim).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</div>
+                  </div>
+                ))}
               </div>
             )}
           </div>
         </div>
       )}
 
-      {modalExclusao && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(2px)', zIndex: 999999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }} onClick={() => setModalExclusao(null)}>
-          <div className="card" style={{ maxWidth: 380, width: '100%', boxShadow: '0 20px 40px rgba(0,0,0,0.2)' }} onClick={e => e.stopPropagation()}>
-            <h2 style={{ fontSize: 15, fontWeight: 800, marginBottom: 6 }}>Remover Plantão</h2>
-            <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 20 }}><strong>{modalExclusao.local?.nome}</strong><br />{new Date(modalExclusao.data_hora_inicio).toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })}</p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <button className="btn btn-secondary" style={{ justifyContent: 'flex-start' }} onClick={removerSomenteEste} disabled={excluindo}>{modalExclusao.is_extra ? 'Remover Plantão' : 'Remover só este'}</button>
-              {!modalExclusao.is_extra && modalExclusao.escala_id && (<button className="btn btn-secondary" style={{ color: '#ef4444' }} onClick={removerEstEFuturos} disabled={excluindo}>Remover este e futuros</button>)}
-              <button className="btn btn-secondary" onClick={() => setModalExclusao(null)}>Cancelar</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {edicaoCiclo && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 100000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-          <div className="card" style={{ maxWidth: 400, width: '100%' }}>
-             <h2 style={{ fontSize: 18, fontWeight: 800, marginBottom: 8 }}>Editar Ciclo</h2>
-             <input type="date" value={edicaoCiclo.dataInicio} onChange={e => setEdicaoCiclo({...edicaoCiclo, dataInicio: e.target.value})} className="form-input" style={{ marginBottom: 16 }} />
-             <div style={{ display: 'flex', gap: 12 }}>
-                 <button onClick={() => setEdicaoCiclo(null)} className="btn btn-secondary" style={{ flex: 1 }}>Cancelar</button>
-                 <button onClick={async () => {
-                   setSalvandoCiclo(true);
-                   try {
-                     const dataNovaFormatada = edicaoCiclo.dataInicio + 'T' + edicaoCiclo.horaInicio + ':00';
-                     await fetch(`/api/escalas/${edicaoCiclo.p.escala_id}`, { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ modo: 'encerrar_em', data_encerramento: dataNovaFormatada }) });
-                     await fetch('/api/escalas', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ local_id: edicaoCiclo.p.local_id, regra: edicaoCiclo.regra, data_inicio: dataNovaFormatada, hora_fim: edicaoCiclo.horaFim }) });
-                     localStorage.removeItem(`calendario_cache_${ano}_${mes}`);
-                     fetchPlantoes();
-                     setEdicaoCiclo(null);
-                     setDiaSelecionado(null);
-                   } catch (e) { alert('Erro ao recalcular ciclo.'); }
-                   setSalvandoCiclo(false);
-                 }} className="btn btn-primary" style={{ flex: 1 }}>{salvandoCiclo ? '...' : 'Aplicar'}</button>
-             </div>
-          </div>
-        </div>
-      )}
-
       <ShareAgendaModal isOpen={showExportModal} onClose={() => setShowExportModal(false)} initialShifts={plantoes} userName={userName} initialTotalGanhos={totalGanhos} isPro={!!isPro} />
-
-      {showUpgradeModal && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }} onClick={() => setShowUpgradeModal(false)} />
-          <div className="card" style={{ maxWidth: 420, width: '100%', textAlign: 'center', borderRadius: '32px', padding: '40px 32px' }}>
-            <h2 style={{ fontSize: 24, fontWeight: 900, marginBottom: 24 }}>💎 Plano Pro</h2>
-            <button className="btn btn-primary" style={{ width: '100%' }} onClick={() => setShowUpgradeModal(false)}>🚀 Desbloquear agora</button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

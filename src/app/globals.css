@@ -31,8 +31,8 @@
 
 [data-theme='dark'] {
   color-scheme: dark;
-  --bg-primary: #020617;
-  --bg-secondary: #0F172A;
+  --bg-primary: #020617; /* slate-950 */
+  --bg-secondary: #0F172A; /* slate-900 */
   --text-primary: #F8FAFC;
   --text-secondary: #94A3B8;
   --text-muted: #475569;
@@ -41,6 +41,27 @@
   --accent-blue: #60A5FA;
   --accent-blue-hover: #93C5FD;
   --accent-blue-light: rgba(59, 130, 246, 0.1);
+}
+
+.aspect-square {
+  aspect-ratio: 1 / 1;
+}
+
+.rounded-2xl {
+  border-radius: 1.5rem;
+}
+
+.overflow-hidden {
+  overflow: hidden;
+}
+
+.border-neon-blue {
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.5), inset 0 0 5px rgba(59, 130, 246, 0.3);
+  border: 2px solid #60A5FA !important;
+}
+
+.bg-slate-900-50 {
+  background: rgba(15, 23, 42, 0.5);
 }
 
 * {
