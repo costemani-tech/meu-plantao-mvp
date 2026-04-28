@@ -1,5 +1,5 @@
-import { Plus, Trash2, Home, MapPin, Edit3, Star } from 'lucide-react';
 'use client';
+import { Plus, Trash2, Home, MapPin, Edit3, Star } from 'lucide-react';
 
 import { useEffect, useState, useCallback } from 'react';
 import { supabase, LocalTrabalho, isUserPro } from '../../lib/supabase';

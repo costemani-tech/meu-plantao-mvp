@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { supabase, LocalTrabalho, isUserPro } from '../../lib/supabase';
 import { toast } from 'sonner';
+import { PlusCircle } from 'lucide-react';
 
 export default function PlantaoExtraPage() {
   const [locais, setLocais] = useState<LocalTrabalho[]>([]);

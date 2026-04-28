@@ -4,6 +4,8 @@ import { toast } from 'sonner';
 import React, { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
+  TrendingUp,
+  Activity,
   Plus, 
   Star, 
   Share2, 

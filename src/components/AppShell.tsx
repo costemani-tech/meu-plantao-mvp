@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { supabase, isUserPro } from '../lib/supabase';
 import { useEffect, useState } from 'react';
-import { LayoutDashboard, CalendarDays, Settings2, PlusCircle, LogOut, Sun, Moon, Activity, Bell, X } from 'lucide-react';
+import { LayoutDashboard, CalendarDays, Settings2, PlusCircle, LogOut, Sun, Moon, Activity, Bell, X, AlertTriangle, Star } from 'lucide-react';
 
 const navItems = [
   { icon: LayoutDashboard, label: 'Central de Plantões', href: '/' },

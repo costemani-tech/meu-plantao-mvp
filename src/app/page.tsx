@@ -10,7 +10,8 @@ import {
   TrendingUp, 
   ChevronRight,
   Eye,
-  EyeOff
+  EyeOff,
+  Plus
 } from 'lucide-react';
 import { 
   DashboardInteractive,

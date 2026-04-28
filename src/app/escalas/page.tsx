@@ -5,7 +5,7 @@ import { supabase, LocalTrabalho, isUserPro } from '../../lib/supabase';
 import { gerarProximosPlantoes, SlotPlantao } from '../../lib/scale-generator';
 import { useRouter } from 'next/navigation';
 import EmptyState from '../../components/EmptyState';
-import { ClipboardList, Bell, Trash2, AlertTriangle, X, ChevronRight, Calendar, Clock, Edit2 } from 'lucide-react';
+import { ClipboardList, Bell, Trash2, AlertTriangle, X, ChevronRight, Calendar, Clock, Edit2, Plus, Star } from 'lucide-react';
 import { formatDaysArray, formatBRTTime, formatRelativeShiftDate } from '../../lib/date-utils';
 
 const CORES_PRESET = [
