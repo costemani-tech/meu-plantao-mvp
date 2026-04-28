@@ -105,19 +105,19 @@ export function EarningsPrivacyWrapper({ total, isPro }: { total: number, isPro:
         <div 
           onClick={onUpgradeClick}
           style={{ 
-            background: '#f8fafc', 
+            background: "var(--bg-primary)", 
             padding: '20px', 
             borderRadius: '20px', 
-            border: '1px solid #e2e8f0',
+            border: "1px solid var(--border-subtle)",
             cursor: 'pointer',
             transition: 'all 0.2s'
           }}
           className="hover-card"
         >
-          <div style={{ fontSize: 15, fontWeight: 700, color: '#1e293b', display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+          <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text-primary)", display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
             🔒 Disponível no Plano Pro
           </div>
-          <div style={{ fontSize: 13, color: '#64748b', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div style={{ fontSize: 13, color: "var(--text-secondary)", display: 'flex', alignItems: 'center', gap: 6 }}>
             📊 Veja seus ganhos extras automaticamente
           </div>
         </div>
@@ -163,18 +163,18 @@ export function DashboardInteractive({ isPro, hasLocations = true }: { isPro: bo
       {/* SEÇÃO PRO - BANNER PREMIUM SaaS (Redesign Clean) */}
       {!isPro && (
         <div className="card" style={{ 
-          background: '#ffffff', 
-          border: '1px solid #dbeafe', // blue-100
+          background: "var(--bg-secondary)", 
+          border: "1px solid var(--border-subtle)", // blue-100
           borderRadius: '24px', 
           padding: '24px',
           marginBottom: 32,
           boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)',
           textAlign: 'center'
         }}>
-          <h3 style={{ fontSize: 18, fontWeight: 800, color: '#001a41', margin: '0 0 4px 0' }}>
+          <h3 style={{ fontSize: 18, fontWeight: 800, color: "var(--text-primary)", margin: '0 0 4px 0' }}>
             💎 Leve seu controle para outro nível
           </h3>
-          <p style={{ fontSize: 14, color: '#64748b', margin: '0 0 20px 0', fontWeight: 500 }}>
+          <p style={{ fontSize: 14, color: "var(--text-secondary)", margin: '0 0 20px 0', fontWeight: 500 }}>
             Desbloqueie a previsão financeira, relatórios em PDF e controle ilimitado.
           </p>
           
@@ -210,7 +210,7 @@ export function DashboardInteractive({ isPro, hasLocations = true }: { isPro: bo
             {/* Logo Logo */}
             <div style={{ fontSize: 14, fontWeight: 900, color: 'var(--accent-blue)', textTransform: 'uppercase', letterSpacing: 2, marginBottom: 8 }}>Meu Plantão</div>
             
-            <h2 style={{ fontSize: 24, fontWeight: 900, marginBottom: 24, color: '#001a41', lineHeight: 1.2 }}>
+            <h2 style={{ fontSize: 24, fontWeight: 900, marginBottom: 24, color: "var(--text-primary)", lineHeight: 1.2 }}>
               💎 Leve seu controle para outro nível
             </h2>
 
@@ -222,7 +222,7 @@ export function DashboardInteractive({ isPro, hasLocations = true }: { isPro: bo
                 { icon: <Activity size={18} />, title: 'Controle Ilimitado', desc: 'Gestão total das suas escalas.' }
               ].map((b, i) => (
                 <div key={i} style={{ 
-                  background: '#eff6ff', // blue-50
+                  background: "var(--accent-blue-light)", // blue-50
                   padding: '16px',
                   borderRadius: '16px',
                   borderLeft: '4px solid #3b82f6', // blue-500
@@ -232,14 +232,14 @@ export function DashboardInteractive({ isPro, hasLocations = true }: { isPro: bo
                 }}>
                   <div style={{ color: "var(--accent-blue)", marginTop: 2 }}>{b.icon}</div>
                   <div>
-                    <div style={{ fontWeight: 800, fontSize: 14, color: '#1e3a8a' }}>{b.title}</div>
-                    <div style={{ fontSize: 12, color: '#60a5fa' }}>{b.desc}</div>
+                    <div style={{ fontWeight: 800, fontSize: 14, color: "var(--accent-blue)" }}>{b.title}</div>
+                    <div style={{ fontSize: 12, color: "var(--text-secondary)" }}>{b.desc}</div>
                   </div>
                 </div>
               ))}
             </div>
 
-            <p style={{ fontSize: 18, fontWeight: 700, color: '#1e293b', marginBottom: 24, lineHeight: 1.4 }}>
+            <p style={{ fontSize: 18, fontWeight: 700, color: "var(--text-primary)", marginBottom: 24, lineHeight: 1.4 }}>
               Utilizado por profissionais para organizar plantões com mais controle.
             </p>
 
@@ -266,7 +266,7 @@ export function DashboardInteractive({ isPro, hasLocations = true }: { isPro: bo
               </button>
             </div>
 
-            <div style={{ marginTop: 24, fontSize: 11, color: '#94a3b8', fontWeight: 500 }}>
+            <div style={{ marginTop: 24, fontSize: 11, color: "var(--text-muted)", fontWeight: 500 }}>
               Acesso imediato a todas as funcionalidades.
             </div>
           </div>
@@ -314,7 +314,7 @@ export function DesbloquearGanhosBtn() {
             {/* Logo Logo */}
             <div style={{ fontSize: 14, fontWeight: 900, color: 'var(--accent-blue)', textTransform: 'uppercase', letterSpacing: 2, marginBottom: 8 }}>Meu Plantão</div>
             
-            <h2 style={{ fontSize: 24, fontWeight: 900, marginBottom: 24, color: '#001a41', lineHeight: 1.2 }}>
+            <h2 style={{ fontSize: 24, fontWeight: 900, marginBottom: 24, color: "var(--text-primary)", lineHeight: 1.2 }}>
               💎 Leve seu controle para outro nível
             </h2>
 
@@ -343,7 +343,7 @@ export function DesbloquearGanhosBtn() {
               ))}
             </div>
 
-            <p style={{ fontSize: 18, fontWeight: 700, color: '#1e293b', marginBottom: 24, lineHeight: 1.4 }}>
+            <p style={{ fontSize: 18, fontWeight: 700, color: "var(--text-primary)", marginBottom: 24, lineHeight: 1.4 }}>
               🚀 Usado por profissionais para organizar plantões com mais controle.
             </p>
 
@@ -370,7 +370,7 @@ export function DesbloquearGanhosBtn() {
               </button>
             </div>
 
-            <div style={{ marginTop: 24, fontSize: 11, color: '#94a3b8', fontWeight: 500 }}>
+            <div style={{ marginTop: 24, fontSize: 11, color: "var(--text-muted)", fontWeight: 500 }}>
               Acesso imediato a todas as funcionalidades.
             </div>
           </div>

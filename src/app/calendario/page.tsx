@@ -260,7 +260,7 @@ export default function CalendarioPage() {
                 <MoreVertical size={20} />
              </button>
              {menuAberto && (
-                 <div style={{ position: 'absolute', top: 45, right: 0, background: 'var(--bg-primary)', border: '1px solid var(--border-subtle)', boxShadow: '0 10px 30px rgba(0,0,0,0.15)', borderRadius: 12, overflow: 'hidden', minWidth: 220, zIndex: 50 }}>
+                 <div style={{ position: 'absolute', top: 45, right: 0, background: "transparent", border: '1px solid var(--border-subtle)', boxShadow: '0 10px 30px rgba(0,0,0,0.15)', borderRadius: 12, overflow: 'hidden', minWidth: 220, zIndex: 50 }}>
                      <button
                        onClick={() => { setMenuAberto(false); setShowExportModal(true); }}
                        style={{ width: '100%', padding: '14px 16px', background: 'transparent', border: 'none', textAlign: 'left', fontWeight: 700, display:'flex', alignItems:'center', gap:10, color:'var(--text-primary)' }}
@@ -279,7 +279,7 @@ export default function CalendarioPage() {
             <div key={d} className="cal-day-header">{d}</div>
           ))}
         </div>
-        <div id="calendar-grid-export" className="calendar-grid" style={{ opacity: loading ? 0.6 : 1, transition: 'opacity 0.2s', padding: '10px', background: 'var(--bg-primary)' }}>
+        <div id="calendar-grid-export" className="calendar-grid" style={{ opacity: loading ? 0.6 : 1, transition: 'opacity 0.2s', padding: '10px', background: "transparent" }}>
           {cells.map((cell, idx) => {
             const ps = cell.mesAtual ? plantoesNoDia(cell.dia) : [];
             return (
@@ -289,8 +289,7 @@ export default function CalendarioPage() {
                   if (!cell.mesAtual) return;
                   setDiaSelecionado(cell.dia);
                 }}
-                style={{ 
-                  cursor: cell.mesAtual ? 'pointer' : 'default',
+                style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "60px", cursor: cell.mesAtual ? 'pointer' : 'default',
                   background: cell.mesAtual ? getCellBackground(ps, cell.dia) : 'transparent',
                   border: ps.some(p => p.status_conflito) ? '2px solid #ef4444' : '1px solid var(--border-subtle)',
                   position: 'relative',
@@ -477,7 +476,7 @@ export default function CalendarioPage() {
                value={edicaoCiclo.dataInicio}
                onChange={e => setEdicaoCiclo({...edicaoCiclo, dataInicio: e.target.value})}
                className="input-field"
-               style={{ width: '100%', marginBottom: 16, padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-subtle)', background: 'var(--bg-primary)', color: 'var(--text-primary)' }}
+               style={{ width: '100%', marginBottom: 16, padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-subtle)', background: "transparent", color: 'var(--text-primary)' }}
              />
 
              <label style={{ fontSize: 13, fontWeight: 700, marginBottom: 6, display: 'block' }}>Nova Regra de Escala:</label>
@@ -490,7 +489,7 @@ export default function CalendarioPage() {
                    if (v !== 'Outro') { setCicloHorasTrabalho(''); setCicloHorasDescanso(''); }
                  }}
                  className="input-field"
-                 style={{ width: '100%', marginBottom: 24, padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-subtle)', background: 'var(--bg-primary)', color: 'var(--text-primary)' }}
+                 style={{ width: '100%', marginBottom: 24, padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-subtle)', background: "transparent", color: 'var(--text-primary)' }}
               >
                    <option value="12x36">12x36 (Trabalha 12h, folga 36h)</option>
                    <option value="24x48">24x48 (Trabalha 24h, folga 48h)</option>
@@ -508,7 +507,7 @@ export default function CalendarioPage() {
                    value={edicaoCiclo!.horaInicio}
                    onChange={e => setEdicaoCiclo({...edicaoCiclo!, horaInicio: e.target.value})}
                    className="input-field"
-                   style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-subtle)', background: 'var(--bg-primary)', color: 'var(--text-primary)' }}
+                   style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-subtle)', background: "transparent", color: 'var(--text-primary)' }}
                  />
                </div>
                <div>
@@ -518,7 +517,7 @@ export default function CalendarioPage() {
                    value={edicaoCiclo!.horaFim}
                    onChange={e => setEdicaoCiclo({...edicaoCiclo!, horaFim: e.target.value})}
                    className="input-field"
-                   style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-subtle)', background: 'var(--bg-primary)', color: 'var(--text-primary)' }}
+                   style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-subtle)', background: "transparent", color: 'var(--text-primary)' }}
                  />
                </div>
              </div>
@@ -527,11 +526,11 @@ export default function CalendarioPage() {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 24, padding: 14, background: 'var(--bg-secondary)', borderRadius: 10, border: '1px solid var(--border-subtle)', animation: 'fadeInDown 0.2s ease' }}>
                   <div>
                     <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 4 }}>Horas Trabalhadas</label>
-                    <input type="number" min="1" value={cicloHorasTrabalho} onChange={e => { setCicloHorasTrabalho(e.target.value); setEdicaoCiclo({...edicaoCiclo!, regra: `${e.target.value}x${cicloHorasDescanso}`}); }} placeholder="Ex: 12" style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1px solid var(--border-subtle)', background: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: 14, boxSizing: 'border-box' }} />
+                    <input type="number" min="1" value={cicloHorasTrabalho} onChange={e => { setCicloHorasTrabalho(e.target.value); setEdicaoCiclo({...edicaoCiclo!, regra: `${e.target.value}x${cicloHorasDescanso}`}); }} placeholder="Ex: 12" style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1px solid var(--border-subtle)', background: "transparent", color: 'var(--text-primary)', fontSize: 14, boxSizing: 'border-box' }} />
                   </div>
                   <div>
                     <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 4 }}>Horas de Descanso</label>
-                    <input type="number" min="1" value={cicloHorasDescanso} onChange={e => { setCicloHorasDescanso(e.target.value); setEdicaoCiclo({...edicaoCiclo!, regra: `${cicloHorasTrabalho}x${e.target.value}`}); }} placeholder="Ex: 60" style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1px solid var(--border-subtle)', background: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: 14, boxSizing: 'border-box' }} />
+                    <input type="number" min="1" value={cicloHorasDescanso} onChange={e => { setCicloHorasDescanso(e.target.value); setEdicaoCiclo({...edicaoCiclo!, regra: `${cicloHorasTrabalho}x${e.target.value}`}); }} placeholder="Ex: 60" style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1px solid var(--border-subtle)', background: "transparent", color: 'var(--text-primary)', fontSize: 14, boxSizing: 'border-box' }} />
                   </div>
                   <p style={{ gridColumn: '1 / -1', margin: 0, fontSize: 11, color: 'var(--text-muted)' }}>Ciclo: {(parseInt(cicloHorasTrabalho,10)||0)+(parseInt(cicloHorasDescanso,10)||0)}h</p>
                 </div>
@@ -612,18 +611,18 @@ export default function CalendarioPage() {
           <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', zIndex: -1 }} onClick={() => setShowUpgradeModal(false)} />
           <div className="card" style={{ maxWidth: 420, width: '100%', textAlign: 'center', borderRadius: '32px', padding: '40px 32px', border: 'none', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)' }}>
             <div style={{ fontSize: 14, fontWeight: 900, color: 'var(--accent-blue)', textTransform: 'uppercase', letterSpacing: 2, marginBottom: 8 }}>Meu Plantão</div>
-            <h2 style={{ fontSize: 24, fontWeight: 900, marginBottom: 24, color: '#001a41', lineHeight: 1.2 }}>💎 Leve seu controle para outro nível</h2>
+            <h2 style={{ fontSize: 24, fontWeight: 900, marginBottom: 24, color: "var(--text-primary)", lineHeight: 1.2 }}>💎 Leve seu controle para outro nível</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 32, textAlign: 'left' }}>
               {[
                 { icon: '💰', title: 'Previsão Financeira', desc: 'Veja quanto vai receber no mês.' },
                 { icon: '📄', title: 'Escalas Premium', desc: 'Gere PDF profissional para envio.' },
                 { icon: '⚡', title: 'Controle Ilimitado', desc: 'Gestão total das suas escalas.' }
               ].map((b, i) => (
-                <div key={i} style={{ background: '#eff6ff', padding: '16px', borderRadius: '16px', borderLeft: '4px solid #3b82f6', display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                <div key={i} style={{ background: "var(--accent-blue-light)", padding: '16px', borderRadius: '16px', borderLeft: '4px solid #3b82f6', display: 'flex', alignItems: 'flex-start', gap: 12 }}>
                   <div style={{ fontSize: 18, marginTop: 2 }}>{b.icon}</div>
                   <div>
-                    <div style={{ fontWeight: 800, fontSize: 14, color: '#1e3a8a' }}>{b.title}</div>
-                    <div style={{ fontSize: 12, color: '#60a5fa' }}>{b.desc}</div>
+                    <div style={{ fontWeight: 800, fontSize: 14, color: "var(--accent-blue)" }}>{b.title}</div>
+                    <div style={{ fontSize: 12, color: "var(--text-secondary)" }}>{b.desc}</div>
                   </div>
                 </div>
               ))}
