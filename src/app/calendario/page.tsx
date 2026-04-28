@@ -174,7 +174,7 @@ export default function CalendarioPage() {
     });
 
   const getCellBackground = (ps: PlantaoComLocal[], dia: number) => {
-    if (ps.length === 0) return 'transparent';
+    if (ps.length === 0) return 'var(--bg-secondary)';
     const getCor = (p: PlantaoComLocal) => p.is_extra ? '#8b5cf6' : (p.local?.cor_calendario ?? '#4f8ef7');
     const locaisUnicos = new Set(ps.map(p => p.local_id || p.local?.nome || p.is_extra));
     if (locaisUnicos.size === 1) return getCor(ps[0]);
@@ -225,7 +225,7 @@ export default function CalendarioPage() {
 
       <div className="card">
         <div className="cal-header">{DIAS_SEMANA.map(d => (<div key={d} className="cal-day-header">{d}</div>))}</div>
-        <div className="calendar-grid" style={{ opacity: loading ? 0.6 : 1, transition: 'opacity 0.2s', padding: '10px', background: "transparent" }}>
+        <div className="calendar-grid" style={{ opacity: loading ? 0.6 : 1, transition: 'opacity 0.2s' }}>
           {cells.map((cell, idx) => {
             const ps = cell.mesAtual ? plantoesNoDia(cell.dia) : [];
             return (
