@@ -204,44 +204,57 @@ export default function EscalasPage() {
   const salvarNovoLocal = async () => {
     if (!novoLocalNome.trim()) { showToast('Informe o nome do local.', 'error'); return; }
     
-    if (isPro === null) return; // ainda carregando, não processar
-    if (!isPro) {
-      setSavingLocal(true);
+    if (isPro === null) {
+      showToast('Aguarde, verificando seu plano...', 'error');
+      return;
+    }
+
+    setSavingLocal(true);
+
+    try {
       const { data: { user } } = await supabase.auth.getUser();
-      const { count } = await supabase.from('locais_trabalho').select('*', { count: 'exact', head: true }).eq('usuario_id', user?.id).eq('ativo', true);
-      if (count !== null && count >= 2) {
-        setShowProModal(true);
-        setSavingLocal(false);
-        return;
+      if (!user) { showToast('Usuário não autenticado.', 'error'); setSavingLocal(false); return; }
+
+      if (!isPro) {
+        const { count } = await supabase
+          .from('locais_trabalho')
+          .select('*', { count: 'exact', head: true })
+          .eq('usuario_id', user.id)
+          .eq('ativo', true);
+        if (count !== null && count >= 2) {
+          setShowProModal(true);
+          setSavingLocal(false);
+          return;
+        }
       }
-    } else {
-      setSavingLocal(true);
-    }
-    
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
 
-    const { data, error } = await supabase.from('locais_trabalho').insert({
-      usuario_id: user.id,
-      nome: novoLocalNome.trim(),
-      cor_calendario: novoLocalCor,
-      endereco: novoLocalIsHomeCare ? null : novoLocalEndereco.trim(),
-      is_home_care: novoLocalIsHomeCare
-    }).select().single();
+      const { data, error } = await supabase.from('locais_trabalho').insert({
+        usuario_id: user.id,
+        nome: novoLocalNome.trim(),
+        cor_calendario: novoLocalCor,
+        endereco: novoLocalIsHomeCare ? null : novoLocalEndereco.trim(),
+        is_home_care: novoLocalIsHomeCare
+      }).select().single();
 
-    if (error) {
-      showToast('Erro ao criar local: ' + error.message, 'error');
-    } else if (data) {
-      setLocais(prev => [...prev, data as LocalTrabalho].sort((a, b) => a.nome.localeCompare(b.nome)));
-      setLocalId(data.id);
-      setIsCreatingLocal(false);
-      setNovoLocalNome('');
-      setNovoLocalIsHomeCare(false);
-      setNovoLocalCor(CORES_PRESET[0]);
-      setNovoLocalEndereco('');
-      showToast('Local criado e selecionado!', 'success');
+      if (error) {
+        console.error('[salvarNovoLocal] Supabase error:', error);
+        showToast('Erro ao criar local: ' + error.message, 'error');
+      } else if (data) {
+        setLocais(prev => [...prev, data as LocalTrabalho].sort((a, b) => a.nome.localeCompare(b.nome)));
+        setLocalId(data.id);
+        setIsCreatingLocal(false);
+        setNovoLocalNome('');
+        setNovoLocalIsHomeCare(false);
+        setNovoLocalCor(CORES_PRESET[0]);
+        setNovoLocalEndereco('');
+        showToast('Local criado e selecionado! Agora clique em Criar Escala.', 'success');
+      }
+    } catch (err: any) {
+      console.error('[salvarNovoLocal] Unexpected error:', err);
+      showToast('Erro inesperado: ' + (err?.message || 'Tente novamente.'), 'error');
+    } finally {
+      setSavingLocal(false);
     }
-    setSavingLocal(false);
   };
 
   const handleEditar = async (e: any) => {
@@ -313,8 +326,21 @@ export default function EscalasPage() {
   };
 
   const salvarEscala = async () => {
-    if (!localId || !dataInicioSo || !horaInicio) {
-      showToast('Preencha o Local, o Dia e a Hora do plantão.', 'error');
+    // Guard: user has new-local panel open but hasn't saved the local yet
+    if (isCreatingLocal) {
+      showToast('Salve o novo local antes de criar a escala.', 'error');
+      return;
+    }
+    if (!localId) {
+      showToast('Selecione ou crie um local de trabalho.', 'error');
+      return;
+    }
+    if (!dataInicioSo) {
+      showToast('Informe a data de início dos plantões.', 'error');
+      return;
+    }
+    if (!horaInicio) {
+      showToast('Informe o horário de entrada.', 'error');
       return;
     }
 
@@ -537,7 +563,8 @@ export default function EscalasPage() {
       }, 1500);
 
     } catch (err: any) {
-      showToast('Erro: ' + (err?.message || 'Falha ao processar escala.'), 'error');
+      console.error('[salvarEscala] Error:', err);
+      showToast('Erro ao salvar: ' + (err?.message || 'Falha ao processar escala.'), 'error');
     } finally {
       setSaving(false);
     }
