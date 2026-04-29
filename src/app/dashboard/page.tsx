@@ -32,7 +32,7 @@ export default function DashboardPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
       const { data: profile } = await supabase.from('profiles').select('is_pro').eq('id', user.id).single();
-      setIsPro(isUserPro(user.email) || (profile?.is_pro === true));
+      setIsPro((profile?.is_pro === true));
     };
     checkPro();
   }, []);
