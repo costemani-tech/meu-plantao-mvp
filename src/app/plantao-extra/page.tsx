@@ -29,7 +29,7 @@ export default function PlantaoExtraPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { setIsPro(false); return; }
       const { data: profile } = await supabase.from('profiles').select('is_pro').eq('id', user.id).single();
-      const userIsPro = isUserPro(user.email) || (profile?.is_pro === true);
+      const userIsPro = (profile?.is_pro === true);
       setIsPro(userIsPro);
 
       if (!userIsPro) {

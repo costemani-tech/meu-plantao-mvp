@@ -51,13 +51,9 @@ export interface Plantao {
   local?: LocalTrabalho;
 }
 
-export const PRO_WHITELIST = [
-  'furiazul@gmail.com',
-  'marciosdsantos@gmail.com',
-  'joanna.rafaelle2014@gmail.com'
-];
-
 export function isUserPro(email?: string | null): boolean {
-  if (!email) return false;
-  return PRO_WHITELIST.includes(email.toLowerCase());
+  // PRO status should be verified from the database profile, not hardcoded in the frontend.
+  // This is a stub, actual verification must occur via supabase profile query.
+  console.warn("isUserPro() should not rely on frontend logic alone. Rely on profile fetching instead.");
+  return false;
 }

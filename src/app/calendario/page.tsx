@@ -43,7 +43,7 @@ export default function CalendarioPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
       const { data: profile } = await supabase.from('profiles').select('is_pro, nome').eq('id', user.id).single();
-      setIsPro(isUserPro(user.email) || (profile?.is_pro === true));
+      setIsPro((profile?.is_pro === true));
 
       const getShortName = (fullName: string) => {
         const parts = fullName?.trim().split(/\s+/) || [];
