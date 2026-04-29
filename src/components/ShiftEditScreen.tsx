@@ -4,13 +4,6 @@ import { useState, useEffect } from 'react';
 import { X, Clock, Calendar, Check, Info } from 'lucide-react';
 import { formatDaysArray } from '../lib/date-utils';
 
-interface LocalTrabalho {
-  id: string;
-  nome: string;
-  cor_calendario?: string;
-  is_home_care?: boolean;
-}
-
 interface ShiftEditScreenProps {
   shift: any;
   onSave: (data: any) => void;
@@ -34,6 +27,16 @@ const CORES = [
   '#f43f5e', // rosa
 ];
 
+const DAYS_OF_WEEK = [
+  { id: 1, label: 'SEG' },
+  { id: 2, label: 'TER' },
+  { id: 3, label: 'QUA' },
+  { id: 4, label: 'QUI' },
+  { id: 5, label: 'SEX' },
+  { id: 6, label: 'SAB' },
+  { id: 0, label: 'DOM' }
+];
+
 export function ShiftEditScreen({ shift, onSave, onCancel }: ShiftEditScreenProps) {
   const [nomeLocal, setNomeLocal] = useState(shift.local?.nome || 'Local Indefinido');
   const [cor, setCor] = useState(shift.local?.cor_calendario || '#3b82f6');
@@ -42,37 +45,75 @@ export function ShiftEditScreen({ shift, onSave, onCancel }: ShiftEditScreenProp
   const [horaInicio, setHoraInicio] = useState(new Date(shift.data_hora_inicio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }));
   const [horaFim, setHoraFim] = useState(new Date(shift.data_hora_fim).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }));
   
+  // Estados para personalização
+  const isCustom = regra === 'custom' || regra.includes(',') || (regra.includes('x') && !['12x36', '24x72'].includes(regra));
+  const initialTipo = (regra.includes('x') && !['12x36', '24x72'].includes(regra)) ? 'horas' : 'dias';
+  
+  const [tipoPersonalizacao, setTipoPersonalizacao] = useState<'dias' | 'horas'>(initialTipo);
+  const [diasSelecionados, setDiasSelecionados] = useState<number[]>(regra.includes(',') ? regra.split(',').map(Number) : [1, 2, 3, 4, 5]);
+  const [horasTrabalho, setHorasTrabalho] = useState(regra.includes('x') ? regra.split('x')[0] : '12');
+  const [horasDescanso, setHorasDescanso] = useState(regra.includes('x') ? regra.split('x')[1] : '36');
+
   const [previewDates, setPreviewDates] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (regra !== 'custom' && !isCustom) return;
+    setRegra('custom');
+  }, [regra, isCustom]);
 
   useEffect(() => {
     const calculatePreview = () => {
       const dates = [];
       let current = new Date(`${dataInicio}T${horaInicio}:00`);
-      
-      for (let i = 0; i < 4; i++) {
-        dates.push({
-          diaSemana: current.toLocaleDateString('pt-BR', { weekday: 'short' }).toUpperCase().replace('.', ''),
-          dia: current.getDate(),
-          mes: current.toLocaleDateString('pt-BR', { month: 'short' }).toUpperCase().replace('.', ''),
-          hora: horaInicio
-        });
+      const regraEfetiva = regra === 'custom' 
+        ? (tipoPersonalizacao === 'dias' ? diasSelecionados.join(',') : `${horasTrabalho}x${horasDescanso}`) 
+        : regra;
 
-        if (regra === '12x36') current.setDate(current.getDate() + 2);
-        else if (regra === '24x72') current.setDate(current.getDate() + 4);
-        else if (regra === '5x2' || regra === '1,2,3,4,5') {
-           current.setDate(current.getDate() + 1);
-           if (current.getDay() === 6) current.setDate(current.getDate() + 2);
-           else if (current.getDay() === 0) current.setDate(current.getDate() + 1);
+      if (!regraEfetiva) return;
+
+      for (let i = 0; i < 4; i++) {
+        // Lógica de salto baseada na regra
+        if (regraEfetiva.includes('x')) {
+          const [ht, hd] = regraEfetiva.split('x').map(Number);
+          dates.push({
+            diaSemana: current.toLocaleDateString('pt-BR', { weekday: 'short' }).toUpperCase().replace('.', ''),
+            dia: current.getDate(),
+            mes: current.toLocaleDateString('pt-BR', { month: 'short' }).toUpperCase().replace('.', ''),
+            hora: horaInicio
+          });
+          current.setHours(current.getHours() + ht + hd);
+        } else {
+          // Lógica de dias da semana
+          const dias = regraEfetiva.split(',').map(Number);
+          // Encontrar o próximo dia permitido
+          while (!dias.includes(current.getDay())) {
+            current.setDate(current.getDate() + 1);
+          }
+          dates.push({
+            diaSemana: current.toLocaleDateString('pt-BR', { weekday: 'short' }).toUpperCase().replace('.', ''),
+            dia: current.getDate(),
+            mes: current.toLocaleDateString('pt-BR', { month: 'short' }).toUpperCase().replace('.', ''),
+            hora: horaInicio
+          });
+          current.setDate(current.getDate() + 1);
+          while (!dias.includes(current.getDay())) {
+            current.setDate(current.getDate() + 1);
+          }
         }
-        else current.setDate(current.getDate() + 1);
       }
       setPreviewDates(dates);
     };
     calculatePreview();
-  }, [dataInicio, regra, horaInicio]);
+  }, [dataInicio, regra, horaInicio, tipoPersonalizacao, diasSelecionados, horasTrabalho, horasDescanso]);
 
   const h = parseInt(horaInicio.split(':')[0]);
   const turnoLabel = (h >= 18 || h < 6) ? 'Noturno' : 'Diurno';
+
+  const toggleDia = (id: number) => {
+    setDiasSelecionados(prev => 
+      prev.includes(id) ? prev.filter(d => d !== id) : [...prev, id].sort((a, b) => a - b)
+    );
+  };
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: '#020617', zIndex: 100000, display: 'flex', flexDirection: 'column', color: '#fff', animation: 'slideUp 0.3s ease' }}>
@@ -104,7 +145,7 @@ export function ShiftEditScreen({ shift, onSave, onCancel }: ShiftEditScreenProp
           <div style={{ position: 'absolute', top: -10, left: -10, fontSize: 60, fontWeight: 900, color: 'rgba(59, 130, 246, 0.05)', pointerEvents: 'none' }}>HOSPITAL</div>
           <div style={{ zIndex: 1 }}>
             <div style={{ fontSize: 18, fontWeight: 900, color: '#fff', marginBottom: 2 }}>{nomeLocal}</div>
-            <div style={{ fontSize: 12, color: '#64748b', fontWeight: 500 }}>{formatDaysArray(regra)} • {turnoLabel}</div>
+            <div style={{ fontSize: 12, color: '#64748b', fontWeight: 500 }}>{formatDaysArray(regra === 'custom' ? (tipoPersonalizacao === 'dias' ? diasSelecionados.join(',') : `${horasTrabalho}x${horasDescanso}`) : regra)} • {turnoLabel}</div>
           </div>
         </div>
 
@@ -152,9 +193,74 @@ export function ShiftEditScreen({ shift, onSave, onCancel }: ShiftEditScreenProp
           </div>
         </div>
 
+        {/* Personalizada Detail */}
+        {regra === 'custom' && (
+          <div style={{ marginBottom: 24, animation: 'fadeIn 0.3s ease' }}>
+            <label style={{ fontSize: 11, fontWeight: 900, color: '#475569', textTransform: 'uppercase', marginBottom: 12, display: 'block' }}>Tipo de Personalização</label>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 20 }}>
+              <button 
+                onClick={() => setTipoPersonalizacao('dias')}
+                style={{ 
+                  padding: '16px', borderRadius: 20, border: tipoPersonalizacao === 'dias' ? '2px solid #3b82f6' : '1px solid #1e293b',
+                  background: 'rgba(30, 41, 59, 0.3)', textAlign: 'left', cursor: 'pointer', position: 'relative'
+                }}
+              >
+                <Calendar size={20} color={tipoPersonalizacao === 'dias' ? '#3b82f6' : '#64748b'} style={{ marginBottom: 12 }} />
+                <div style={{ fontWeight: 800, fontSize: 14, color: '#fff', marginBottom: 4 }}>Por dias da semana</div>
+                <div style={{ fontSize: 11, color: '#64748b' }}>Defina quais dias você trabalha na semana.</div>
+              </button>
+              <button 
+                onClick={() => setTipoPersonalizacao('horas')}
+                style={{ 
+                  padding: '16px', borderRadius: 20, border: tipoPersonalizacao === 'horas' ? '2px solid #3b82f6' : '1px solid #1e293b',
+                  background: 'rgba(30, 41, 59, 0.3)', textAlign: 'left', cursor: 'pointer', position: 'relative'
+                }}
+              >
+                <Clock size={20} color={tipoPersonalizacao === 'horas' ? '#3b82f6' : '#64748b'} style={{ marginBottom: 12 }} />
+                <div style={{ fontWeight: 800, fontSize: 14, color: '#fff', marginBottom: 4 }}>Por horas</div>
+                <div style={{ fontSize: 11, color: '#64748b' }}>Defina quantas horas trabalha e descansa.</div>
+              </button>
+            </div>
+
+            {tipoPersonalizacao === 'dias' ? (
+              <div style={{ animation: 'fadeIn 0.3s ease' }}>
+                <label style={{ fontSize: 11, fontWeight: 900, color: '#475569', textTransform: 'uppercase', marginBottom: 12, display: 'block' }}>Dias Trabalhados</label>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 20 }}>
+                  {DAYS_OF_WEEK.map(d => (
+                    <button 
+                      key={d.id}
+                      onClick={() => toggleDia(d.id)}
+                      style={{ 
+                        flex: 1, minWidth: 45, padding: '12px 0', borderRadius: 12, 
+                        background: diasSelecionados.includes(d.id) ? '#3b82f6' : 'rgba(30, 41, 59, 0.5)',
+                        border: '1px solid #1e293b', color: '#fff', fontWeight: 800, fontSize: 11, cursor: 'pointer'
+                      }}
+                    >
+                      {d.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 20, animation: 'fadeIn 0.3s ease' }}>
+                <div>
+                  <label style={{ fontSize: 10, fontWeight: 800, color: '#64748b', textTransform: 'uppercase', marginBottom: 8, display: 'block' }}>Horas Trabalhadas</label>
+                  <input type="number" value={horasTrabalho} onChange={e => setHorasTrabalho(e.target.value)} style={{ width: '100%', background: 'rgba(30, 41, 59, 0.5)', border: '1px solid #1e293b', borderRadius: 14, padding: '12px', color: '#fff', fontSize: 16, fontWeight: 800 }} />
+                </div>
+                <div>
+                  <label style={{ fontSize: 10, fontWeight: 800, color: '#64748b', textTransform: 'uppercase', marginBottom: 8, display: 'block' }}>Horas de Descanso</label>
+                  <input type="number" value={horasDescanso} onChange={e => setHorasDescanso(e.target.value)} style={{ width: '100%', background: 'rgba(30, 41, 59, 0.5)', border: '1px solid #1e293b', borderRadius: 14, padding: '12px', color: '#fff', fontSize: 16, fontWeight: 800 }} />
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Horários */}
         <div style={{ marginBottom: 24 }}>
-          <label style={{ fontSize: 11, fontWeight: 900, color: '#475569', textTransform: 'uppercase', marginBottom: 12, display: 'block' }}>Horário</label>
+          <label style={{ fontSize: 11, fontWeight: 900, color: '#475569', textTransform: 'uppercase', marginBottom: 12, display: 'block' }}>
+            {tipoPersonalizacao === 'horas' && regra === 'custom' ? 'Horário de Início' : 'Horário de Trabalho'}
+          </label>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <div>
               <div style={{ fontSize: 9, fontWeight: 800, color: '#64748b', marginBottom: 6 }}>ENTRADA</div>
@@ -167,17 +273,19 @@ export function ShiftEditScreen({ shift, onSave, onCancel }: ShiftEditScreenProp
                 />
               </div>
             </div>
-            <div>
-              <div style={{ fontSize: 9, fontWeight: 800, color: '#64748b', marginBottom: 6 }}>SAÍDA</div>
-              <div style={{ position: 'relative' }}>
-                <input 
-                  type="time" 
-                  value={horaFim} 
-                  onChange={e => setHoraFim(e.target.value)}
-                  style={{ width: '100%', background: 'rgba(30, 41, 59, 0.5)', border: '1px solid #1e293b', borderRadius: 14, padding: '12px', color: '#fff', fontSize: 16, fontWeight: 800, outline: 'none' }} 
-                />
+            {(tipoPersonalizacao === 'dias' || regra !== 'custom') && (
+              <div>
+                <div style={{ fontSize: 9, fontWeight: 800, color: '#64748b', marginBottom: 6 }}>SAÍDA</div>
+                <div style={{ position: 'relative' }}>
+                  <input 
+                    type="time" 
+                    value={horaFim} 
+                    onChange={e => setHoraFim(e.target.value)}
+                    style={{ width: '100%', background: 'rgba(30, 41, 59, 0.5)', border: '1px solid #1e293b', borderRadius: 14, padding: '12px', color: '#fff', fontSize: 16, fontWeight: 800, outline: 'none' }} 
+                  />
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
 
@@ -228,7 +336,12 @@ export function ShiftEditScreen({ shift, onSave, onCancel }: ShiftEditScreenProp
             Cancelar
           </button>
           <button 
-            onClick={() => onSave({ regra, horaInicio, horaFim, cor, dataInicio })}
+            onClick={() => {
+              const regraFinal = regra === 'custom' 
+                ? (tipoPersonalizacao === 'dias' ? diasSelecionados.join(',') : `${horasTrabalho}x${horasDescanso}`) 
+                : regra;
+              onSave({ regra: regraFinal, horaInicio, horaFim, cor, dataInicio });
+            }}
             style={{ 
               flex: 1, 
               padding: '16px', 
@@ -250,6 +363,10 @@ export function ShiftEditScreen({ shift, onSave, onCancel }: ShiftEditScreenProp
         @keyframes slideUp {
           from { transform: translateY(100%); }
           to { transform: translateY(0); }
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
         }
       `}</style>
     </div>
