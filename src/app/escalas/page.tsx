@@ -307,6 +307,12 @@ export default function EscalasPage() {
       if (!user) throw new Error('Usuário não autenticado. Faça login novamente.');
 
       if (isCreatingLocal) {
+        if (isPro === null) {
+          showToast('Validando status da conta. Tente novamente em um instante...', 'error');
+          setSaving(false);
+          return;
+        }
+
         if (!isPro) {
           const { count } = await supabase
             .from('locais_trabalho')
