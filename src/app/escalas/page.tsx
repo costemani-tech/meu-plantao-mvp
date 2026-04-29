@@ -201,61 +201,7 @@ export default function EscalasPage() {
     }
   }, [dataCompletaISO, regraFinal, regra, horasTrabalhoOutro, horasDescansoOutro, tipoJornada, tipoDiarista, diasDiarista, regraDiarista, diasTrabalhoOutro, diasDescansoOutro, horaFim]);
 
-  const salvarNovoLocal = async () => {
-    if (!novoLocalNome.trim()) { showToast('Informe o nome do local.', 'error'); return; }
-    
-    if (isPro === null) {
-      showToast('Aguarde, verificando seu plano...', 'error');
-      return;
-    }
 
-    setSavingLocal(true);
-
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { showToast('Usuário não autenticado.', 'error'); setSavingLocal(false); return; }
-
-      if (!isPro) {
-        const { count } = await supabase
-          .from('locais_trabalho')
-          .select('*', { count: 'exact', head: true })
-          .eq('usuario_id', user.id)
-          .eq('ativo', true);
-        if (count !== null && count >= 2) {
-          setShowProModal(true);
-          setSavingLocal(false);
-          return;
-        }
-      }
-
-      const { data, error } = await supabase.from('locais_trabalho').insert({
-        usuario_id: user.id,
-        nome: novoLocalNome.trim(),
-        cor_calendario: novoLocalCor,
-        endereco: novoLocalIsHomeCare ? null : novoLocalEndereco.trim(),
-        is_home_care: novoLocalIsHomeCare
-      }).select().single();
-
-      if (error) {
-        console.error('[salvarNovoLocal] Supabase error:', error);
-        showToast('Erro ao criar local: ' + error.message, 'error');
-      } else if (data) {
-        setLocais(prev => [...prev, data as LocalTrabalho].sort((a, b) => a.nome.localeCompare(b.nome)));
-        setLocalId(data.id);
-        setIsCreatingLocal(false);
-        setNovoLocalNome('');
-        setNovoLocalIsHomeCare(false);
-        setNovoLocalCor(CORES_PRESET[0]);
-        setNovoLocalEndereco('');
-        showToast('Local criado e selecionado! Agora clique em Criar Escala.', 'success');
-      }
-    } catch (err: any) {
-      console.error('[salvarNovoLocal] Unexpected error:', err);
-      showToast('Erro inesperado: ' + (err?.message || 'Tente novamente.'), 'error');
-    } finally {
-      setSavingLocal(false);
-    }
-  };
 
   const handleEditar = async (e: any) => {
     try {
@@ -326,15 +272,20 @@ export default function EscalasPage() {
   };
 
   const salvarEscala = async () => {
-    // Guard: user has new-local panel open but hasn't saved the local yet
+    let localFinalId = localId;
+
     if (isCreatingLocal) {
-      showToast('Salve o novo local antes de criar a escala.', 'error');
-      return;
+      if (!novoLocalNome.trim()) {
+        showToast('Informe o nome do novo local.', 'error');
+        return;
+      }
+    } else {
+      if (!localFinalId) {
+        showToast('Selecione ou crie um local de trabalho.', 'error');
+        return;
+      }
     }
-    if (!localId) {
-      showToast('Selecione ou crie um local de trabalho.', 'error');
-      return;
-    }
+
     if (!dataInicioSo) {
       showToast('Informe a data de início dos plantões.', 'error');
       return;
@@ -350,6 +301,40 @@ export default function EscalasPage() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Usuário não autenticado. Faça login novamente.');
+
+      if (isCreatingLocal) {
+        if (!isPro) {
+          const { count } = await supabase
+            .from('locais_trabalho')
+            .select('*', { count: 'exact', head: true })
+            .eq('usuario_id', user.id)
+            .eq('ativo', true);
+          if (count !== null && count >= 2) {
+            setShowProModal(true);
+            setSaving(false);
+            return;
+          }
+        }
+
+        const { data: novoLocal, error: erroLocal } = await supabase.from('locais_trabalho').insert({
+          usuario_id: user.id,
+          nome: novoLocalNome.trim(),
+          cor_calendario: novoLocalCor,
+          endereco: novoLocalIsHomeCare ? null : novoLocalEndereco.trim(),
+          is_home_care: novoLocalIsHomeCare
+        }).select().single();
+
+        if (erroLocal) {
+          showToast('Erro ao criar local: ' + erroLocal.message, 'error');
+          setSaving(false);
+          return;
+        }
+
+        localFinalId = novoLocal.id;
+        setLocais(prev => [...prev, novoLocal as LocalTrabalho].sort((a, b) => a.nome.localeCompare(b.nome)));
+        setLocalId(localFinalId);
+        setIsCreatingLocal(false);
+      }
 
       // Se for edição, limpar plantões futuros da escala anterior
       if (editingId) {
@@ -388,7 +373,7 @@ export default function EscalasPage() {
         const { data: updated, error: erroUpdate } = await supabase
           .from('escalas')
           .update({
-            local_id: localId,
+            local_id: localFinalId,
             data_inicio: dataInicioSo,
             regra: regraParaSalvar,
             tipo_jornada: tipoJornada,
@@ -405,7 +390,7 @@ export default function EscalasPage() {
           .from('escalas')
           .insert({
             usuario_id: user.id,
-            local_id: localId,
+            local_id: localFinalId,
             data_inicio: dataInicioSo,
             regra: regraParaSalvar,
             tipo_jornada: tipoJornada,
@@ -433,7 +418,7 @@ export default function EscalasPage() {
             arrayDePlantoes.push({
               escala_id: escalaCriada.id,
               usuario_id: user.id,
-              local_id: localId,
+              local_id: localFinalId,
               data_hora_inicio: inicioIso,
               data_hora_fim: fimObj.toISOString(),
               status: 'Agendado',
@@ -479,7 +464,7 @@ export default function EscalasPage() {
             arrayDePlantoes.push({
               escala_id: escalaCriada.id,
               usuario_id: user.id,
-              local_id: localId,
+              local_id: localFinalId,
               data_hora_inicio: inicioIso,
               data_hora_fim: fimObj.toISOString(),
               status: 'Agendado',
@@ -498,7 +483,7 @@ export default function EscalasPage() {
         }
 
         if (receberAlerta) {
-          const localSelecionado = locais.find(l => l.id === localId);
+          const localSelecionado = locais.find(l => l.id === localFinalId);
           const nomeLocal = localSelecionado?.nome || 'seu local de trabalho';
 
           const pushNotifications: any[] = [];
@@ -707,14 +692,6 @@ export default function EscalasPage() {
                   </div>
                 </div>
 
-                <button
-                  className="btn btn-primary"
-                  onClick={salvarNovoLocal}
-                  disabled={savingLocal}
-                  style={{ width: '100%', padding: '6px 12px', fontSize: 13 }}
-                >
-                  {savingLocal ? ' Salvando...' : 'Salvar e Selecionar'}
-                </button>
               </div>
             ) : (
               <>
