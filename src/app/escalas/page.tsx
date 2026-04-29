@@ -314,6 +314,7 @@ export default function EscalasPage() {
             .eq('usuario_id', user.id)
             .eq('ativo', true);
           if (count !== null && count >= 2) {
+            showToast('Limite de locais gratuitos atingido. Faça upgrade para adicionar mais.', 'error');
             setShowProModal(true);
             setSaving(false);
             return;
@@ -486,12 +487,24 @@ export default function EscalasPage() {
       }
 
       if (arrayDePlantoes.length > 0) {
-        console.log('[salvarEscala] Inserindo', arrayDePlantoes.length, 'plantões...', arrayDePlantoes[0]);
-        const { error: erroInsert } = await supabase.from('plantoes').insert(arrayDePlantoes);
-        if (erroInsert) {
-          console.error('[salvarEscala] Erro no insert dos plantões:', erroInsert);
-          await supabase.from('escalas').delete().eq('id', escalaCriada.id);
-          throw new Error('Falha ao inserir plantões: ' + erroInsert.message);
+        console.log('[salvarEscala] Iniciando Bulk Insert de', arrayDePlantoes.length, 'plantões...');
+        
+        const chunkSize = 100;
+        for (let i = 0; i < arrayDePlantoes.length; i += chunkSize) {
+          const chunk = arrayDePlantoes.slice(i, i + chunkSize);
+          const { error: erroInsert } = await supabase.from('plantoes').insert(chunk);
+          
+          if (erroInsert) {
+            console.error(`[salvarEscala] Erro no lote ${Math.floor(i/chunkSize) + 1}:`, erroInsert);
+            
+            // Rollback Manual
+            await supabase.from('escalas').delete().eq('id', escalaCriada.id);
+            if (isCreatingLocal && localFinalId) {
+              await supabase.from('locais_trabalho').delete().eq('id', localFinalId);
+            }
+            
+            throw new Error('Falha ao inserir ocorrências. Operação desfeita: ' + erroInsert.message);
+          }
         }
 
         if (receberAlerta) {
