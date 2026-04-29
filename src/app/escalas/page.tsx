@@ -600,6 +600,18 @@ export default function EscalasPage() {
 
   return (
     <div className="page-container">
+      {/* ===== TOAST GLOBAL ===== */}
+      {toast && (
+        <div style={{
+          position: 'fixed', bottom: 90, left: '50%', transform: 'translateX(-50%)',
+          zIndex: 999999, padding: '14px 24px', borderRadius: 16, maxWidth: '90vw',
+          background: toast.type === 'success' ? '#16a34a' : '#dc2626',
+          color: '#fff', fontWeight: 700, fontSize: 14, textAlign: 'center',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.4)', animation: 'fadeIn 0.2s ease'
+        }}>
+          {toast.type === 'error' ? '❌ ' : '✅ '}{toast.msg}
+        </div>
+      )}
       <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <h1>Escalas <ClipboardList size={24} style={{ marginLeft: 8, display: "inline" }} /></h1>
