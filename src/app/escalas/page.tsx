@@ -294,6 +294,10 @@ export default function EscalasPage() {
       showToast('Informe o horário de entrada.', 'error');
       return;
     }
+    if (tipoJornada === 'Diarista' && !horaFim) {
+      showToast('Informe o horário de saída para a escala Diarista.', 'error');
+      return;
+    }
 
     setSaving(true);
     setUltimoResultado(null);
@@ -383,7 +387,10 @@ export default function EscalasPage() {
           .select()
           .single();
           
-        if (erroUpdate) throw erroUpdate;
+        if (erroUpdate) {
+          console.error('[salvarEscala] Erro no update da escala:', erroUpdate);
+          throw new Error('Erro ao atualizar escala base: ' + erroUpdate.message);
+        }
         escalaCriada = updated;
       } else {
         const { data: inserted, error: erroEscala } = await supabase
@@ -399,7 +406,10 @@ export default function EscalasPage() {
           .select()
           .single();
 
-        if (erroEscala) throw erroEscala;
+        if (erroEscala) {
+          console.error('[salvarEscala] Erro no insert da escala:', erroEscala);
+          throw new Error('Erro ao criar escala base: ' + erroEscala.message);
+        }
         escalaCriada = inserted;
       }
 
@@ -476,10 +486,12 @@ export default function EscalasPage() {
       }
 
       if (arrayDePlantoes.length > 0) {
+        console.log('[salvarEscala] Inserindo', arrayDePlantoes.length, 'plantões...', arrayDePlantoes[0]);
         const { error: erroInsert } = await supabase.from('plantoes').insert(arrayDePlantoes);
         if (erroInsert) {
+          console.error('[salvarEscala] Erro no insert dos plantões:', erroInsert);
           await supabase.from('escalas').delete().eq('id', escalaCriada.id);
-          throw erroInsert;
+          throw new Error('Falha ao inserir plantões: ' + erroInsert.message);
         }
 
         if (receberAlerta) {
