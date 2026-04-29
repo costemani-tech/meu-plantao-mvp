@@ -444,7 +444,7 @@ export default function EscalasPage() {
             const fimObj = new Date(dataAtualObj);
             fimObj.setHours(hFim, mFim, 0, 0);
             if (fimObj <= dataAtualObj) fimObj.setDate(fimObj.getDate() + 1);
-            arrayDePlantoes.push({ escala_id: escalaCriada.id, usuario_id: user.id, local_id: localId, data_hora_inicio: inicioIso, data_hora_fim: fimObj.toISOString(), status: 'Agendado', is_extra: false });
+            arrayDePlantoes.push({ escala_id: escalaCriada.id, usuario_id: user.id, local_id: localFinalId, data_hora_inicio: inicioIso, data_hora_fim: fimObj.toISOString(), status: 'Agendado', is_extra: false });
           }
           dataAtualObj.setDate(dataAtualObj.getDate() + 1);
           idx2 = (idx2 + 1) % cicloDias2;
