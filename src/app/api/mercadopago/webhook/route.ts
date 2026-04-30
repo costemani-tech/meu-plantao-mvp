@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { MercadoPagoConfig, PreApproval, Payment } from 'mercadopago';
+import { MercadoPagoConfig, Payment } from 'mercadopago';
 import { createClient } from '@supabase/supabase-js';
 
 export async function POST(req: Request) {
@@ -32,15 +32,7 @@ export async function POST(req: Request) {
     let isApproved = false;
     let userId = null;
 
-    if (type === 'subscription_preapproval') {
-      const preApproval = new PreApproval(client);
-      const subscription = await preApproval.get({ id: dataId });
-      
-      if (subscription.status === 'authorized' && subscription.external_reference) {
-        isApproved = true;
-        userId = subscription.external_reference;
-      }
-    } else if (type === 'payment') {
+    if (type === 'payment') {
       const paymentClient = new Payment(client);
       const payment = await paymentClient.get({ id: dataId });
       
@@ -64,7 +56,7 @@ export async function POST(req: Request) {
       if (error) {
         console.error('[MercadoPago Webhook] Erro ao atualizar usuário para PRO:', error);
       } else {
-        console.log(`[MercadoPago Webhook] Usuário ${userId} promovido para PRO com sucesso.`);
+        console.log(`[MercadoPago Webhook] Usuário ${userId} promovido para PRO com sucesso (Oferta Founder).`);
       }
     }
 
