@@ -98,6 +98,7 @@ export default function EscalasPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   
   const [showProModal, setShowProModal] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<'mensal' | 'anual' | 'avulso'>('mensal');
   const [loadingCheckout, setLoadingCheckout] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [isPro, setIsPro] = useState<boolean | null>(null);
@@ -281,7 +282,7 @@ export default function EscalasPage() {
       const response = await fetch('/api/mercadopago/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user.id, userEmail: user.email }),
+        body: JSON.stringify({ userId: user.id, userEmail: user.email, plan: selectedPlan }),
       });
 
       const data = await response.json();
@@ -1321,7 +1322,7 @@ export default function EscalasPage() {
                 Você atingiu o limite gratuito de 2 locais. Assine o <strong>Meu Plantão Pro</strong> e libere todo o potencial do app!
               </p>
 
-              <div style={{ textAlign: 'left', marginBottom: 32, display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div style={{ textAlign: 'left', marginBottom: 24, display: 'flex', flexDirection: 'column', gap: 12 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, color: 'var(--text-primary)' }}>
                   <span style={{ color: 'var(--accent-teal)', fontWeight: 800 }}>✓</span> Locais de trabalho ilimitados
                 </div>
@@ -1331,15 +1332,56 @@ export default function EscalasPage() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, color: 'var(--text-primary)' }}>
                   <span style={{ color: 'var(--accent-teal)', fontWeight: 800 }}>✓</span> Personalização de cores exclusiva
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, color: 'var(--text-primary)' }}>
-                  <span style={{ color: 'var(--accent-teal)', fontWeight: 800 }}>✓</span> Suporte prioritário 24/7
-                </div>
               </div>
 
-              <div style={{ background: 'var(--bg-secondary)', borderRadius: 16, padding: 16, marginBottom: 24, border: '1px solid var(--border-subtle)' }}>
-                <div style={{ fontSize: 14, color: 'var(--text-muted)', marginBottom: 4 }}>Assinatura Mensal</div>
-                <div style={{ fontSize: 32, fontWeight: 800, color: 'var(--text-primary)', display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 4 }}>
-                  <span style={{ fontSize: 16, fontWeight: 600 }}>R$</span>9,90<span style={{ fontSize: 14, color: 'var(--text-muted)', fontWeight: 500 }}>/mês</span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 24 }}>
+                <div 
+                  onClick={() => setSelectedPlan('mensal')}
+                  style={{ 
+                    border: selectedPlan === 'mensal' ? '2px solid var(--accent-blue)' : '1px solid var(--border-subtle)', 
+                    background: selectedPlan === 'mensal' ? 'rgba(37, 99, 235, 0.05)' : 'var(--bg-secondary)', 
+                    borderRadius: 16, padding: 16, cursor: 'pointer', transition: 'all 0.2s',
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+                  }}
+                >
+                  <div style={{ textAlign: 'left' }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>Assinatura Mensal</div>
+                    <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Pagamento recorrente</div>
+                  </div>
+                  <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--accent-blue)' }}>R$ 9,90/mês</div>
+                </div>
+
+                <div 
+                  onClick={() => setSelectedPlan('anual')}
+                  style={{ 
+                    border: selectedPlan === 'anual' ? '2px solid var(--accent-teal)' : '1px solid var(--border-subtle)', 
+                    background: selectedPlan === 'anual' ? 'rgba(34, 211, 181, 0.05)' : 'var(--bg-secondary)', 
+                    borderRadius: 16, padding: 16, cursor: 'pointer', transition: 'all 0.2s',
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'relative'
+                  }}
+                >
+                  <div style={{ position: 'absolute', top: -10, right: 16, background: 'var(--accent-teal)', color: '#fff', fontSize: 10, fontWeight: 800, padding: '4px 8px', borderRadius: 12, textTransform: 'uppercase' }}>Desconto</div>
+                  <div style={{ textAlign: 'left' }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>Plano Anual</div>
+                    <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Pagamento único (PIX/Cartão)</div>
+                  </div>
+                  <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--accent-teal)' }}>R$ 89,90</div>
+                </div>
+
+                <div 
+                  onClick={() => setSelectedPlan('avulso')}
+                  style={{ 
+                    border: selectedPlan === 'avulso' ? '2px solid var(--accent-blue)' : '1px solid var(--border-subtle)', 
+                    background: selectedPlan === 'avulso' ? 'rgba(37, 99, 235, 0.05)' : 'var(--bg-secondary)', 
+                    borderRadius: 16, padding: 16, cursor: 'pointer', transition: 'all 0.2s',
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+                  }}
+                >
+                  <div style={{ textAlign: 'left' }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>Acesso 1 Mês (Avulso)</div>
+                    <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Pagamento único (PIX/Cartão)</div>
+                  </div>
+                  <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--text-primary)' }}>R$ 9,90</div>
                 </div>
               </div>
 

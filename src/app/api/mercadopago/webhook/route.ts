@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { MercadoPagoConfig, PreApproval } from 'mercadopago';
+import { MercadoPagoConfig, PreApproval, Payment } from 'mercadopago';
 import { createClient } from '@supabase/supabase-js';
 
 export async function POST(req: Request) {
@@ -29,29 +29,42 @@ export async function POST(req: Request) {
       accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN || '',
     });
 
-    // Se for aprovação de assinatura
+    let isApproved = false;
+    let userId = null;
+
     if (type === 'subscription_preapproval') {
       const preApproval = new PreApproval(client);
       const subscription = await preApproval.get({ id: dataId });
       
       if (subscription.status === 'authorized' && subscription.external_reference) {
-        const userId = subscription.external_reference;
-        
-        // Atualizar is_pro no Supabase
-        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-        const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-        const supabase = createClient(supabaseUrl, supabaseKey);
+        isApproved = true;
+        userId = subscription.external_reference;
+      }
+    } else if (type === 'payment') {
+      const paymentClient = new Payment(client);
+      const payment = await paymentClient.get({ id: dataId });
+      
+      if (payment.status === 'approved' && payment.external_reference) {
+        isApproved = true;
+        userId = payment.external_reference;
+      }
+    }
 
-        const { error } = await supabase
-          .from('profiles')
-          .update({ is_pro: true })
-          .eq('id', userId);
+    if (isApproved && userId) {
+      // Atualizar is_pro no Supabase
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+      const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+      const supabase = createClient(supabaseUrl, supabaseKey);
 
-        if (error) {
-          console.error('[MercadoPago Webhook] Erro ao atualizar usuário para PRO:', error);
-        } else {
-          console.log(`[MercadoPago Webhook] Usuário ${userId} promovido para PRO com sucesso.`);
-        }
+      const { error } = await supabase
+        .from('profiles')
+        .update({ is_pro: true })
+        .eq('id', userId);
+
+      if (error) {
+        console.error('[MercadoPago Webhook] Erro ao atualizar usuário para PRO:', error);
+      } else {
+        console.log(`[MercadoPago Webhook] Usuário ${userId} promovido para PRO com sucesso.`);
       }
     }
 

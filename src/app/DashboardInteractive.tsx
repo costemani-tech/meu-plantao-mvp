@@ -128,6 +128,7 @@ export function EarningsPrivacyWrapper({ total, isPro }: { total: number, isPro:
 
 export function DashboardInteractive({ isPro, hasLocations = true }: { isPro: boolean, hasLocations?: boolean }) {
   const [showProModal, setShowProModal] = useState('');
+  const [selectedPlan, setSelectedPlan] = useState<'mensal' | 'anual' | 'avulso'>('mensal');
   const [loadingCheckout, setLoadingCheckout] = useState(false);
   const router = useRouter();
 
@@ -140,7 +141,7 @@ export function DashboardInteractive({ isPro, hasLocations = true }: { isPro: bo
       const response = await fetch('/api/mercadopago/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user.id, userEmail: user.email }),
+        body: JSON.stringify({ userId: user.id, userEmail: user.email, plan: selectedPlan }),
       });
 
       const data = await response.json();
@@ -269,9 +270,56 @@ export function DashboardInteractive({ isPro, hasLocations = true }: { isPro: bo
               ))}
             </div>
 
-            <p style={{ fontSize: 18, fontWeight: 700, color: "var(--text-primary)", marginBottom: 24, lineHeight: 1.4 }}>
-              Utilizado por profissionais para organizar plantões com mais controle.
-            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 24, textAlign: 'left' }}>
+              <div 
+                onClick={() => setSelectedPlan('mensal')}
+                style={{ 
+                  border: selectedPlan === 'mensal' ? '2px solid var(--accent-blue)' : '1px solid var(--border-subtle)', 
+                  background: selectedPlan === 'mensal' ? 'var(--bg-primary)' : 'var(--bg-secondary)', 
+                  borderRadius: 16, padding: 12, cursor: 'pointer', transition: 'all 0.2s',
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+                }}
+              >
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>Assinatura Mensal</div>
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Pagamento recorrente</div>
+                </div>
+                <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--accent-blue)' }}>R$ 9,90/mês</div>
+              </div>
+
+              <div 
+                onClick={() => setSelectedPlan('anual')}
+                style={{ 
+                  border: selectedPlan === 'anual' ? '2px solid var(--accent-teal)' : '1px solid var(--border-subtle)', 
+                  background: selectedPlan === 'anual' ? 'var(--bg-primary)' : 'var(--bg-secondary)', 
+                  borderRadius: 16, padding: 12, cursor: 'pointer', transition: 'all 0.2s',
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'relative'
+                }}
+              >
+                <div style={{ position: 'absolute', top: -10, right: 12, background: 'var(--accent-teal)', color: '#fff', fontSize: 9, fontWeight: 800, padding: '4px 8px', borderRadius: 12, textTransform: 'uppercase' }}>Desconto</div>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>Plano Anual</div>
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Pagamento único (PIX/Cartão)</div>
+                </div>
+                <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--accent-teal)' }}>R$ 89,90</div>
+              </div>
+
+              <div 
+                onClick={() => setSelectedPlan('avulso')}
+                style={{ 
+                  border: selectedPlan === 'avulso' ? '2px solid var(--accent-blue)' : '1px solid var(--border-subtle)', 
+                  background: selectedPlan === 'avulso' ? 'var(--bg-primary)' : 'var(--bg-secondary)', 
+                  borderRadius: 16, padding: 12, cursor: 'pointer', transition: 'all 0.2s',
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+                }}
+              >
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>Acesso 1 Mês (Avulso)</div>
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Pagamento único (PIX/Cartão)</div>
+                </div>
+                <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text-primary)' }}>R$ 9,90</div>
+              </div>
+            </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <button 
@@ -309,6 +357,7 @@ export function DashboardInteractive({ isPro, hasLocations = true }: { isPro: bo
 
 export function DesbloquearGanhosBtn() {
   const [showProModal, setShowProModal] = useState('');
+  const [selectedPlan, setSelectedPlan] = useState<'mensal' | 'anual' | 'avulso'>('mensal');
   const [loadingCheckout, setLoadingCheckout] = useState(false);
 
   const handleAssinarPro = async () => {
@@ -403,9 +452,56 @@ export function DesbloquearGanhosBtn() {
               ))}
             </div>
 
-            <p style={{ fontSize: 18, fontWeight: 700, color: "var(--text-primary)", marginBottom: 24, lineHeight: 1.4 }}>
-              🚀 Usado por profissionais para organizar plantões com mais controle.
-            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 24, textAlign: 'left' }}>
+              <div 
+                onClick={() => setSelectedPlan('mensal')}
+                style={{ 
+                  border: selectedPlan === 'mensal' ? '2px solid #3b82f6' : '1px solid #e2e8f0', 
+                  background: selectedPlan === 'mensal' ? '#eff6ff' : '#f8fafc', 
+                  borderRadius: 16, padding: 12, cursor: 'pointer', transition: 'all 0.2s',
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+                }}
+              >
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#1e3a8a' }}>Assinatura Mensal</div>
+                  <div style={{ fontSize: 11, color: '#64748b' }}>Pagamento recorrente</div>
+                </div>
+                <div style={{ fontSize: 14, fontWeight: 800, color: '#3b82f6' }}>R$ 9,90/mês</div>
+              </div>
+
+              <div 
+                onClick={() => setSelectedPlan('anual')}
+                style={{ 
+                  border: selectedPlan === 'anual' ? '2px solid #10b981' : '1px solid #e2e8f0', 
+                  background: selectedPlan === 'anual' ? '#ecfdf5' : '#f8fafc', 
+                  borderRadius: 16, padding: 12, cursor: 'pointer', transition: 'all 0.2s',
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'relative'
+                }}
+              >
+                <div style={{ position: 'absolute', top: -10, right: 12, background: '#10b981', color: '#fff', fontSize: 9, fontWeight: 800, padding: '4px 8px', borderRadius: 12, textTransform: 'uppercase' }}>Desconto</div>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#064e3b' }}>Plano Anual</div>
+                  <div style={{ fontSize: 11, color: '#64748b' }}>Pagamento único (PIX/Cartão)</div>
+                </div>
+                <div style={{ fontSize: 14, fontWeight: 800, color: '#10b981' }}>R$ 89,90</div>
+              </div>
+
+              <div 
+                onClick={() => setSelectedPlan('avulso')}
+                style={{ 
+                  border: selectedPlan === 'avulso' ? '2px solid #3b82f6' : '1px solid #e2e8f0', 
+                  background: selectedPlan === 'avulso' ? '#eff6ff' : '#f8fafc', 
+                  borderRadius: 16, padding: 12, cursor: 'pointer', transition: 'all 0.2s',
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+                }}
+              >
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#1e3a8a' }}>Acesso 1 Mês (Avulso)</div>
+                  <div style={{ fontSize: 11, color: '#64748b' }}>Pagamento único (PIX/Cartão)</div>
+                </div>
+                <div style={{ fontSize: 14, fontWeight: 800, color: '#3b82f6' }}>R$ 9,90</div>
+              </div>
+            </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <button 
