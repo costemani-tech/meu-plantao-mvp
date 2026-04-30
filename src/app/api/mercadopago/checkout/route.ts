@@ -44,21 +44,21 @@ export async function POST(req: Request) {
             {
               id: plan,
               title: isAnual ? 'Meu Plantão Pro - Plano Anual' : 'Meu Plantão Pro - Avulso (1 Mês)',
-              quantity: 1,
-              unit_price: isAnual ? 89.90 : 9.90,
+              quantity: Number(1),
               currency_id: 'BRL',
+              unit_price: Number(isAnual ? 89.90 : 9.90)
             }
           ],
           payer: {
             email: userEmail
           },
-          external_reference: userId,
           back_urls: {
             success: `${baseUrl}/escalas`,
             failure: `${baseUrl}/escalas`,
-            pending: `${baseUrl}/escalas`,
+            pending: `${baseUrl}/escalas`
           },
-          auto_return: 'approved'
+          auto_return: 'approved',
+          external_reference: String(userId)
         }
       });
       init_point = response.init_point!;
