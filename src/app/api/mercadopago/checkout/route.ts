@@ -21,8 +21,8 @@ export async function POST(req: Request) {
       body: {
         items: [
           {
-            id: 'founder_edition',
-            title: 'Meu Plantão PRO - Founder Edition (1 Ano)',
+            id: 'oferta_lancamento',
+            title: 'Meu Plantão PRO - Oferta de Lançamento (1 Ano)',
             quantity: Number(1),
             currency_id: 'BRL',
             unit_price: Number(9.90)

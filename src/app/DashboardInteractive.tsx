@@ -269,7 +269,7 @@ export function DashboardInteractive({ isPro, hasLocations = true }: { isPro: bo
             </div>
 
             <div style={{ background: 'linear-gradient(135deg, rgba(37,99,235,0.05) 0%, rgba(34,211,181,0.05) 100%)', borderRadius: 16, padding: 24, marginBottom: 24, border: '1px solid var(--border-subtle)', textAlign: 'center', position: 'relative' }}>
-              <div style={{ position: 'absolute', top: -12, left: '50%', transform: 'translateX(-50%)', background: 'var(--accent-teal)', color: '#fff', fontSize: 11, fontWeight: 900, padding: '4px 12px', borderRadius: 20, textTransform: 'uppercase', letterSpacing: 1, boxShadow: '0 4px 10px rgba(34,211,181,0.3)' }}>Oferta Founder</div>
+              <div style={{ position: 'absolute', top: -12, left: '50%', transform: 'translateX(-50%)', background: 'var(--accent-teal)', color: '#fff', fontSize: 11, fontWeight: 900, padding: '4px 12px', borderRadius: 20, textTransform: 'uppercase', letterSpacing: 1, boxShadow: '0 4px 10px rgba(34,211,181,0.3)' }}>🔥 Oferta de Lançamento</div>
               <div style={{ fontSize: 15, color: 'var(--text-secondary)', marginBottom: 8, fontWeight: 600 }}>1 Ano de PRO por apenas</div>
               <div style={{ fontSize: 40, fontWeight: 900, color: 'var(--text-primary)', display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 4 }}>
                 <span style={{ fontSize: 18, fontWeight: 700 }}>R$</span>9,90
@@ -290,7 +290,7 @@ export function DashboardInteractive({ isPro, hasLocations = true }: { isPro: bo
                 onClick={handleAssinarPro}
                 disabled={loadingCheckout}
               >
-                {loadingCheckout ? 'Gerando Pagamento...' : 'Desbloquear Oferta Founder'}
+                {loadingCheckout ? 'Gerando Pagamento...' : 'Desbloquear Oferta de Lançamento'}
               </button>
               
               <button 
@@ -407,7 +407,7 @@ export function DesbloquearGanhosBtn() {
             </div>
 
             <div style={{ background: 'linear-gradient(135deg, rgba(37,99,235,0.05) 0%, rgba(34,211,181,0.05) 100%)', borderRadius: 16, padding: 24, marginBottom: 24, border: '1px solid var(--border-subtle)', textAlign: 'center', position: 'relative' }}>
-              <div style={{ position: 'absolute', top: -12, left: '50%', transform: 'translateX(-50%)', background: 'var(--accent-teal)', color: '#fff', fontSize: 11, fontWeight: 900, padding: '4px 12px', borderRadius: 20, textTransform: 'uppercase', letterSpacing: 1, boxShadow: '0 4px 10px rgba(34,211,181,0.3)' }}>Oferta Founder</div>
+              <div style={{ position: 'absolute', top: -12, left: '50%', transform: 'translateX(-50%)', background: 'var(--accent-teal)', color: '#fff', fontSize: 11, fontWeight: 900, padding: '4px 12px', borderRadius: 20, textTransform: 'uppercase', letterSpacing: 1, boxShadow: '0 4px 10px rgba(34,211,181,0.3)' }}>🔥 Oferta de Lançamento</div>
               <div style={{ fontSize: 15, color: 'var(--text-secondary)', marginBottom: 8, fontWeight: 600 }}>1 Ano de PRO por apenas</div>
               <div style={{ fontSize: 40, fontWeight: 900, color: 'var(--text-primary)', display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 4 }}>
                 <span style={{ fontSize: 18, fontWeight: 700 }}>R$</span>9,90
@@ -428,7 +428,7 @@ export function DesbloquearGanhosBtn() {
                 onClick={handleAssinarPro}
                 disabled={loadingCheckout}
               >
-                {loadingCheckout ? 'Gerando Pagamento...' : '🚀 Desbloquear Oferta Founder'}
+                {loadingCheckout ? 'Gerando Pagamento...' : '🚀 Desbloquear Oferta de Lançamento'}
               </button>
               
               <button 
