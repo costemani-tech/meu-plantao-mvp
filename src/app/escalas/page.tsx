@@ -98,6 +98,7 @@ export default function EscalasPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   
   const [showProModal, setShowProModal] = useState(false);
+  const [loadingCheckout, setLoadingCheckout] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [isPro, setIsPro] = useState<boolean | null>(null);
 
@@ -268,6 +269,32 @@ export default function EscalasPage() {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err) {
       console.error('Erro ao preparar edição:', err);
+    }
+  };
+
+  const handleAssinarPro = async () => {
+    setLoadingCheckout(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Usuário não autenticado.');
+
+      const response = await fetch('/api/mercadopago/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.id, userEmail: user.email }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Erro ao gerar link de pagamento');
+      
+      if (data.init_point) {
+        window.location.href = data.init_point;
+      }
+    } catch (err: any) {
+      console.error(err);
+      showToast(err.message, 'error');
+    } finally {
+      setLoadingCheckout(false);
     }
   };
 
@@ -1273,6 +1300,67 @@ export default function EscalasPage() {
             </div>
 
             <button className="btn btn-secondary" style={{ width: '100%', justifyContent: 'center' }} onClick={() => setModalEncerrar(null)}>Cancelar</button>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL PLANO PRO */}
+      {showProModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', zIndex: 100000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+          <div className="card" style={{ maxWidth: 440, width: '100%', borderRadius: 24, padding: 32, background: 'var(--bg-primary)', border: '1px solid var(--border-subtle)', position: 'relative', overflow: 'hidden' }}>
+            <div style={{ position: 'absolute', top: -50, left: -50, width: 150, height: 150, background: 'var(--accent-teal)', filter: 'blur(80px)', opacity: 0.3, zIndex: 0 }} />
+            <div style={{ position: 'absolute', bottom: -50, right: -50, width: 150, height: 150, background: 'var(--accent-blue)', filter: 'blur(80px)', opacity: 0.3, zIndex: 0 }} />
+            
+            <div style={{ position: 'relative', zIndex: 1, textAlign: 'center' }}>
+              <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 64, height: 64, background: 'rgba(34, 211, 181, 0.1)', borderRadius: '50%', marginBottom: 16 }}>
+                <Star size={32} color="var(--accent-teal)" fill="var(--accent-teal)" />
+              </div>
+              
+              <h3 style={{ margin: '0 0 12px 0', fontSize: 24, fontWeight: 800, color: 'var(--text-primary)' }}>Evolua para o Plano Pro</h3>
+              <p style={{ fontSize: 15, color: 'var(--text-secondary)', marginBottom: 24, lineHeight: 1.6 }}>
+                Você atingiu o limite gratuito de 2 locais. Assine o <strong>Meu Plantão Pro</strong> e libere todo o potencial do app!
+              </p>
+
+              <div style={{ textAlign: 'left', marginBottom: 32, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, color: 'var(--text-primary)' }}>
+                  <span style={{ color: 'var(--accent-teal)', fontWeight: 800 }}>✓</span> Locais de trabalho ilimitados
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, color: 'var(--text-primary)' }}>
+                  <span style={{ color: 'var(--accent-teal)', fontWeight: 800 }}>✓</span> Alertas avançados por WhatsApp (em breve)
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, color: 'var(--text-primary)' }}>
+                  <span style={{ color: 'var(--accent-teal)', fontWeight: 800 }}>✓</span> Personalização de cores exclusiva
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, color: 'var(--text-primary)' }}>
+                  <span style={{ color: 'var(--accent-teal)', fontWeight: 800 }}>✓</span> Suporte prioritário 24/7
+                </div>
+              </div>
+
+              <div style={{ background: 'var(--bg-secondary)', borderRadius: 16, padding: 16, marginBottom: 24, border: '1px solid var(--border-subtle)' }}>
+                <div style={{ fontSize: 14, color: 'var(--text-muted)', marginBottom: 4 }}>Assinatura Mensal</div>
+                <div style={{ fontSize: 32, fontWeight: 800, color: 'var(--text-primary)', display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 4 }}>
+                  <span style={{ fontSize: 16, fontWeight: 600 }}>R$</span>9,90<span style={{ fontSize: 14, color: 'var(--text-muted)', fontWeight: 500 }}>/mês</span>
+                </div>
+              </div>
+
+              <button 
+                className="btn btn-primary" 
+                style={{ width: '100%', justifyContent: 'center', fontSize: 16, padding: '16px', background: 'linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-teal) 100%)', border: 'none', boxShadow: '0 8px 20px rgba(34, 211, 181, 0.3)', marginBottom: 12 }}
+                onClick={handleAssinarPro}
+                disabled={loadingCheckout}
+              >
+                {loadingCheckout ? 'Gerando Pagamento...' : 'Assinar Plano Pro Agora'}
+              </button>
+              
+              <button 
+                className="btn btn-secondary" 
+                style={{ width: '100%', justifyContent: 'center', background: 'transparent', border: 'none', color: 'var(--text-muted)' }} 
+                onClick={() => setShowProModal(false)}
+                disabled={loadingCheckout}
+              >
+                Continuar na versão gratuita
+              </button>
+            </div>
           </div>
         </div>
       )}
