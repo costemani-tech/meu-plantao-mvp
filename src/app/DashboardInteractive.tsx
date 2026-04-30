@@ -128,7 +128,36 @@ export function EarningsPrivacyWrapper({ total, isPro }: { total: number, isPro:
 
 export function DashboardInteractive({ isPro, hasLocations = true }: { isPro: boolean, hasLocations?: boolean }) {
   const [showProModal, setShowProModal] = useState('');
+  const [loadingCheckout, setLoadingCheckout] = useState(false);
   const router = useRouter();
+
+  const handleAssinarPro = async () => {
+    setLoadingCheckout(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Usuário não autenticado.');
+
+      const response = await fetch('/api/mercadopago/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.id, userEmail: user.email }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Erro ao gerar link de pagamento');
+      
+      if (data.init_point) {
+        window.location.href = data.init_point;
+      } else {
+        throw new Error('URL de pagamento não retornada pela API.');
+      }
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || 'Erro ao gerar pagamento');
+    } finally {
+      setLoadingCheckout(false);
+    }
+  };
 
   // Auto-open Paywall para usuários Free + Listeners
   useEffect(() => {
@@ -188,8 +217,9 @@ export function DashboardInteractive({ isPro, hasLocations = true }: { isPro: bo
               boxShadow: '0 10px 15px -3px rgba(37, 99, 235, 0.3)'
             }}
             onClick={() => setShowProModal('Banner')}
+            disabled={loadingCheckout}
           >
-            🚀 Assinar PRO
+            {loadingCheckout && showProModal === 'Banner' ? 'Gerando Pagamento...' : '🚀 Assinar PRO'}
           </button>
         </div>
       )}
@@ -253,9 +283,10 @@ export function DashboardInteractive({ isPro, hasLocations = true }: { isPro: bo
                   padding: '18px', fontSize: 16, fontWeight: 900,
                   boxShadow: '0 10px 15px -3px rgba(37, 99, 235, 0.3)'
                 }} 
-                onClick={() => setShowProModal('')}
+                onClick={handleAssinarPro}
+                disabled={loadingCheckout}
               >
-                Desbloquear agora
+                {loadingCheckout ? 'Gerando Pagamento...' : 'Desbloquear agora'}
               </button>
               
               <button 
@@ -278,6 +309,35 @@ export function DashboardInteractive({ isPro, hasLocations = true }: { isPro: bo
 
 export function DesbloquearGanhosBtn() {
   const [showProModal, setShowProModal] = useState('');
+  const [loadingCheckout, setLoadingCheckout] = useState(false);
+
+  const handleAssinarPro = async () => {
+    setLoadingCheckout(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Usuário não autenticado.');
+
+      const response = await fetch('/api/mercadopago/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.id, userEmail: user.email }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Erro ao gerar link de pagamento');
+      
+      if (data.init_point) {
+        window.location.href = data.init_point;
+      } else {
+        throw new Error('URL de pagamento não retornada pela API.');
+      }
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || 'Erro ao gerar pagamento');
+    } finally {
+      setLoadingCheckout(false);
+    }
+  };
 
   return (
     <>
@@ -357,9 +417,10 @@ export function DesbloquearGanhosBtn() {
                   padding: '18px', fontSize: 16, fontWeight: 900,
                   boxShadow: '0 10px 15px -3px rgba(37, 99, 235, 0.3)'
                 }} 
-                onClick={() => setShowProModal('')}
+                onClick={handleAssinarPro}
+                disabled={loadingCheckout}
               >
-                🚀 Desbloquear agora
+                {loadingCheckout ? 'Gerando Pagamento...' : '🚀 Desbloquear agora'}
               </button>
               
               <button 
