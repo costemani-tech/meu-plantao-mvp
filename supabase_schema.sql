@@ -50,14 +50,39 @@ create table public.trocas_plantao (
 );
 
 -- Row Level Security (RLS) Policies (Simplified for MVP, assuming single tenant or open access for now)
+-- Row Level Security (RLS) Policies
 alter table public.usuarios enable row level security;
 alter table public.locais_trabalho enable row level security;
 alter table public.escalas enable row level security;
 alter table public.plantoes enable row level security;
 alter table public.trocas_plantao enable row level security;
 
-create policy "Allow all operations for anon (MVP)" on public.usuarios for all using (true) with check (true);
-create policy "Allow all operations for anon (MVP)" on public.locais_trabalho for all using (true) with check (true);
-create policy "Allow all operations for anon (MVP)" on public.escalas for all using (true) with check (true);
-create policy "Allow all operations for anon (MVP)" on public.plantoes for all using (true) with check (true);
-create policy "Allow all operations for anon (MVP)" on public.trocas_plantao for all using (true) with check (true);
+-- Policies for usuarios
+create policy "Users can view all profiles" on public.usuarios for select using (auth.role() = 'authenticated');
+create policy "Users can insert their own profile" on public.usuarios for insert with check (auth.uid() = id);
+create policy "Users can update their own profile" on public.usuarios for update using (auth.uid() = id) with check (auth.uid() = id);
+create policy "Users can delete their own profile" on public.usuarios for delete using (auth.uid() = id);
+
+-- Policies for locais_trabalho (Assuming everyone can see them for MVP, but only authenticated can create, update, delete)
+create policy "Anyone can view locais_trabalho" on public.locais_trabalho for select using (true);
+create policy "Authenticated users can create locais_trabalho" on public.locais_trabalho for insert with check (auth.role() = 'authenticated');
+create policy "Authenticated users can update locais_trabalho" on public.locais_trabalho for update using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
+create policy "Authenticated users can delete locais_trabalho" on public.locais_trabalho for delete using (auth.role() = 'authenticated');
+
+-- Policies for escalas
+create policy "Users can view their own escalas" on public.escalas for select using (auth.uid() = usuario_id);
+create policy "Users can insert their own escalas" on public.escalas for insert with check (auth.uid() = usuario_id);
+create policy "Users can update their own escalas" on public.escalas for update using (auth.uid() = usuario_id) with check (auth.uid() = usuario_id);
+create policy "Users can delete their own escalas" on public.escalas for delete using (auth.uid() = usuario_id);
+
+-- Policies for plantoes
+create policy "Users can view their own plantoes" on public.plantoes for select using (auth.uid() = usuario_id);
+create policy "Users can insert their own plantoes" on public.plantoes for insert with check (auth.uid() = usuario_id);
+create policy "Users can update their own plantoes" on public.plantoes for update using (auth.uid() = usuario_id) with check (auth.uid() = usuario_id);
+create policy "Users can delete their own plantoes" on public.plantoes for delete using (auth.uid() = usuario_id);
+
+-- Policies for trocas_plantao
+create policy "Users can view trocas related to them" on public.trocas_plantao for select using (auth.uid() IN (novo_usuario_id, (SELECT usuario_id FROM public.plantoes WHERE id = plantao_original_id)));
+create policy "Users can create trocas" on public.trocas_plantao for insert with check (auth.uid() = novo_usuario_id);
+create policy "Users can update trocas related to them" on public.trocas_plantao for update using (auth.uid() IN (novo_usuario_id, (SELECT usuario_id FROM public.plantoes WHERE id = plantao_original_id)));
+create policy "Users can delete trocas related to them" on public.trocas_plantao for delete using (auth.uid() IN (novo_usuario_id, (SELECT usuario_id FROM public.plantoes WHERE id = plantao_original_id)));
