@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-const ADMIN_TOKEN = 'ADMIN_SECRET_2026';
+const ADMIN_TOKEN = process.env.ADMIN_TOKEN;
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
