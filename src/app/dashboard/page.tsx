@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { supabase, Plantao, LocalTrabalho, isUserPro } from '../../lib/supabase';
+import { supabase, Plantao, LocalTrabalho, isUserPro, isSubscriptionActive } from '../../lib/supabase';
 import { ReportTemplate } from '../../components/ReportTemplate';
 import { ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -31,8 +31,8 @@ export default function DashboardPage() {
     const checkPro = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
-      const { data: profile } = await supabase.from('profiles').select('is_pro').eq('id', user.id).single();
-      setIsPro(isUserPro(user.email) || (profile?.is_pro === true));
+      const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+      setIsPro(isUserPro(user.email) || isSubscriptionActive(profile));
     };
     checkPro();
   }, []);

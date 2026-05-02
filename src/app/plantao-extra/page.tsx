@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { supabase, LocalTrabalho, isUserPro } from '../../lib/supabase';
+import { supabase, LocalTrabalho, isUserPro, isSubscriptionActive } from '../../lib/supabase';
 import { toast } from 'sonner';
 import { PlusCircle } from 'lucide-react';
 
@@ -28,8 +28,8 @@ export default function PlantaoExtraPage() {
     const checkPro = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { setIsPro(false); return; }
-      const { data: profile } = await supabase.from('profiles').select('is_pro').eq('id', user.id).single();
-      const userIsPro = isUserPro(user.email) || (profile?.is_pro === true);
+      const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+      const userIsPro = isUserPro(user.email) || isSubscriptionActive(profile);
       setIsPro(userIsPro);
 
       if (!userIsPro) {

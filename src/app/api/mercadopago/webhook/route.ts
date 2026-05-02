@@ -31,6 +31,7 @@ export async function POST(req: Request) {
 
     let isApproved = false;
     let userId = null;
+    let paymentId = null;
 
     if (type === 'payment') {
       const paymentClient = new Payment(client);
@@ -39,6 +40,7 @@ export async function POST(req: Request) {
       if (payment.status === 'approved' && payment.external_reference) {
         isApproved = true;
         userId = payment.external_reference;
+        paymentId = payment.id;
       }
     }
 
@@ -55,8 +57,15 @@ export async function POST(req: Request) {
       const { error } = await supabase
         .from('profiles')
         .update({ 
-          is_pro: true,
-          pro_expires_at: expiresAt.toISOString()
+          is_pro: true, // Retrocompatibility
+          pro_expires_at: expiresAt.toISOString(), // Retrocompatibility
+          plan_type: 'PRO',
+          subscription_status: 'active',
+          start_date: new Date().toISOString(),
+          end_date: expiresAt.toISOString(),
+          auto_renew: false,
+          mercadopago_id: paymentId ? String(paymentId) : null,
+          launch_offer: true
         })
         .eq('id', userId);
 

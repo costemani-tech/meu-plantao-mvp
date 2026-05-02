@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback, useMemo } from 'react';
-import { supabase, Plantao, LocalTrabalho, isUserPro } from '../../lib/supabase';
+import { supabase, Plantao, LocalTrabalho, isUserPro, isSubscriptionActive } from '../../lib/supabase';
 import { Clock, MoreVertical, ChevronLeft, ChevronRight, Info, Edit2, Trash2, Calendar as CalendarIcon, Settings } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { ShareAgendaModal } from '../../components/ShareAgendaModal';
@@ -42,8 +42,8 @@ export default function CalendarioPage() {
     const checkPro = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
-      const { data: profile } = await supabase.from('profiles').select('is_pro, nome').eq('id', user.id).single();
-      setIsPro(isUserPro(user.email) || (profile?.is_pro === true));
+      const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+      setIsPro(isUserPro(user.email) || isSubscriptionActive(profile));
 
       const getShortName = (fullName: string) => {
         const parts = fullName?.trim().split(/\s+/) || [];

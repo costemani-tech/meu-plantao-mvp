@@ -61,3 +61,17 @@ export function isUserPro(email?: string | null): boolean {
   if (!email) return false;
   return PRO_WHITELIST.includes(email.toLowerCase());
 }
+
+export function isSubscriptionActive(profile?: any | null): boolean {
+  if (!profile) return false;
+  
+  // Se o end_date existir, baseamos a lógica de acesso estritamente nele
+  if (profile.end_date) {
+    const end = new Date(profile.end_date).getTime();
+    const now = new Date().getTime();
+    return end > now;
+  }
+  
+  // Fallback para is_pro legado
+  return profile.is_pro === true;
+}

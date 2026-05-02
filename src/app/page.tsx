@@ -19,7 +19,7 @@ import {
   EarningsPrivacyWrapper,
   UpcomingShiftsClient 
 } from './DashboardInteractive';
-import { isUserPro } from '../lib/supabase';
+import { isUserPro, isSubscriptionActive } from '../lib/supabase';
 import { formatRelativeShiftDate } from '../lib/date-utils';
 
 // Utilitário para pegar o cliente Supabase Server-Side
@@ -211,7 +211,7 @@ export default async function DashboardPage() {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('is_pro, nome')
+    .select('*')
     .eq('id', user.id)
     .single();
 
@@ -222,7 +222,7 @@ export default async function DashboardPage() {
   const greeting = formatGreeting(fullName);
   const userName = greeting.isFallback ? 'Doutor(a)' : greeting.text.replace('Olá, ', '').replace('!', '');
 
-  const isPro = isUserPro(user.email) || (profile?.is_pro === true);
+  const isPro = isUserPro(user.email) || isSubscriptionActive(profile);
 
   const inicioMes = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
   const fimMes = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0, 23, 59, 59).toISOString();

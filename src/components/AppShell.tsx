@@ -2,9 +2,9 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { supabase, isUserPro } from '../lib/supabase';
+import { supabase, isUserPro, isSubscriptionActive } from '../lib/supabase';
 import { useEffect, useState } from 'react';
-import { LayoutDashboard, CalendarDays, Settings2, PlusCircle, LogOut, Sun, Moon, Activity, Bell, X, AlertTriangle, Star } from 'lucide-react';
+import { LayoutDashboard, CalendarDays, Settings2, PlusCircle, LogOut, Sun, Moon, Activity, Bell, X, AlertTriangle, Star, CreditCard } from 'lucide-react';
 
 const navItems = [
   { icon: LayoutDashboard, label: 'Central de Plantões', href: '/' },
@@ -214,9 +214,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           return;
         }
 
-        // Whitelist + Banco de Dados
-        const { data: profile } = await supabase.from('profiles').select('is_pro').eq('id', user.id).single();
-        const proStatus = isUserPro(user.email) || (profile?.is_pro === true);
+        // Whitelist + Banco de Dados (agora usando end_date primariamente)
+        const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+        const proStatus = isUserPro(user.email) || isSubscriptionActive(profile);
         setIsPro(proStatus);
 
         if (!proStatus && pathname !== '/login' && pathname !== '/locais') {
@@ -336,6 +336,17 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               );
             })}
             
+            {isPro && (
+              <Link 
+                href="/meu-plano"
+                className={`nav-item ${pathname === '/meu-plano' ? 'active' : ''}`}
+                style={{ width: '100%', textDecoration: 'none' }}
+              >
+                <CreditCard className="nav-icon" size={20} />
+                Meu Plano
+              </Link>
+            )}
+
             {/* Desktop spacer to push buttons to bottom */}
             <div className="desktop-spacer" style={{ flex: 1 }} />
             
@@ -583,6 +594,17 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             );
           })}
           
+          {isPro && (
+            <Link
+              href="/meu-plano"
+              className={`mobile-nav-item ${pathname === '/meu-plano' ? 'active' : ''}`}
+              title="Meu Plano"
+            >
+              <CreditCard className="nav-icon" size={24} strokeWidth={pathname === '/meu-plano' ? 2.5 : 2} />
+              <span>Plano</span>
+            </Link>
+          )}
+
           {/* Logout Mobile */}
           <button
             onClick={handleLogout}

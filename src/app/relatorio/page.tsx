@@ -2,7 +2,7 @@
 
 import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { supabase, isUserPro } from '../../lib/supabase';
+import { supabase, isUserPro, isSubscriptionActive } from '../../lib/supabase';
 import { ArrowLeft, Printer } from 'lucide-react';
 
 const MESES = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
@@ -27,8 +27,8 @@ function RelatorioContent() {
         return;
       }
       
-      const { data: profile } = await supabase.from('profiles').select('is_pro').eq('id', user.id).single();
-      const userIsPro = isUserPro(user.email) || (profile?.is_pro === true);
+      const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+      const userIsPro = isUserPro(user.email) || isSubscriptionActive(profile);
       setIsPro(userIsPro);
 
       if (!userIsPro) {

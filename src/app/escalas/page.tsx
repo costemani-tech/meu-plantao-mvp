@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { supabase, LocalTrabalho, isUserPro } from '../../lib/supabase';
+import { supabase, LocalTrabalho, isUserPro, isSubscriptionActive } from '../../lib/supabase';
 import { gerarProximosPlantoes, SlotPlantao } from '../../lib/scale-generator';
 import { useRouter } from 'next/navigation';
 import EmptyState from '../../components/EmptyState';
@@ -106,8 +106,8 @@ export default function EscalasPage() {
     const checkPro = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { setIsPro(false); return; }
-      const { data: profile } = await supabase.from('profiles').select('is_pro').eq('id', user.id).single();
-      setIsPro(isUserPro(user.email) || (profile?.is_pro === true));
+      const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+      setIsPro(isUserPro(user.email) || isSubscriptionActive(profile));
     };
     checkPro();
   }, []);
