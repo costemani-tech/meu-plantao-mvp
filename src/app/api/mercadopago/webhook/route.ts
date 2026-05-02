@@ -43,20 +43,27 @@ export async function POST(req: Request) {
     }
 
     if (isApproved && userId) {
-      // Atualizar is_pro no Supabase
+      // Atualizar is_pro e pro_expires_at (6 meses) no Supabase
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
       const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
       const supabase = createClient(supabaseUrl, supabaseKey);
 
+      // Calcula expiração: 6 meses a partir de agora
+      const expiresAt = new Date();
+      expiresAt.setMonth(expiresAt.getMonth() + 6);
+
       const { error } = await supabase
         .from('profiles')
-        .update({ is_pro: true })
+        .update({ 
+          is_pro: true,
+          pro_expires_at: expiresAt.toISOString()
+        })
         .eq('id', userId);
 
       if (error) {
         console.error('[MercadoPago Webhook] Erro ao atualizar usuário para PRO:', error);
       } else {
-        console.log(`[MercadoPago Webhook] Usuário ${userId} promovido para PRO com sucesso (Oferta Founder).`);
+        console.log(`[MercadoPago Webhook] Usuário ${userId} promovido para PRO com sucesso (Oferta Lançamento - 6 meses, expira em ${expiresAt.toISOString()}).`);
       }
     }
 
