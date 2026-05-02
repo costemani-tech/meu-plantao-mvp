@@ -2,6 +2,20 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { 
+  Home, 
+  Calendar, 
+  Settings, 
+  Plus, 
+  Users, 
+  Rocket, 
+  Hospital, 
+  TrendingUp, 
+  HandMetal, 
+  Clock, 
+  MapPin, 
+  CheckCircle2 
+} from 'lucide-react';
 
 // ─── DADOS SIMULADOS ───────────────────────────────────────────────
 const LOCAIS_MOCK = [
@@ -68,12 +82,12 @@ function formatDT(d: Date) {
 }
 
 type Tab = 'dashboard' | 'calendario' | 'escalas' | 'locais' | 'extra';
-const TABS: { id: Tab; icon: string; label: string }[] = [
-  { id: 'dashboard', icon: '🏠', label: 'Mission Control' },
-  { id: 'calendario', icon: '📅', label: 'Calendário' },
-  { id: 'escalas', icon: '⚙️', label: 'Escalas' },
-  { id: 'extra', icon: '➕', label: 'Plantão Extra' },
-  { id: 'locais', icon: '👥', label: 'Locais' },
+const TABS: { id: Tab; icon: React.ReactNode; label: string }[] = [
+  { id: 'dashboard', icon: <Home size={18} />, label: 'Mission Control' },
+  { id: 'calendario', icon: <Calendar size={18} />, label: 'Calendário' },
+  { id: 'escalas', icon: <Settings size={18} />, label: 'Escalas' },
+  { id: 'extra', icon: <Plus size={18} />, label: 'Plantão Extra' },
+  { id: 'locais', icon: <Users size={18} />, label: 'Locais' },
 ];
 
 export default function DemoPage() {
@@ -106,7 +120,10 @@ export default function DemoPage() {
 
       <div className="app-shell">
         <aside className="sidebar">
-          <div className="sidebar-logo"><div className="sidebar-logo-icon">🏥</div><div className="sidebar-logo-text">Meu <span>Plantão</span></div></div>
+          <div className="sidebar-logo">
+            <div className="sidebar-logo-icon"><Hospital size={20} /></div>
+            <div className="sidebar-logo-text">Meu <span>Plantão</span></div>
+          </div>
           <nav className="nav-section">
             <div className="nav-label">Menu</div>
             {TABS.map(t => (
@@ -123,13 +140,13 @@ export default function DemoPage() {
           {tab === 'dashboard' && (
             <>
               <div className="page-header">
-                <h1>Mission Control 🚀</h1>
+                <h1>Mission Control <Rocket size={24} className="inline-block ml-1 text-primary" /></h1>
                 <p>Visão geral dos seus plantões</p>
               </div>
 
               <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))' }}>
                 <div className="stat-card">
-                  <div className="stat-icon blue">📅</div>
+                  <div className="stat-icon blue"><Calendar size={20} /></div>
                   <div className="stat-content">
                     <div className="stat-label">Plantões no Mês</div>
                     <div className="stat-value">{plantoesDoMes.length}</div>
@@ -137,7 +154,7 @@ export default function DemoPage() {
                   </div>
                 </div>
                 <div className="stat-card">
-                  <div className="stat-icon orange">🏥</div>
+                  <div className="stat-icon orange"><Hospital size={20} /></div>
                   <div className="stat-content">
                     <div className="stat-label">Locais Ativos</div>
                     <div className="stat-value">{LOCAIS_MOCK.length}</div>

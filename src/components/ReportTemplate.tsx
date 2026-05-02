@@ -75,42 +75,42 @@ export const ReportTemplate = React.forwardRef<HTMLDivElement, ReportTemplatePro
         style={{
           width: '100%',
           maxWidth: '800px',
-          background: '#ffffff',
-          padding: '24px', // padding reduzido para caber bem no mobile
-          fontFamily: 'Inter, sans-serif',
-          color: '#1e293b',
+          background: '#050816',
+          padding: '32px',
+          fontFamily: 'Inter, system-ui, sans-serif',
+          color: '#F8FAFC',
           margin: '0 auto'
         }}
       >
         {/* HEADER */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', borderBottom: '2px solid #f1f5f9', paddingBottom: '20px', marginBottom: '30px' }}>
           <div>
-            <h1 style={{ fontSize: '24px', fontWeight: 900, color: '#3b82f6', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '28px' }}>⚡</span> Meu Plantão
+            <h1 style={{ fontSize: '24px', fontWeight: 900, color: '#2563EB', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+              Meu Plantão
             </h1>
-            <p style={{ margin: '4px 0 0 0', color: '#64748b', fontSize: '13px', fontWeight: 600 }}>Resumo de Ganhos 💰</p>
+            <p style={{ margin: '4px 0 0 0', color: '#94A3B8', fontSize: '13px', fontWeight: 600 }}>Relatório Financeiro Profissional</p>
           </div>
-          <div style={{ textAlign: 'left' }}>
-            <h2 style={{ fontSize: '18px', fontWeight: 800, margin: 0, textTransform: 'uppercase', color: '#0f172a' }}>
+          <div style={{ textAlign: 'right' }}>
+            <h2 style={{ fontSize: '18px', fontWeight: 800, margin: 0, textTransform: 'uppercase', color: '#F8FAFC' }}>
               {mesNome} {ano}
             </h2>
-            <p style={{ margin: '4px 0 0 0', color: '#64748b', fontSize: '13px' }}>Gerado em {new Date().toLocaleDateString('pt-BR')}</p>
+            <p style={{ margin: '4px 0 0 0', color: '#94A3B8', fontSize: '13px' }}>Gerado em {new Date().toLocaleDateString('pt-BR')}</p>
           </div>
         </div>
 
         {/* DASHBOARD Kpis */}
         <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', marginBottom: '40px' }}>
-          <div style={{ flex: '1 1 200px', background: '#f8fafc', padding: '16px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-            <span style={{ fontSize: '13px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>Carga Mensal Total</span>
-            <div style={{ fontSize: '32px', fontWeight: 900, color: '#0f172a', marginTop: '8px' }}>{totalHoras.toFixed(0)} <span style={{ fontSize: '16px', color: '#94a3b8' }}>Horas</span></div>
+          <div style={{ flex: '1 1 200px', background: '#0F172A', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
+            <span style={{ fontSize: '13px', fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase' }}>Carga Mensal Total</span>
+            <div style={{ fontSize: '32px', fontWeight: 900, color: '#F8FAFC', marginTop: '8px' }}>{totalHoras.toFixed(0)} <span style={{ fontSize: '16px', color: '#94a3b8' }}>Horas</span></div>
           </div>
-          <div style={{ flex: '1 1 200px', background: '#f0fdf4', padding: '16px', borderRadius: '12px', border: '1px solid #bbf7d0' }}>
-            <span style={{ fontSize: '12px', fontWeight: 700, color: '#166534', textTransform: 'uppercase' }}>Extras Acumulados</span>
-            <div style={{ fontSize: '28px', fontWeight: 900, color: '#15803d', marginTop: '8px' }}>R$ {totalRemunerado.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
+          <div style={{ flex: '1 1 200px', background: '#0F172A', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
+            <span style={{ fontSize: '12px', fontWeight: 700, color: '#10B981', textTransform: 'uppercase' }}>Extras Acumulados</span>
+            <div style={{ fontSize: '28px', fontWeight: 900, color: '#10B981', marginTop: '8px' }}>R$ {totalRemunerado.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
           </div>
-          <div style={{ flex: '1 1 200px', background: '#eff6ff', padding: '16px', borderRadius: '12px', border: '1px solid #bfdbfe' }}>
-            <span style={{ fontSize: '12px', fontWeight: 700, color: '#1e40af', textTransform: 'uppercase' }}>Créditos de Folga</span>
-            <div style={{ fontSize: '28px', fontWeight: 900, color: '#1d4ed8', marginTop: '8px' }}>{saldoFolgas} <span style={{ fontSize: '14px', color: '#93c5fd' }}>Plantões</span></div>
+          <div style={{ flex: '1 1 200px', background: '#0F172A', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
+            <span style={{ fontSize: '12px', fontWeight: 700, color: '#2563EB', textTransform: 'uppercase' }}>Créditos de Folga</span>
+            <div style={{ fontSize: '28px', fontWeight: 900, color: '#2563EB', marginTop: '8px' }}>{saldoFolgas} <span style={{ fontSize: '14px', color: 'rgba(37, 99, 235, 0.5)' }}>Plantões</span></div>
           </div>
         </div>
 
@@ -128,9 +128,9 @@ export const ReportTemplate = React.forwardRef<HTMLDivElement, ReportTemplatePro
               boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)'
             }}>
               {/* Buraco do Donut pra ficar vazado */}
-              <div style={{ width: '130px', height: '130px', background: '#f8fafc', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
-                <span style={{ fontSize: '24px', fontWeight: 900, color: '#0f172a' }}>{totalHoras.toFixed(0)}</span>
-                <span style={{ fontSize: '11px', fontWeight: 700, color: '#64748b', letterSpacing: '1px' }}>HORAS</span>
+              <div style={{ width: '130px', height: '130px', background: '#050816', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
+                <span style={{ fontSize: '24px', fontWeight: 900, color: '#F8FAFC' }}>{totalHoras.toFixed(0)}</span>
+                <span style={{ fontSize: '11px', fontWeight: 700, color: '#94A3B8', letterSpacing: '1px' }}>HORAS</span>
               </div>
             </div>
           ) : (
@@ -138,7 +138,7 @@ export const ReportTemplate = React.forwardRef<HTMLDivElement, ReportTemplatePro
           )}
          
           <div style={{ flex: 1 }}>
-            <h3 style={{ fontSize: '16px', fontWeight: 800, margin: '0 0 16px 0', color: '#0f172a' }}>Distribuição de Horas por Local</h3>
+            <h3 style={{ fontSize: '16px', fontWeight: 800, margin: '0 0 16px 0', color: '#F8FAFC' }}>Distribuição de Horas por Local</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {locaisArray.map(l => (
                 <div key={l.nome} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -156,7 +156,7 @@ export const ReportTemplate = React.forwardRef<HTMLDivElement, ReportTemplatePro
         </div>
 
         {/* TABELA DE PLANTÕES */}
-        <h3 style={{ fontSize: '18px', fontWeight: 800, margin: '0 0 16px 0', color: '#0f172a', borderBottom: '2px solid #e2e8f0', paddingBottom:'8px' }}>Extrato Detalhado Mensal</h3>
+        <h3 style={{ fontSize: '18px', fontWeight: 800, margin: '0 0 16px 0', color: '#F8FAFC', borderBottom: '2px solid rgba(255, 255, 255, 0.05)', paddingBottom:'8px' }}>Extrato Detalhado Mensal</h3>
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', minWidth: '500px', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
             <thead>
@@ -169,7 +169,7 @@ export const ReportTemplate = React.forwardRef<HTMLDivElement, ReportTemplatePro
           </thead>
           <tbody>
             {plantoes.map((p, idx) => (
-              <tr key={p.id} style={{ borderBottom: '1px solid #f1f5f9', background: idx % 2 === 0 ? '#fff' : '#f8fafc' }}>
+              <tr key={p.id} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.05)', background: idx % 2 === 0 ? '#050816' : '#0F172A' }}>
                 <td style={{ padding: '12px 8px', fontWeight: 600 }}>
                   {new Date(p.data_hora_inicio).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
                 </td>

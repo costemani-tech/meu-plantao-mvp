@@ -242,7 +242,7 @@ export default function CalendarioPage() {
   };
 
   return (
-    <div className="page-container" style={{ background: '#020617', minHeight: '100vh', paddingBottom: '120px' }}>
+    <div className="page-container" style={{ background: '#050816', minHeight: '100vh', paddingBottom: '120px' }}>
       <div style={{ textAlign: 'center', marginBottom: 32, paddingTop: 20 }}>
         <h1 style={{ fontSize: 28, fontWeight: 900, color: '#fff', marginBottom: 4 }}>Calendário</h1>
         <p style={{ color: '#94a3b8', fontSize: 14 }}>Visualize seus plantões — {loading && 'carregando...'}</p>
@@ -265,10 +265,15 @@ export default function CalendarioPage() {
             return (
               <div key={idx} onClick={() => { if (!cell.mesAtual) return; setDiaSelecionado(cell.dia); }}
                 className={`aspect-square rounded-2xl overflow-hidden ${hojeCell ? 'border-neon-blue' : ''}`}
-                style={{ position: 'relative', background: cell.mesAtual ? 'rgba(15, 23, 42, 0.5)' : 'transparent', cursor: cell.mesAtual ? 'pointer' : 'default', border: !hojeCell && cell.mesAtual ? '1px solid #1e293b' : 'none' }}>
+                style={{ 
+                  position: 'relative', 
+                  background: cell.mesAtual ? '#0F172A' : 'transparent', 
+                  cursor: cell.mesAtual ? 'pointer' : 'default', 
+                  border: !hojeCell && cell.mesAtual ? '1px solid rgba(255, 255, 255, 0.05)' : 'none' 
+                }}>
                 {renderCellBackground(ps, cell.dia)}
                 <div style={{ position: 'relative', zIndex: 5, height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <span style={{ fontSize: 15, fontWeight: 900, color: ps.length > 0 ? '#fff' : (cell.mesAtual ? '#64748b' : '#334155'), textShadow: ps.length > 0 ? '0 1px 4px rgba(0,0,0,0.5)' : 'none' }}>{cell.dia}</span>
+                  <span style={{ fontSize: 15, fontWeight: 900, color: ps.length > 0 ? '#F8FAFC' : (cell.mesAtual ? '#94A3B8' : '#334155'), textShadow: ps.length > 0 ? '0 1px 4px rgba(0,0,0,0.5)' : 'none' }}>{cell.dia}</span>
                 </div>
                 {hojeCell && (<div style={{ position: 'absolute', top: 4, left: 4, background: '#3b82f6', color: '#fff', fontSize: 7, fontWeight: 900, padding: '2px 4px', borderRadius: 4, zIndex: 10 }}>HOJE</div>)}
                 {ps.length > 3 && (<div style={{ position: 'absolute', bottom: 4, right: 4, background: 'rgba(0,0,0,0.6)', color: '#fff', fontSize: 8, fontWeight: 900, padding: '2px 4px', borderRadius: 4, zIndex: 10 }}>+{ps.length - 3}</div>)}
@@ -279,22 +284,22 @@ export default function CalendarioPage() {
       </div>
 
       {hospitaisNoMes.length > 0 && (
-        <div className="card" style={{ marginTop: 32, background: 'rgba(15, 23, 42, 0.5)', border: '1px solid #1e293b', borderRadius: 24, padding: 24 }}>
-          <h3 style={{ fontSize: 12, fontWeight: 900, color: '#475569', textTransform: 'uppercase', marginBottom: 20 }}>Legenda</h3>
+        <div className="card" style={{ marginTop: 32, background: '#0F172A', border: '1px solid rgba(255, 255, 255, 0.05)', borderRadius: 24, padding: 24 }}>
+          <h3 style={{ fontSize: 12, fontWeight: 900, color: '#94A3B8', textTransform: 'uppercase', marginBottom: 20 }}>Legenda</h3>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 20, marginBottom: 24 }}>
             {hospitaisNoMes.map((h, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <div style={{ width: 14, height: 14, borderRadius: '50%', background: h.cor }} />
                 <div>
-                  <div style={{ fontSize: 14, fontWeight: 800, color: '#f8fafc' }}>{h.nome}</div>
-                  <div style={{ fontSize: 12, color: '#64748b', fontWeight: 500 }}>{formatDaysArray(h.regra)} • {h.turno}</div>
+                  <div style={{ fontSize: 14, fontWeight: 800, color: '#F8FAFC' }}>{h.nome}</div>
+                  <div style={{ fontSize: 12, color: '#94A3B8', fontWeight: 500 }}>{formatDaysArray(h.regra)} • {h.turno}</div>
                 </div>
               </div>
             ))}
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, paddingTop: 20, borderTop: '1px solid #1e293b' }}>
-            <Info size={16} color="#475569" />
-            <p style={{ fontSize: 13, color: '#64748b', margin: 0, fontWeight: 500 }}>As cores representam os locais de trabalho. Toque em um dia para ver os detalhes.</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, paddingTop: 20, borderTop: '1px solid rgba(255, 255, 255, 0.05)' }}>
+            <Info size={16} color="#94A3B8" />
+            <p style={{ fontSize: 13, color: '#94A3B8', margin: 0, fontWeight: 500 }}>As cores representam os locais de trabalho. Toque em um dia para ver os detalhes.</p>
           </div>
         </div>
       )}

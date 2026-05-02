@@ -1,5 +1,5 @@
 'use client';
-import { Plus, Trash2, Home, MapPin, Edit3, Star } from 'lucide-react';
+import { Plus, Trash2, Home, MapPin, Edit3, Star, HandMetal, Lock, Rocket, Timer, Hospital, Sparkles } from 'lucide-react';
 
 import { useEffect, useState, useCallback } from 'react';
 import { supabase, LocalTrabalho, isUserPro, isSubscriptionActive } from '../../lib/supabase';
@@ -146,9 +146,9 @@ export default function LocaisPage() {
       <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
         <div className="skeleton" style={{ height: 40, width: '250px', marginBottom: '8px' }} />
         <div className="skeleton" style={{ height: 16, width: '350px', marginBottom: '24px' }} />
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.4fr', gap: 24 }}>
-           <div className="skeleton" style={{ height: 400, borderRadius: '24px' }} />
-           <div className="skeleton" style={{ height: 400, borderRadius: '24px' }} />
+        <div className="mobile-stack" style={{ display: 'grid', gridTemplateColumns: '1fr 1.4fr', gap: 24 }}>
+           <div className="skeleton" style={{ height: 400 }} />
+           <div className="skeleton" style={{ height: 400 }} />
         </div>
       </div>
     );
@@ -173,7 +173,9 @@ export default function LocaisPage() {
           borderRadius: 'var(--radius-lg)',
           boxShadow: 'var(--shadow-sm)'
         }}>
-          <div style={{ fontSize: 64, marginBottom: 24 }}>👋</div>
+          <div style={{ fontSize: 64, marginBottom: 24, color: '#2563EB' }}>
+            <HandMetal size={64} />
+          </div>
           <h2 style={{ fontSize: 24, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 12 }}>
             Bem-vindo ao Meu Plantão!
           </h2>
@@ -205,30 +207,32 @@ export default function LocaisPage() {
                 alignItems: 'center',
                 gap: '16px'
               }}>
-                <div style={{ fontSize: '40px' }}>🔒</div>
+                <div style={{ fontSize: '40px', color: '#2563EB' }}>
+                  <Lock size={40} />
+                </div>
                 <h2 style={{ fontSize: '16px', fontWeight: 800, color: '#fff', margin: 0 }}>
                   Limite do Plano Gratuito atingido (2 locais)
                 </h2>
                 <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.8)', lineHeight: '1.6', margin: 0 }}>
                   Para adicionar mais hospitais e gerenciar seus ganhos sem limites, assine o <strong>Plano PRO</strong>.
                 </p>
-                <a 
-                  href="https://wa.me/5521991847945?text=Ol%C3%A1%21%20Estou%20gostando%20muito%20do%20Meu%20Plant%C3%A3o%20e%20cheguei%20no%20limite%20do%20plano%20free.%20Quero%20assinar%20o%20Plano%20PRO%20para%20liberar%20os%20recursos.%20Como%20fa%C3%A7o%20para%20ativar%3F"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn btn-primary"
-                  style={{ 
-                    background: '#22c55e', 
-                    border: 'none', 
-                    color: '#fff', 
-                    width: '100%', 
-                    justifyContent: 'center',
-                    padding: '12px',
-                    fontWeight: 700
-                  }}
-                >
-                  🚀 Assinar Plano PRO
-                </a>
+                  <a 
+                    href="https://wa.me/5521991847945?text=Ol%C3%A1%21%20Estou%20gostando%20muito%20do%20Meu%20Plant%C3%A3o%20e%20cheguei%20no%20limite%20do%20plano%20free.%20Quero%20assinar%20o%20Plano%20PRO%20para%20liberar%20os%20recursos.%20Como%20fa%C3%A7o%20para%20ativar%3F"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn btn-primary"
+                    style={{ 
+                      background: '#2563EB', 
+                      border: 'none', 
+                      color: '#fff', 
+                      width: '100%', 
+                      justifyContent: 'center',
+                      padding: '12px',
+                      fontWeight: 700
+                    }}
+                  >
+                    <Rocket size={18} className="mr-2" /> Assinar Plano PRO
+                  </a>
               </div>
             ) : (
               <>
@@ -312,7 +316,11 @@ export default function LocaisPage() {
                   onClick={adicionarLocal} 
                   disabled={saving}
                 >
-                  {saving ? '⏳ Salvando...' : '➕ Adicionar Local'}
+                  {saving ? (
+                    <><Timer size={18} className="mr-2 animate-spin" /> Salvando...</>
+                  ) : (
+                    <><Plus size={18} className="mr-2" /> Adicionar Local</>
+                  )}
                 </button>
               </>
             )}
@@ -322,11 +330,13 @@ export default function LocaisPage() {
             <h2 style={{ fontWeight: 700, marginBottom: 16, fontSize: 16 }}>
               Locais Cadastrados ({locais.length})
             </h2>
-            {locais.length === 0 ? (
-              <div className="empty-state">
-                <div className="empty-icon">🏥</div>
-                <p>Nenhum local cadastrado ainda.</p>
-              </div>
+              {locais.length === 0 ? (
+                <div style={{ padding: '40px 20px', textAlign: 'center' }}>
+                  <div style={{ color: '#94A3B8', marginBottom: 16, display: 'flex', justifyContent: 'center' }}>
+                    <Hospital size={48} />
+                  </div>
+                  <p style={{ color: '#94A3B8', fontSize: 14 }}>Nenhum local cadastrado ainda.</p>
+                </div>
             ) : (
               <div className="shift-list">
                 {locais.map(l => (
@@ -376,10 +386,9 @@ export default function LocaisPage() {
 
       {toast && <div className={`toast ${toast.type}`}>{toast.msg}</div>}
 
-      {/* MODAL EDICAO DE LOCAL */}
       {localEmEdicao && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }} onClick={() => setLocalEmEdicao(null)}>
-          <div className="card" style={{ maxWidth: 400, width: '100%' }} onClick={e => e.stopPropagation()}>
+        <div className="premium-modal-overlay" onClick={() => setLocalEmEdicao(null)}>
+          <div className="premium-modal-card" onClick={e => e.stopPropagation()}>
             <h2 style={{ fontSize: 20, fontWeight: 800, marginBottom: 16, color: 'var(--text-primary)' }}>Editar Local</h2>
             
             <div className="form-group">
@@ -421,18 +430,19 @@ export default function LocaisPage() {
         </div>
       )}
 
-      {/* MODAL PRO PAYWALL */}
       {showProModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-          <div className="card" style={{ maxWidth: 400, width: '100%', textAlign: 'center' }}>
-            <span style={{ fontSize: 48, display: 'block', marginBottom: 16 }}>⭐</span>
+        <div className="premium-modal-overlay" onClick={() => setShowProModal(false)}>
+          <div className="premium-modal-card" onClick={e => e.stopPropagation()}>
+            <div style={{ color: '#2563EB', marginBottom: 20, display: 'flex', justifyContent: 'center' }}>
+              <Sparkles size={48} />
+            </div>
             <h2 style={{ fontSize: 20, fontWeight: 800, marginBottom: 8, color: 'var(--text-primary)' }}>Upgrade para o Pro</h2>
-            <p style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 24, lineHeight: 1.5 }}>
+            <p style={{ fontSize: 14, color: '#94A3B8', marginBottom: 24, lineHeight: 1.5 }}>
               Você atingiu o limite de 2 locais do plano gratuito. Assine o Pro para gerenciar hospitais ilimitados!
             </p>
             <div style={{ display: 'flex', gap: 12 }}>
               <button className="btn btn-secondary" style={{ flex: 1, justifyContent: 'center' }} onClick={() => setShowProModal(false)}>Voltar</button>
-              <button className="btn btn-primary" style={{ flex: 1, justifyContent: 'center', background: 'linear-gradient(to right, #f59e0b, #d97706)', border: 'none' }} onClick={() => setShowProModal(false)}>Assinar Pro</button>
+              <button className="btn btn-primary" style={{ flex: 1, justifyContent: 'center', background: '#2563EB', border: 'none' }} onClick={() => setShowProModal(false)}>Assinar Pro</button>
             </div>
           </div>
         </div>

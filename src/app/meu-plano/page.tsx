@@ -2,6 +2,7 @@ import { Suspense } from 'react';
 import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
 import { redirect } from 'next/navigation';
+import { Sparkles } from 'lucide-react';
 import MeuPlanoClient from './MeuPlanoClient';
 import { isUserPro } from '../../lib/supabase';
 
@@ -48,12 +49,20 @@ export default async function MeuPlanoPage() {
   }
 
   // Define o nome de exibição do plano
-  let planName = 'Plano Gratuito';
+  let planName: React.ReactNode = 'Plano Gratuito';
   if (isActive) {
     if (launchOffer) {
-      planName = 'Plano PRO — Oferta de Lançamento 💎';
+      planName = (
+        <span className="flex items-center gap-2">
+          <Sparkles size={18} className="text-yellow-400" /> Plano PRO — Oferta de Lançamento
+        </span>
+      );
     } else {
-      planName = 'Plano PRO';
+      planName = (
+        <span className="flex items-center gap-2">
+          <Sparkles size={18} className="text-blue-400" /> Plano PRO
+        </span>
+      );
     }
   }
 

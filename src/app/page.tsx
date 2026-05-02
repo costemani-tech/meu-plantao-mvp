@@ -21,6 +21,7 @@ import {
 } from './DashboardInteractive';
 import { isUserPro, isSubscriptionActive } from '../lib/supabase';
 import { formatRelativeShiftDate } from '../lib/date-utils';
+import { HandMetal } from 'lucide-react';
 
 // Utilitário para pegar o cliente Supabase Server-Side
 async function getSupabase() {
@@ -72,7 +73,9 @@ async function StatsSection({ userId, isPro, greeting }: { userId: string, isPro
         display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', 
         padding: '60px 24px', minHeight: '60vh', justifyContent: 'center'
       }}>
-        <div style={{ fontSize: 64, marginBottom: 24, animation: 'cardEntrance 0.8s ease' }}>👋</div>
+        <div style={{ fontSize: 64, marginBottom: 24, animation: 'cardEntrance 0.8s ease', color: '#2563EB' }}>
+          <HandMetal size={64} />
+        </div>
         <h2 style={{ fontSize: 28, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 12 }}>
           Seja bem-vindo!
         </h2>
@@ -80,8 +83,8 @@ async function StatsSection({ userId, isPro, greeting }: { userId: string, isPro
           Sua agenda está pronta para ser organizada. Comece cadastrando onde você trabalha.
         </p>
         <Link href="/locais" style={{ textDecoration: 'none' }}>
-          <button className="btn btn-primary" style={{ padding: '16px 40px', fontSize: 16, borderRadius: 16, background: 'var(--accent-blue)' }}>
-            ➕ Adicionar Primeiro Local
+          <button className="btn btn-primary" style={{ padding: '16px 40px', fontSize: 16, borderRadius: '1.5rem', background: '#2563EB', boxShadow: '0 0 15px rgba(37, 99, 235, 0.25)' }}>
+            <Plus size={20} className="mr-2" /> Adicionar Primeiro Local
           </button>
         </Link>
       </div>
@@ -172,7 +175,7 @@ async function UpcomingShiftsWrapper({ userId, userName, totalGanhos, isPro }: {
 // Skeletons
 function StatsSkeleton() {
   return (
-    <div className="card" style={{ padding: '24px', borderRadius: '24px', background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)', boxShadow: 'var(--shadow-md)', marginBottom: 32 }}>
+    <div className="card" style={{ padding: '24px', borderRadius: '1.5rem', background: '#0F172A', border: '1px solid rgba(255,255,255,0.05)', boxShadow: 'var(--shadow-md)', marginBottom: 32 }}>
       <div className="skeleton" style={{ height: 40, width: '80%', borderRadius: 8, marginBottom: 20 }} />
       <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: 20, marginBottom: 20 }}>
         <div className="skeleton" style={{ height: 60, width: '100%', borderRadius: 8 }} />
@@ -263,10 +266,10 @@ export default async function DashboardPage() {
   const hasLocations = (locaisCount || 0) > 0;
 
   return (
-    <div style={{ padding: "0 16px 120px 16px", maxWidth: "600px", margin: "0 auto" }}>
+    <div className="page-container" style={{ paddingBottom: '120px' }}>
       
       {/* HEADER (Instantâneo) */}
-      <div className="page-header" style={{ paddingTop: 16 }}>
+      <div className="page-header">
         <h1>{greeting.text}</h1>
         <p>Acompanhe sua escala e ganhos para o mês de {new Date().toLocaleDateString("pt-BR", { month: "long" })}.</p>
       </div>

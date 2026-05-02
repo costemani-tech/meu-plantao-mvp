@@ -19,25 +19,25 @@ export default function EmptyState({
   onAction 
 }: EmptyStateProps) {
   return (
-    <div className="empty-state" style={{ padding: '60px 24px', borderStyle: 'dashed', borderWidth: 2 }}>
+    <div className="empty-state" style={{ padding: '60px 24px', textAlign: 'center' }}>
       <div style={{ 
-        width: 80, 
-        height: 80, 
-        background: 'var(--accent-blue-light)', 
-        color: 'var(--accent-blue)', 
-        borderRadius: '50%', 
+        width: 64, 
+        height: 64, 
+        background: 'rgba(255, 255, 255, 0.03)', 
+        color: '#94A3B8', 
+        borderRadius: '1.5rem', 
         display: 'flex', 
         alignItems: 'center', 
         justifyContent: 'center',
-        marginBottom: 24,
-        opacity: 0.8
+        marginBottom: 20,
+        marginInline: 'auto'
       }}>
         {icon}
       </div>
-      <h3 style={{ fontSize: 20, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 8 }}>
+      <h3 style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 8 }}>
         {title}
       </h3>
-      <p style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 24, maxWidth: 300, marginInline: 'auto' }}>
+      <p style={{ fontSize: 14, color: '#94A3B8', marginBottom: 24, maxWidth: 320, marginInline: 'auto', lineHeight: 1.5 }}>
         {description}
       </p>
       {actionLabel && onAction && (

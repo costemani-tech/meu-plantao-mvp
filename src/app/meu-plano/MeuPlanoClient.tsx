@@ -2,9 +2,10 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { XCircle, CheckCircle2, AlertCircle } from 'lucide-react';
 
 interface MeuPlanoClientProps {
-  planName: string;
+  planName: React.ReactNode;
   isActive: boolean;
   subStatus: string;
   endDate?: string | null;
@@ -101,21 +102,22 @@ export default function MeuPlanoClient({ planName, isActive, subStatus, endDate,
 
       {/* Modal de Retenção */}
       {showModal && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }} onClick={() => !loading && setShowModal(false)} />
-          
-          <div className="card" style={{ maxWidth: 400, width: '100%', position: 'relative', borderRadius: 24, padding: 32 }}>
+        <div className="premium-modal-overlay" onClick={() => !loading && setShowModal(false)}>
+          <div className="premium-modal-card" onClick={e => e.stopPropagation()}>
+            <div style={{ color: '#ef4444', marginBottom: 20, display: 'flex', justifyContent: 'center' }}>
+              <AlertCircle size={48} />
+            </div>
             <h2 style={{ fontSize: 20, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 12 }}>Tem certeza?</h2>
             
             <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.5, marginBottom: 20 }}>
               Seu acesso PRO continuará disponível até <strong>{formattedEndDate}</strong>. Após isso, sua conta voltará para o plano gratuito e você perderá acesso a:
             </p>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 24, fontSize: 14, color: 'var(--text-primary)', fontWeight: 500 }}>
-              <div>❌ Compartilhamento premium</div>
-              <div>❌ Relatórios financeiros</div>
-              <div>❌ Locais ilimitados</div>
-              <div>❌ Exportação profissional</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 24, fontSize: 14, color: 'var(--text-secondary)' }}>
+              <div className="flex items-center gap-3"><XCircle size={16} className="text-red-500" /> Compartilhamento premium</div>
+              <div className="flex items-center gap-3"><XCircle size={16} className="text-red-500" /> Relatórios financeiros</div>
+              <div className="flex items-center gap-3"><XCircle size={16} className="text-red-500" /> Locais ilimitados</div>
+              <div className="flex items-center gap-3"><XCircle size={16} className="text-red-500" /> Exportação profissional</div>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>

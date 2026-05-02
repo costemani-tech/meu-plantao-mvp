@@ -3,7 +3,7 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { supabase, isUserPro, isSubscriptionActive } from '../../lib/supabase';
-import { ArrowLeft, Printer } from 'lucide-react';
+import { ArrowLeft, Printer, TrendingUp } from 'lucide-react';
 
 const MESES = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
 
@@ -141,7 +141,9 @@ function RelatorioContent() {
           color: '#334155'
         }}>
           <div style={{ borderBottom: '2px solid #e2e8f0', paddingBottom: 16, marginBottom: 24 }}>
-            <h1 style={{ fontSize: 24, fontWeight: 800, margin: 0, color: '#0f172a' }}>Resumo dos Ganhos 💰</h1>
+            <h1 style={{ fontSize: 24, fontWeight: 800, margin: 0, color: '#0f172a', display: 'flex', alignItems: 'center', gap: 10 }}>
+              Resumo dos Ganhos <TrendingUp size={24} className="text-primary" />
+            </h1>
             <p style={{ margin: 0, color: '#64748b', fontSize: 14 }}>Meu Plantão Ganhos</p>
           </div>
 

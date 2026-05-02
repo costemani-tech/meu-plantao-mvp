@@ -305,7 +305,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       {loading && (
         <div style={{
           position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
-          zIndex: 9999, background: '#1a1e2d', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          zIndex: 9999, background: '#050816', display: 'flex', alignItems: 'center', justifyContent: 'center',
           overflow: 'hidden'
         }}>
           <video 
@@ -320,11 +320,11 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       )}
 
-      <aside className="sidebar">
+      <aside className="sidebar" style={{ background: '#0F172A', borderRight: '1px solid rgba(255,255,255,0.05)' }}>
         <div className="sidebar-logo" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <img src="/icons/icon-192x192.png" alt="Meu Plantão" style={{ height: 38, width: 'auto', borderRadius: '8px' }} />
           <div className="sidebar-logo-text" style={{ fontSize: '1.25rem', fontWeight: 800 }}>
-            Meu <span style={{ color: 'var(--accent-blue)' }}>Plantão</span>
+            Meu <span style={{ color: '#2563EB' }}>Plantão</span>
           </div>
         </div>
         <nav className="nav-section" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
@@ -372,6 +372,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         </nav>
       </aside>
       <main className="main-content">
+        <div className="main-container" style={{ width: '100%', maxWidth: '1280px', margin: '0 auto', position: 'relative' }}>
         {pathname !== '/login' && (
           <div className="top-actions-bar">
             <button 
@@ -538,8 +539,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 padding: '14px', 
                 fontSize: 14, 
                 fontWeight: 800,
-                background: 'var(--accent-blue)',
-                boxShadow: '0 6px 20px rgba(37, 99, 235, 0.25)'
+                background: '#2563EB',
+                boxShadow: '0 0 15px rgba(37, 99, 235, 0.25)',
+                borderRadius: '1.5rem'
               }}
             >
               {pwaPlatform === 'ios' ? (showIosGuide ? 'FECHAR GUIA' : 'COMO INSTALAR?') : (isInstalling ? 'PREPARANDO...' : (hasPrompt ? 'INSTALAR APP GRÁTIS' : 'ABRIR / INSTALAR APP'))}
@@ -560,7 +562,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 <button 
                   className="btn btn-primary" 
-                  style={{ width: '100%', justifyContent: 'center', background: 'linear-gradient(135deg, #f59e0b, #d97706)' }}
+                  style={{ width: '100%', justifyContent: 'center', background: '#2563EB', boxShadow: '0 0 15px rgba(37, 99, 235, 0.25)', borderRadius: '1.5rem' }}
                   onClick={() => {}}
                 >
                   <Star size={18} fill="currentColor" /> Assinar Versão Pro
@@ -578,6 +580,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         ) : (
           children
         )}
+        </div>
       </main>
 
       {/* Navegação Mobile Inferior - Exclusiva para Celulares */}

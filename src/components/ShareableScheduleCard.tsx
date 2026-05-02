@@ -54,20 +54,20 @@ export const ShareableScheduleCard = forwardRef<HTMLDivElement, ShareableSchedul
       ref={ref}
       style={{
         width: '400px',
-        background: '#f8fafc', // bg-slate-50
+        background: '#050816',
         fontFamily: 'Inter, system-ui, sans-serif',
         overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column',
         position: 'relative',
-        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5)',
       }}
     >
       {/* Cabeçalho SaaS Clean */}
       <div style={{
-        background: '#ffffff',
+        background: '#0F172A',
         padding: '24px 20px',
-        borderBottom: '1px solid #e2e8f0',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
         display: 'flex',
         alignItems: 'center',
         gap: '12px',
@@ -87,7 +87,7 @@ export const ShareableScheduleCard = forwardRef<HTMLDivElement, ShareableSchedul
           <Activity size={24} />
         </div>
         <div style={{ textAlign: 'left' }}>
-          <h1 style={{ margin: 0, fontSize: '20px', fontWeight: 800, color: '#0f172a', letterSpacing: '-0.5px' }}>
+          <h1 style={{ margin: 0, fontSize: '20px', fontWeight: 800, color: '#F8FAFC', letterSpacing: '-0.5px' }}>
             Meu Plantão
           </h1>
           <p style={{ margin: 0, fontSize: '11px', color: '#64748b', fontWeight: 500 }}>
@@ -99,8 +99,8 @@ export const ShareableScheduleCard = forwardRef<HTMLDivElement, ShareableSchedul
       {/* Identification & Dynamic Month */}
       <div style={{
         padding: '16px 24px',
-        background: '#ffffff',
-        borderBottom: '1px solid #e2e8f0',
+        background: '#0F172A',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
         display: 'flex',
         flexDirection: 'column',
         gap: '4px',
@@ -108,7 +108,7 @@ export const ShareableScheduleCard = forwardRef<HTMLDivElement, ShareableSchedul
         zIndex: 1
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ fontWeight: 800, fontSize: '16px', color: '#0f172a' }}>
+          <div style={{ fontWeight: 800, fontSize: '16px', color: '#F8FAFC' }}>
             {userName}
           </div>
           <div style={{ 
@@ -140,13 +140,15 @@ export const ShareableScheduleCard = forwardRef<HTMLDivElement, ShareableSchedul
           const group = groupedShifts[localName];
           return (
             <div key={localName} style={{
-              background: '#ffffff',
+              background: '#0F172A',
               borderRadius: '12px',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
               borderLeft: `4px solid ${group.color}`,
               padding: '14px',
+              border: '1px solid rgba(255, 255, 255, 0.05)',
+              borderLeftWidth: '4px'
             }}>
-              <h3 style={{ margin: '0 0 10px 0', fontSize: '14px', fontWeight: 700, color: '#0f172a' }}>
+              <h3 style={{ margin: '0 0 10px 0', fontSize: '14px', fontWeight: 700, color: '#F8FAFC' }}>
                 {localName}
               </h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -162,7 +164,7 @@ export const ShareableScheduleCard = forwardRef<HTMLDivElement, ShareableSchedul
                   return (
                     <div key={idx} style={{
                       fontSize: '11px',
-                      color: '#334155',
+                      color: '#94A3B8',
                       fontWeight: 500,
                       display: 'flex',
                       alignItems: 'center',
@@ -200,16 +202,16 @@ export const ShareableScheduleCard = forwardRef<HTMLDivElement, ShareableSchedul
       {totalGanhos > 0 && !hideValues && (
         <div style={{ padding: '0 20px 12px 20px' }}>
           <div style={{
-            background: '#ffffff',
+            background: 'rgba(255, 255, 255, 0.03)',
             borderRadius: '12px',
             padding: '14px',
             textAlign: 'center',
-            border: '1px solid #e2e8f0',
+            border: '1px solid rgba(255, 255, 255, 0.05)',
           }}>
-            <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 600, marginBottom: '2px' }}>
+            <div style={{ fontSize: '11px', color: '#94A3B8', fontWeight: 600, marginBottom: '2px' }}>
               Total a receber em extras
             </div>
-            <div style={{ fontSize: '18px', fontWeight: 800, color: '#16a34a' }}>
+            <div style={{ fontSize: '18px', fontWeight: 800, color: '#10B981' }}>
               {totalGanhos.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
             </div>
           </div>
@@ -222,19 +224,19 @@ export const ShareableScheduleCard = forwardRef<HTMLDivElement, ShareableSchedul
         textAlign: 'center',
         fontSize: '11px',
         color: '#94a3b8',
-        background: '#ffffff',
-        borderTop: '1px solid #e2e8f0',
+        background: '#0F172A',
+        borderTop: '1px solid rgba(255, 255, 255, 0.05)',
         position: 'relative',
         zIndex: 1
       }}>
-        {isPro ? (
-           <>Gerado por <span style={{ color: '#2563eb', fontWeight: 700 }}>meuplantao.com.br</span></>
-        ) : (
-           <div style={{ opacity: 0.8 }}>
-             <div style={{ fontWeight: 700, color: '#475569', marginBottom: 2 }}>Organize sua escala também</div>
-             <div style={{ color: '#2563eb', fontWeight: 800 }}>meuplantao.com.br</div>
-           </div>
-        )}
+        <div style={{ opacity: 0.8 }}>
+          <div style={{ fontWeight: 700, color: '#F8FAFC', marginBottom: 2 }}>
+            Organize sua escala também
+          </div>
+          <div style={{ color: '#2563EB', fontWeight: 800, fontSize: '13px' }}>
+            meuplantao.com.br
+          </div>
+        </div>
       </div>
     </div>
   );
