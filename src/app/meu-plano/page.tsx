@@ -24,7 +24,7 @@ export default async function MeuPlanoPage() {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('plan_type, subscription_status, start_date, end_date, auto_renew, launch_offer, is_pro')
+    .select('plan_type, status, start_date, end_date, auto_renew, launch_offer, is_pro')
     .eq('id', user.id)
     .single();
 
@@ -33,7 +33,7 @@ export default async function MeuPlanoPage() {
   
   const isWhitelist = isUserPro(user.email);
   const planType = profile?.plan_type || 'FREE';
-  const subStatus = profile?.subscription_status || 'free';
+  const subStatus = profile?.status || 'active';
   const endDate = profile?.end_date;
   const launchOffer = profile?.launch_offer || false;
   const autoRenew = profile?.auto_renew || false;

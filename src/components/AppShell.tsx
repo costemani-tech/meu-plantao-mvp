@@ -219,6 +219,15 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         const proStatus = isUserPro(user.email) || isSubscriptionActive(profile);
         setIsPro(proStatus);
 
+        // Lógica de Rebaixamento (Lazy Downgrade)
+        if (profile?.plan_type === 'PRO' && !proStatus && !isUserPro(user.email)) {
+          await supabase.from('profiles').update({ 
+            plan_type: 'FREE',
+            status: 'expired'
+          }).eq('id', user.id);
+          console.log('[SaaS] Plano PRO expirado. Rebaixando usuário para FREE.');
+        }
+
         if (!proStatus && pathname !== '/login' && pathname !== '/locais') {
           const { count } = await supabase
             .from('locais_trabalho')

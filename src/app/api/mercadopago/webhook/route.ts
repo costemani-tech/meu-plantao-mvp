@@ -60,7 +60,7 @@ export async function POST(req: Request) {
           is_pro: true, // Retrocompatibility
           pro_expires_at: expiresAt.toISOString(), // Retrocompatibility
           plan_type: 'PRO',
-          subscription_status: 'active',
+          status: 'active',
           start_date: new Date().toISOString(),
           end_date: expiresAt.toISOString(),
           auto_renew: false,

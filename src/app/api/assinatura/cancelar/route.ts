@@ -25,7 +25,7 @@ export async function POST(req: Request) {
 
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('subscription_status, end_date, auto_renew')
+      .select('status, end_date, auto_renew')
       .eq('id', user.id)
       .single();
 
@@ -34,7 +34,7 @@ export async function POST(req: Request) {
     }
 
     // Se já estiver cancelado, apenas retorna sucesso
-    if (profile.subscription_status === 'canceled') {
+    if (profile.status === 'canceled') {
       return NextResponse.json({ success: true, message: 'Já cancelado', end_date: profile.end_date });
     }
 
@@ -43,7 +43,7 @@ export async function POST(req: Request) {
     const { error: updateError } = await supabase
       .from('profiles')
       .update({
-        subscription_status: 'canceled',
+        status: 'canceled',
         auto_renew: false,
       })
       .eq('id', user.id);

@@ -90,6 +90,13 @@ export default function MeuPlanoClient({ planName, isActive, subStatus, endDate,
             </button>
           </div>
         )}
+
+        {/* Mensagem para pagamento único (auto_renew: false) */}
+        {isActive && !localAutoRenew && localSubStatus !== 'canceled' && (
+          <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: 20, marginTop: 10, fontSize: 13, color: 'var(--text-secondary)', fontStyle: 'italic' }}>
+            Seu plano é um pagamento único e expira naturalmente em <strong>{formattedEndDate}</strong>.
+          </div>
+        )}
       </div>
 
       {/* Modal de Retenção */}
