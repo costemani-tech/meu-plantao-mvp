@@ -135,10 +135,13 @@ export function EarningsPrivacyWrapper({ total, isPro }: { total: number, isPro:
 export function DashboardInteractive({ isPro, hasLocations }: { isPro: boolean, hasLocations: boolean }) {
   const router = useRouter();
 
-  // Auto-open Paywall para usuários Free
+  // Auto-open Paywall para usuários Free com delay para suavidade
   useEffect(() => {
     if (!isPro) {
-      window.dispatchEvent(new CustomEvent('open-upgrade-modal'));
+      const timer = setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('open-upgrade-modal'));
+      }, 800);
+      return () => clearTimeout(timer);
     }
   }, [isPro]);
 
