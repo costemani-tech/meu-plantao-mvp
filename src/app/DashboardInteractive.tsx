@@ -206,29 +206,39 @@ export function DashboardInteractive({ isPro, hasLocations = true }: { isPro: bo
       {!isPro && (
         <div className="card" style={{ 
           background: ofertaAtiva
-            ? 'linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%)'
+            ? 'linear-gradient(135deg, #0f172a 0%, #1a2f4a 100%)'
             : 'var(--bg-secondary)',
-          border: ofertaAtiva ? '1px solid rgba(34,211,181,0.3)' : '1px solid var(--border-subtle)',
+          border: ofertaAtiva ? '1px solid rgba(20,184,166,0.35)' : '1px solid var(--border-subtle)',
           borderRadius: '24px', 
           padding: '24px',
           marginBottom: 32,
           boxShadow: ofertaAtiva
-            ? '0 4px 24px -4px rgba(34,211,181,0.2)'
+            ? '0 8px 32px -4px rgba(20,184,166,0.18)'
             : '0 4px 6px -1px rgba(0,0,0,0.05)',
           textAlign: 'center'
         }}>
           {ofertaAtiva ? (
             <>
-              <div style={{ display: 'inline-block', background: 'var(--accent-teal)', color: '#fff', fontSize: 11, fontWeight: 900, padding: '4px 14px', borderRadius: 20, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>🔥 Oferta de Lançamento</div>
-              <h3 style={{ fontSize: 18, fontWeight: 800, color: '#fff', margin: '0 0 4px 0' }}>
-                💎 Plano PRO por apenas R$&nbsp;9,90
-              </h3>
-              <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', margin: '0 0 6px 0', fontWeight: 500 }}>
-                De R$ 89,90/ano · 6 meses de acesso PRO
-              </p>
-              <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', margin: '0 0 20px 0' }}>
-                Oferta válida para os primeiros 100 usuários ou até 31/08/2026 · {100 - proCount} vagas restantes
-              </p>
+              {/* Badge */}
+              <div style={{ display: 'inline-block', background: 'linear-gradient(135deg, #14b8a6, #0d9488)', color: '#fff', fontSize: 11, fontWeight: 900, padding: '5px 16px', borderRadius: 20, textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 16, boxShadow: '0 4px 12px rgba(20,184,166,0.35)' }}>OFERTA DE LANÇAMENTO</div>
+
+              {/* Preço principal */}
+              <div style={{ fontSize: 22, fontWeight: 900, color: '#fff', marginBottom: 4 }}>💎 Plano PRO por apenas R$&nbsp;9,90</div>
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)', textDecoration: 'line-through', marginBottom: 18, fontWeight: 500 }}>De R$ 89,90/ano</div>
+
+              {/* Checkmarks */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, textAlign: 'left', marginBottom: 18 }}>
+                {['✅ 6 meses de acesso PRO', '✅ Todos os recursos premium', '✅ Condição especial para os primeiros usuários'].map((item, i) => (
+                  <div key={i} style={{ fontSize: 14, fontWeight: 600, color: 'rgba(255,255,255,0.9)' }}>{item}</div>
+                ))}
+              </div>
+
+              {/* Urgência */}
+              <div style={{ background: 'rgba(20,184,166,0.12)', border: '1px solid rgba(20,184,166,0.25)', borderRadius: 12, padding: '12px 16px', marginBottom: 18 }}>
+                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', marginBottom: 4 }}>⏳ Válido para os primeiros 100 usuários</div>
+                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', marginBottom: 8 }}>ou até 31/08/2026</div>
+                <div style={{ fontSize: 15, fontWeight: 900, color: '#5eead4' }}>🔥 {100 - proCount} vagas restantes</div>
+              </div>
             </>
           ) : (
             <>
@@ -240,7 +250,7 @@ export function DashboardInteractive({ isPro, hasLocations = true }: { isPro: bo
               </p>
             </>
           )}
-          
+
           <button 
             className="btn btn-primary" 
             style={{ 
@@ -251,13 +261,13 @@ export function DashboardInteractive({ isPro, hasLocations = true }: { isPro: bo
               border: 'none', padding: '16px', borderRadius: '14px', 
               fontWeight: 900, fontSize: 15,
               boxShadow: ofertaAtiva
-                ? '0 10px 15px -3px rgba(20,184,166,0.35)'
+                ? '0 10px 20px -4px rgba(20,184,166,0.4)'
                 : '0 10px 15px -3px rgba(37,99,235,0.3)'
             }}
             onClick={() => setShowProModal('Banner')}
             disabled={loadingCheckout}
           >
-            {loadingCheckout && showProModal === 'Banner' ? 'Gerando Pagamento...' : ofertaAtiva ? '🚀 Garantir Oferta de Lançamento' : '🚀 Assinar PRO'}
+            {loadingCheckout && showProModal === 'Banner' ? 'Gerando Pagamento...' : ofertaAtiva ? '🚀 Garantir por R$ 9,90' : '🚀 Assinar PRO'}
           </button>
         </div>
       )}
@@ -280,23 +290,29 @@ export function DashboardInteractive({ isPro, hasLocations = true }: { isPro: bo
             {ofertaAtiva ? (
               // ─── OFERTA DE LANÇAMENTO ───────────────────────────────────
               <>
-                <div style={{ background: 'linear-gradient(135deg, rgba(20,184,166,0.12) 0%, rgba(37,99,235,0.08) 100%)', border: '1px solid rgba(20,184,166,0.3)', borderRadius: 20, padding: '28px 20px', marginBottom: 24 }}>
-                  <div style={{ background: 'var(--accent-teal)', color: '#fff', fontSize: 11, fontWeight: 900, padding: '5px 14px', borderRadius: 20, textTransform: 'uppercase', letterSpacing: 1, display: 'inline-block', marginBottom: 16 }}>OFERTA DE LANÇAMENTO</div>
-                  <div style={{ fontSize: 22, fontWeight: 900, color: 'var(--text-primary)', marginBottom: 6 }}>💎 Plano PRO por apenas R$&nbsp;9,90</div>
-                  <div style={{ fontSize: 14, color: 'var(--text-muted)', textDecoration: 'line-through', marginBottom: 14 }}>De R$ 89,90/ano</div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, textAlign: 'left', marginBottom: 16 }}>
-                    {[
-                      '✅ 6 meses de acesso PRO',
-                      '✅ Todos os recursos premium',
-                      '✅ Oferta limitada para os primeiros usuários',
-                    ].map((item, i) => (
-                      <div key={i} style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>{item}</div>
-                    ))}
-                  </div>
-                  <div style={{ fontSize: 12, color: 'var(--text-muted)', borderTop: '1px solid var(--border-subtle)', paddingTop: 12 }}>
-                    Oferta válida para: os primeiros 100 usuários OU até 31/08/2026<br />
-                    <span style={{ color: 'var(--accent-teal)', fontWeight: 700 }}>{100 - proCount} vagas restantes</span>
-                  </div>
+                {/* Badge */}
+                <div style={{ display: 'inline-block', background: 'linear-gradient(135deg, #14b8a6, #0d9488)', color: '#fff', fontSize: 11, fontWeight: 900, padding: '5px 16px', borderRadius: 20, textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 20, boxShadow: '0 4px 12px rgba(20,184,166,0.35)' }}>OFERTA DE LANÇAMENTO</div>
+
+                {/* Preço */}
+                <div style={{ fontSize: 26, fontWeight: 900, color: 'var(--text-primary)', marginBottom: 4 }}>💎 Plano PRO por apenas R$&nbsp;9,90</div>
+                <div style={{ fontSize: 14, color: 'var(--text-muted)', textDecoration: 'line-through', marginBottom: 20, fontWeight: 500 }}>De R$ 89,90/ano</div>
+
+                {/* Checkmarks */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10, textAlign: 'left', marginBottom: 20 }}>
+                  {[
+                    '✅ 6 meses de acesso PRO',
+                    '✅ Todos os recursos premium',
+                    '✅ Condição especial para os primeiros usuários',
+                  ].map((item, i) => (
+                    <div key={i} style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>{item}</div>
+                  ))}
+                </div>
+
+                {/* Urgência */}
+                <div style={{ background: 'rgba(20,184,166,0.08)', border: '1px solid rgba(20,184,166,0.2)', borderRadius: 14, padding: '14px 18px', marginBottom: 24, textAlign: 'center' }}>
+                  <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 4 }}>⏳ Válido para os primeiros 100 usuários</div>
+                  <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 10 }}>ou até 31/08/2026</div>
+                  <div style={{ fontSize: 18, fontWeight: 900, color: '#0d9488' }}>🔥 {100 - proCount} vagas restantes</div>
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -307,7 +323,7 @@ export function DashboardInteractive({ isPro, hasLocations = true }: { isPro: bo
                       background: 'linear-gradient(to right, #14b8a6, #0d9488)', 
                       border: 'none', borderRadius: '100px', 
                       padding: '18px', fontSize: 16, fontWeight: 900,
-                      boxShadow: '0 10px 15px -3px rgba(20,184,166,0.35)'
+                      boxShadow: '0 10px 20px -4px rgba(20,184,166,0.4)'
                     }} 
                     onClick={handleAssinarPro}
                     disabled={loadingCheckout}
