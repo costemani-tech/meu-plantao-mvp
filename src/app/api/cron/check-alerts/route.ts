@@ -13,11 +13,12 @@ export async function GET(request: NextRequest) {
 
   const ONESIGNAL_APP_ID = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID!;
   const ONESIGNAL_REST_KEY = process.env.ONESIGNAL_REST_KEY!;
+
   // Vercel Cron security: validate the authorization header
-  // const authHeader = request.headers.get('authorization');
-  // if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-  //   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  // }
+  const authHeader = request.headers.get('authorization');
+  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
 
   const now = new Date();
   const windowStart = now.toISOString();
