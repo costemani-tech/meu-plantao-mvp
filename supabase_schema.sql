@@ -68,3 +68,41 @@ create policy "Usuários podem gerenciar suas trocas de plantões" on public.tro
   auth.uid() = novo_usuario_id or
   auth.uid() in (select usuario_id from public.plantoes where id = plantao_original_id)
 );
+
+-- Table: profiles (Usuários e Assinaturas)
+create table if not exists public.profiles (
+  id uuid references auth.users(id) on delete cascade primary key,
+  nome varchar,
+  email varchar unique,
+  is_pro boolean default false,
+  plan_type varchar default 'FREE',
+  pro_expires_at timestamp with time zone,
+  start_date timestamp with time zone,
+  end_date timestamp with time zone,
+  auto_renew boolean default false,
+  mercadopago_id varchar,
+  launch_offer boolean default false,
+  status varchar default 'active',
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- Table: notificacoes
+create table if not exists public.notificacoes (
+  id uuid default uuid_generate_v4() primary key,
+  usuario_id uuid references auth.users(id) on delete cascade not null,
+  escala_id uuid references public.escalas(id) on delete cascade,
+  data_hora_inicio timestamp with time zone not null,
+  publicar_em timestamp with time zone not null,
+  titulo varchar not null,
+  mensagem text,
+  lida boolean default false,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  unique(usuario_id, escala_id, data_hora_inicio)
+);
+
+-- RLS policies for profiles and notificacoes
+alter table public.profiles enable row level security;
+alter table public.notificacoes enable row level security;
+
+create policy "Usuários podem ver e editar seu próprio perfil" on public.profiles for all using (auth.uid() = id) with check (auth.uid() = id);
+create policy "Usuários podem gerenciar suas próprias notificações" on public.notificacoes for all using (auth.uid() = usuario_id) with check (auth.uid() = usuario_id);
