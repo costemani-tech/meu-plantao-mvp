@@ -56,8 +56,15 @@ alter table public.escalas enable row level security;
 alter table public.plantoes enable row level security;
 alter table public.trocas_plantao enable row level security;
 
-create policy "Allow all operations for anon (MVP)" on public.usuarios for all using (true) with check (true);
-create policy "Allow all operations for anon (MVP)" on public.locais_trabalho for all using (true) with check (true);
-create policy "Allow all operations for anon (MVP)" on public.escalas for all using (true) with check (true);
-create policy "Allow all operations for anon (MVP)" on public.plantoes for all using (true) with check (true);
-create policy "Allow all operations for anon (MVP)" on public.trocas_plantao for all using (true) with check (true);
+-- Políticas de segurança: Apenas o dono (usuário autenticado) pode ver/editar seus próprios dados
+create policy "Usuários podem gerenciar seus próprios dados" on public.usuarios for all using (auth.uid() = id) with check (auth.uid() = id);
+create policy "Usuários podem gerenciar seus próprios locais" on public.locais_trabalho for all using (auth.uid() = usuario_id) with check (auth.uid() = usuario_id);
+create policy "Usuários podem gerenciar suas próprias escalas" on public.escalas for all using (auth.uid() = usuario_id) with check (auth.uid() = usuario_id);
+create policy "Usuários podem gerenciar seus próprios plantões" on public.plantoes for all using (auth.uid() = usuario_id) with check (auth.uid() = usuario_id);
+create policy "Usuários podem gerenciar suas trocas de plantões" on public.trocas_plantao for all using (
+  auth.uid() = novo_usuario_id or
+  auth.uid() in (select usuario_id from public.plantoes where id = plantao_original_id)
+) with check (
+  auth.uid() = novo_usuario_id or
+  auth.uid() in (select usuario_id from public.plantoes where id = plantao_original_id)
+);
