@@ -3,7 +3,7 @@ create extension if not exists "uuid-ossp";
 
 -- Table: Usuarios
 create table public.usuarios (
-  id uuid default uuid_generate_v4() primary key,
+  id uuid references auth.users(id) on delete cascade primary key,
   nome varchar not null,
   email varchar not null unique,
   funcao varchar default 'Médico',
@@ -13,8 +13,12 @@ create table public.usuarios (
 -- Table: Locais_Trabalho
 create table public.locais_trabalho (
   id uuid default uuid_generate_v4() primary key,
+  usuario_id uuid references auth.users(id) on delete cascade not null,
   nome varchar not null,
   cor_calendario varchar default '#000000',
+  endereco varchar,
+  is_home_care boolean default false,
+  ativo boolean default true,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
@@ -50,14 +54,31 @@ create table public.trocas_plantao (
 );
 
 -- Row Level Security (RLS) Policies (Simplified for MVP, assuming single tenant or open access for now)
+-- Table: Profiles
+create table public.profiles (
+  id uuid references auth.users(id) on delete cascade primary key,
+  email varchar not null,
+  is_pro boolean default false,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- Row Level Security (RLS) Policies
 alter table public.usuarios enable row level security;
+alter table public.profiles enable row level security;
 alter table public.locais_trabalho enable row level security;
 alter table public.escalas enable row level security;
 alter table public.plantoes enable row level security;
 alter table public.trocas_plantao enable row level security;
 
-create policy "Allow all operations for anon (MVP)" on public.usuarios for all using (true) with check (true);
-create policy "Allow all operations for anon (MVP)" on public.locais_trabalho for all using (true) with check (true);
-create policy "Allow all operations for anon (MVP)" on public.escalas for all using (true) with check (true);
-create policy "Allow all operations for anon (MVP)" on public.plantoes for all using (true) with check (true);
-create policy "Allow all operations for anon (MVP)" on public.trocas_plantao for all using (true) with check (true);
+create policy "Users can manage their own data" on public.usuarios for all using (id = auth.uid()) with check (id = auth.uid());
+create policy "Users can view their own profile" on public.profiles for select using (id = auth.uid());
+create policy "Users can manage their own locations" on public.locais_trabalho for all using (usuario_id = auth.uid()) with check (usuario_id = auth.uid());
+create policy "Users can manage their own escalas" on public.escalas for all using (usuario_id = auth.uid()) with check (usuario_id = auth.uid());
+create policy "Users can manage their own plantoes" on public.plantoes for all using (usuario_id = auth.uid()) with check (usuario_id = auth.uid());
+create policy "Users can manage their own trocas" on public.trocas_plantao for all using (
+  plantao_original_id in (select id from public.plantoes where usuario_id = auth.uid())
+  or novo_usuario_id = auth.uid()
+) with check (
+  plantao_original_id in (select id from public.plantoes where usuario_id = auth.uid())
+  or novo_usuario_id = auth.uid()
+);
