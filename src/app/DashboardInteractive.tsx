@@ -132,7 +132,7 @@ export function EarningsPrivacyWrapper({ total, isPro }: { total: number, isPro:
   );
 }
 
-export default function DashboardInteractive({ isPro, hasLocations }: { isPro: boolean, hasLocations: boolean }) {
+export function DashboardInteractive({ isPro, hasLocations }: { isPro: boolean, hasLocations: boolean }) {
   const router = useRouter();
 
   // Auto-open Paywall para usuários Free
