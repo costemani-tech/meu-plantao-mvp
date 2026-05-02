@@ -98,35 +98,33 @@ export function EarningsPrivacyWrapper({ total, isPro }: { total: number, isPro:
           {total > 0 ? (
             <div style={{ fontSize: 24, fontWeight: 800, color: '#10B981', display: 'flex', alignItems: 'center', gap: 10, transition: 'all 0.3s' }}>
               <DollarSign size={20} /> <span style={{ filter: hidden ? 'blur(8px)' : 'none' }}>
-                {hidden ? 'R$ 0.000,00' : total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(total)}
               </span>
             </div>
           ) : (
-            <div>
-              <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: 10 }}>
-                <DollarSign size={20} /> Nenhum extra
-              </div>
-            </div>
+            <div style={{ fontSize: 13, color: 'var(--text-muted)', fontStyle: 'italic' }}>Nenhum valor extra registrado.</div>
           )}
         </div>
       ) : (
         <div 
           onClick={onUpgradeClick}
           style={{ 
-            background: "rgba(255, 255, 255, 0.03)", 
+            background: 'linear-gradient(135deg, rgba(37,99,235,0.08) 0%, rgba(37,99,235,0.02) 100%)', 
             padding: '20px', 
             borderRadius: '1.5rem', 
-            border: "1px solid rgba(255, 255, 255, 0.05)",
+            border: '1px solid rgba(37,99,235,0.15)', 
+            marginTop: 8,
             cursor: 'pointer',
             transition: 'all 0.2s'
           }}
           className="hover-card"
         >
-          <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text-primary)", display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-            <Lock size={16} className="text-primary" /> Disponível no Plano Pro
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+            <Lock size={16} className="text-blue-500" />
+            <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text-primary)' }}>Previsão Financeira</div>
           </div>
-          <div style={{ fontSize: 13, color: "var(--text-secondary)", display: 'flex', alignItems: 'center', gap: 6 }}>
-            <BarChart3 size={14} /> Veja seus ganhos extras automaticamente
+          <div style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.4 }}>
+            Assine o plano PRO para ver o cálculo automático dos seus ganhos do mês.
           </div>
         </div>
       )}
@@ -134,61 +132,14 @@ export function EarningsPrivacyWrapper({ total, isPro }: { total: number, isPro:
   );
 }
 
-export function DashboardInteractive({ isPro, hasLocations = true }: { isPro: boolean, hasLocations?: boolean }) {
-  const [showProModal, setShowProModal] = useState('');
-  const [loadingCheckout, setLoadingCheckout] = useState(false);
-  const [ofertaAtiva, setOfertaAtiva] = useState<boolean | null>(null);
-  const [proCount, setProCount] = useState(0);
+export default function DashboardInteractive({ isPro, hasLocations }: { isPro: boolean, hasLocations: boolean }) {
   const router = useRouter();
 
-  // Busca status da oferta de lançamento ao montar
-  useEffect(() => {
-    fetch('/api/mercadopago/oferta-status')
-      .then(r => r.json())
-      .then(d => {
-        setOfertaAtiva(d.ofertaAtiva ?? false);
-        setProCount(d.proCount ?? 0);
-      })
-      .catch(() => setOfertaAtiva(false));
-  }, []);
-
-  const handleAssinarPro = async () => {
-    setLoadingCheckout(true);
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Usuário não autenticado.');
-
-      const response = await fetch('/api/mercadopago/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user.id, userEmail: user.email }),
-      });
-
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Erro ao gerar link de pagamento');
-      
-      if (data.init_point) {
-        window.location.href = data.init_point;
-      } else {
-        throw new Error('URL de pagamento não retornada pela API.');
-      }
-    } catch (err: any) {
-      console.error(err);
-      toast.error(err.message || 'Erro ao gerar pagamento');
-    } finally {
-      setLoadingCheckout(false);
-    }
-  };
-
-  // Auto-open Paywall para usuários Free + Listeners
+  // Auto-open Paywall para usuários Free
   useEffect(() => {
     if (!isPro) {
-      setShowProModal('Onload');
+      window.dispatchEvent(new CustomEvent('open-upgrade-modal'));
     }
-
-    const handleOpen = () => setShowProModal('Event');
-    window.addEventListener('open-upgrade-modal', handleOpen);
-    return () => window.removeEventListener('open-upgrade-modal', handleOpen);
   }, [isPro]);
 
   const handleFabClick = () => {
@@ -197,6 +148,10 @@ export function DashboardInteractive({ isPro, hasLocations = true }: { isPro: bo
       return;
     }
     router.push('/plantao-extra');
+  };
+
+  const handleUpgradeClick = () => {
+    window.dispatchEvent(new CustomEvent('open-upgrade-modal'));
   };
 
   return (
@@ -213,63 +168,48 @@ export function DashboardInteractive({ isPro, hasLocations = true }: { isPro: bo
       {/* SEÇÃO PRO - BANNER PREMIUM */}
       {!isPro && (
         <div className="card" style={{ 
-          background: ofertaAtiva
-            ? 'linear-gradient(135deg, #0f172a 0%, #1a2f4a 100%)'
-            : 'var(--bg-secondary)',
-          border: ofertaAtiva ? '1px solid rgba(20,184,166,0.35)' : '1px solid var(--border-subtle)',
+          background: 'linear-gradient(135deg, #0f172a 0%, #1a2f4a 100%)',
+          border: '1px solid rgba(20,184,166,0.35)',
           borderRadius: '24px', 
           padding: '24px',
           marginBottom: 32,
-          boxShadow: ofertaAtiva
-            ? '0 8px 32px -4px rgba(20,184,166,0.18)'
-            : '0 4px 6px -1px rgba(0,0,0,0.05)',
+          boxShadow: '0 8px 32px -4px rgba(20,184,166,0.18)',
           textAlign: 'center'
         }}>
-          {ofertaAtiva ? (
-            <>
-              {/* Badge */}
-              <div style={{ display: 'inline-block', background: '#2563EB', color: '#fff', fontSize: 11, fontWeight: 900, padding: '5px 16px', borderRadius: 20, textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 16, boxShadow: '0 4px 12px rgba(37,99,235,0.35)' }}>OFERTA DE LANÇAMENTO</div>
+          <>
+            {/* Badge */}
+            <div style={{ display: 'inline-block', background: '#2563EB', color: '#fff', fontSize: 11, fontWeight: 900, padding: '5px 16px', borderRadius: 20, textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 16, boxShadow: '0 4px 12px rgba(37,99,235,0.35)' }}>OFERTA DE LANÇAMENTO</div>
 
-              {/* Preço principal */}
-              <div style={{ fontSize: 22, fontWeight: 900, color: '#fff', marginBottom: 4 }}>
-                <Sparkles size={20} className="inline mr-2 text-yellow-400" /> Plano PRO por apenas R$&nbsp;9,90
-              </div>
-              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)', textDecoration: 'line-through', marginBottom: 18, fontWeight: 500 }}>De R$ 89,90/ano</div>
+            {/* Preço principal */}
+            <div style={{ fontSize: 22, fontWeight: 900, color: '#fff', marginBottom: 4 }}>
+              <Sparkles size={20} className="inline mr-2 text-yellow-400" /> Plano PRO por apenas R$&nbsp;9,90
+            </div>
+            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)', marginBottom: 18, fontWeight: 500 }}>Oferta Exclusiva de Lançamento</div>
 
-              {/* Checkmarks */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, textAlign: 'left', marginBottom: 18 }}>
-                {[
-                  { icon: <CheckCircle2 size={16} className="text-green-400" />, text: '6 meses de acesso PRO' },
-                  { icon: <CheckCircle2 size={16} className="text-green-400" />, text: 'Todos os recursos premium' },
-                  { icon: <CheckCircle2 size={16} className="text-green-400" />, text: 'Condição especial para os primeiros usuários' }
-                ].map((item, i) => (
-                  <div key={i} style={{ fontSize: 14, fontWeight: 600, color: 'rgba(255,255,255,0.9)', display: 'flex', alignItems: 'center', gap: 8 }}>
-                    {item.icon} {item.text}
-                  </div>
-                ))}
-              </div>
-
-              {/* Urgência */}
-              <div style={{ background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: 12, padding: '12px 16px', marginBottom: 18 }}>
-                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'center' }}>
-                  <Timer size={14} /> Válido para os primeiros 100 usuários
+            {/* Checkmarks */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, textAlign: 'left', marginBottom: 18 }}>
+              {[
+                { icon: <CheckCircle2 size={16} className="text-green-400" />, text: '6 meses de acesso PRO' },
+                { icon: <CheckCircle2 size={16} className="text-green-400" />, text: 'Todos os recursos premium' },
+                { icon: <CheckCircle2 size={16} className="text-green-400" />, text: 'Condição especial para os primeiros usuários' }
+              ].map((item, i) => (
+                <div key={i} style={{ fontSize: 14, fontWeight: 600, color: 'rgba(255,255,255,0.9)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                  {item.icon} {item.text}
                 </div>
-                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', marginBottom: 8 }}>ou até 31/08/2026</div>
-                <div style={{ fontSize: 15, fontWeight: 900, color: '#60A5FA', display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'center' }}>
-                  <Zap size={16} /> {100 - proCount} vagas restantes
-                </div>
+              ))}
+            </div>
+
+            {/* Urgência */}
+            <div style={{ background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: 12, padding: '12px 16px', marginBottom: 18 }}>
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'center' }}>
+                <Timer size={14} /> Válido por tempo limitado
               </div>
-            </>
-          ) : (
-            <>
-              <h3 style={{ fontSize: 18, fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 4px 0', display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center' }}>
-                <Sparkles size={20} className="text-blue-500" /> Leve seu controle para outro nível
-              </h3>
-              <p style={{ fontSize: 14, color: 'var(--text-secondary)', margin: '0 0 20px 0', fontWeight: 500 }}>
-                Desbloqueie a previsão financeira, relatórios em PDF e controle ilimitado.
-              </p>
-            </>
-          )}
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', marginBottom: 8 }}>Aproveite esta oportunidade única</div>
+              <div style={{ fontSize: 15, fontWeight: 900, color: '#60A5FA', display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'center' }}>
+                <Zap size={16} /> Vagas limitadas
+              </div>
+            </div>
+          </>
 
           <button 
             className="btn btn-primary" 
@@ -277,161 +217,12 @@ export function DashboardInteractive({ isPro, hasLocations = true }: { isPro: bo
               width: '100%',
               boxShadow: '0 10px 15px -3px rgba(37,99,235,0.3)'
             }}
-            onClick={() => setShowProModal('Banner')}
-            disabled={loadingCheckout}
+            onClick={handleUpgradeClick}
           >
-            {loadingCheckout && showProModal === 'Banner' ? 'Gerando Pagamento...' : (
-              <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <Rocket size={18} /> {ofertaAtiva ? 'Garantir por R$ 9,90' : 'Assinar PRO'}
-              </span>
-            )}
+            <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <Rocket size={18} /> Garantir por R$ 9,90
+            </span>
           </button>
-        </div>
-      )}
-
-      {/* MODAL PRO PAYWALL */}
-      {showProModal && (
-        <div className="premium-modal-overlay">
-          <div className="premium-modal-card">
-            <div style={{ fontSize: 14, fontWeight: 900, color: 'var(--accent-blue)', textTransform: 'uppercase', letterSpacing: 2, marginBottom: 8 }}>Meu Plantão</div>
-
-            {ofertaAtiva ? (
-              // ─── OFERTA DE LANÇAMENTO ───────────────────────────────────
-              <>
-                {/* Badge */}
-                <div style={{ display: 'inline-block', background: '#2563EB', color: '#fff', fontSize: 11, fontWeight: 900, padding: '5px 16px', borderRadius: 20, textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 20, boxShadow: '0 4px 12px rgba(37,99,235,0.35)' }}>OFERTA DE LANÇAMENTO</div>
-
-                {/* Preço */}
-                <div style={{ fontSize: 26, fontWeight: 900, color: 'var(--text-primary)', marginBottom: 4 }}>
-                  <Sparkles size={24} className="inline mr-2 text-yellow-400" /> Plano PRO por apenas R$&nbsp;9,90
-                </div>
-                <div style={{ fontSize: 14, color: 'var(--text-muted)', textDecoration: 'line-through', marginBottom: 20, fontWeight: 500 }}>De R$ 89,90/ano</div>
-
-                {/* Checkmarks */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10, textAlign: 'left', marginBottom: 20 }}>
-                  {[
-                    { icon: <CheckCircle2 size={16} className="text-green-400" />, text: '6 meses de acesso PRO' },
-                    { icon: <CheckCircle2 size={16} className="text-green-400" />, text: 'Todos os recursos premium' },
-                    { icon: <CheckCircle2 size={16} className="text-green-400" />, text: 'Condição especial para os primeiros usuários' },
-                  ].map((item, i) => (
-                    <div key={i} style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 8 }}>
-                      {item.icon} {item.text}
-                    </div>
-                  ))}
-                </div>
-
-                {/* Urgência */}
-                <div style={{ background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: 14, padding: '14px 18px', marginBottom: 24, textAlign: 'center' }}>
-                  <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'center' }}>
-                    <Timer size={14} /> Válido para os primeiros 100 usuários
-                  </div>
-                  <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 10 }}>ou até 31/08/2026</div>
-                  <div style={{ fontSize: 18, fontWeight: 900, color: '#60A5FA', display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'center' }}>
-                    <Zap size={18} /> {100 - proCount} vagas restantes
-                  </div>
-                </div>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                  <button 
-                    className="btn btn-primary" 
-                    style={{ 
-                      width: '100%', justifyContent: 'center', 
-                      background: '#2563EB', 
-                      border: 'none', borderRadius: '1.5rem', 
-                      padding: '18px', fontSize: 16, fontWeight: 900,
-                      boxShadow: '0 10px 20px -4px rgba(37,99,235,0.4)'
-                    }} 
-                    onClick={handleAssinarPro}
-                    disabled={loadingCheckout}
-                  >
-                    {loadingCheckout ? 'Gerando Pagamento...' : (
-                      <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <Rocket size={20} /> Garantir por R$ 9,90
-                      </span>
-                    )}
-                  </button>
-                  
-                  <button 
-                    style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }} 
-                    onClick={() => setShowProModal('')}
-                  >
-                    Talvez mais tarde
-                  </button>
-                </div>
-
-                <div style={{ marginTop: 16, fontSize: 11, color: 'var(--text-muted)', fontWeight: 500 }}>
-                  Pagamento único · Acesso imediato a todas as funcionalidades.
-                </div>
-              </>
-            ) : (
-              // ─── PLANO PADRÃO (oferta encerrada) ───────────────────────
-              <>
-                <h2 style={{ fontSize: 24, fontWeight: 900, marginBottom: 24, color: 'var(--text-primary)', lineHeight: 1.2 }}>
-                  <Sparkles size={28} className="inline mr-2 text-blue-500" /> Leve seu controle para outro nível
-                </h2>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 24, textAlign: 'left' }}>
-                  {[
-                    { icon: <TrendingUp size={18} />, title: 'Previsão Financeira', desc: 'Veja quanto vai receber no mês.' },
-                    { icon: <FileText size={18} />, title: 'Escalas Premium', desc: 'Gere PDF profissional para envio.' },
-                    { icon: <Activity size={18} />, title: 'Controle Ilimitado', desc: 'Gestão total das suas escalas.' }
-                  ].map((b, i) => (
-                    <div key={i} style={{ 
-                      background: 'var(--accent-blue-light)', 
-                      padding: '16px',
-                      borderRadius: '16px',
-                      borderLeft: '4px solid #3b82f6', 
-                      display: 'flex',
-                      alignItems: 'flex-start',
-                      gap: 12
-                    }}>
-                      <div style={{ color: 'var(--accent-blue)', marginTop: 2 }}>{b.icon}</div>
-                      <div>
-                        <div style={{ fontWeight: 800, fontSize: 14, color: 'var(--accent-blue)' }}>{b.title}</div>
-                        <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{b.desc}</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <div style={{ borderRadius: 16, padding: '24px', marginBottom: 24, border: '1px solid var(--border-subtle)', textAlign: 'center' }}>
-                  <div style={{ fontSize: 15, color: 'var(--text-secondary)', marginBottom: 8, fontWeight: 600 }}>Plano Anual PRO</div>
-                  <div style={{ fontSize: 48, fontWeight: 900, color: 'var(--text-primary)', display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 6 }}>
-                    <span style={{ fontSize: 20, fontWeight: 700 }}>R$</span>89,90
-                  </div>
-                  <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 8 }}>1 ano de acesso · Pagamento único</div>
-                </div>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                  <button 
-                    className="btn btn-primary" 
-                    style={{ 
-                      width: '100%', justifyContent: 'center', 
-                      background: 'linear-gradient(to right, #2563eb, #1e40af)', 
-                      border: 'none', borderRadius: '100px', 
-                      padding: '18px', fontSize: 16, fontWeight: 900,
-                      boxShadow: '0 10px 15px -3px rgba(37, 99, 235, 0.3)'
-                    }} 
-                    onClick={handleAssinarPro}
-                    disabled={loadingCheckout}
-                  >
-                    {loadingCheckout ? 'Gerando Pagamento...' : 'Assinar PRO — R$ 89,90/ano'}
-                  </button>
-                  
-                  <button 
-                    style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }} 
-                    onClick={() => setShowProModal('')}
-                  >
-                    Talvez mais tarde
-                  </button>
-                </div>
-
-                <div style={{ marginTop: 24, fontSize: 11, color: 'var(--text-muted)', fontWeight: 500 }}>
-                  Acesso imediato a todas as funcionalidades.
-                </div>
-              </>
-            )}
-          </div>
         </div>
       )}
     </>
@@ -439,127 +230,23 @@ export function DashboardInteractive({ isPro, hasLocations = true }: { isPro: bo
 }
 
 export function DesbloquearGanhosBtn() {
-  const [showProModal, setShowProModal] = useState('');
-  const [loadingCheckout, setLoadingCheckout] = useState(false);
-
-  const handleAssinarPro = async () => {
-    setLoadingCheckout(true);
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Usuário não autenticado.');
-
-      const response = await fetch('/api/mercadopago/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user.id, userEmail: user.email }),
-      });
-
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Erro ao gerar link de pagamento');
-      
-      if (data.init_point) {
-        window.location.href = data.init_point;
-      } else {
-        throw new Error('URL de pagamento não retornada pela API.');
-      }
-    } catch (err: any) {
-      console.error(err);
-      toast.error(err.message || 'Erro ao gerar pagamento');
-    } finally {
-      setLoadingCheckout(false);
-    }
+  const handleUpgradeClick = () => {
+    window.dispatchEvent(new CustomEvent('open-upgrade-modal'));
   };
 
   return (
-    <>
-        <button 
-          className="btn btn-primary" 
-          onClick={() => setShowProModal('Ganhos')}
-          style={{ 
-            background: 'linear-gradient(135deg, #f59e0b, #d97706)', 
-            boxShadow: '0 8px 20px rgba(245, 158, 11, 0.25)',
-            width: 'fit-content',
-            padding: '12px 24px'
-          }}
-        >
-          Desbloquear ganhos <DollarSign size={16} className="ml-2" />
-        </button>
-
-      {/* MODAL PRO PAYWALL */}
-      {showProModal && (
-        <div className="premium-modal-overlay">
-          <div className="premium-modal-card">
-            {/* Logo Logo */}
-            <div style={{ fontSize: 14, fontWeight: 900, color: 'var(--accent-blue)', textTransform: 'uppercase', letterSpacing: 2, marginBottom: 8 }}>Meu Plantão</div>
-            
-            <h2 style={{ fontSize: 24, fontWeight: 900, marginBottom: 24, color: "var(--text-primary)", lineHeight: 1.2 }}>
-              💎 Leve seu controle para outro nível
-            </h2>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 24, textAlign: 'left' }}>
-              {[
-                { icon: <DollarSign size={18} className="text-blue-500" />, title: 'Previsão Financeira', desc: 'Veja quanto vai receber no mês.' },
-                { icon: <FileText size={18} className="text-blue-500" />, title: 'Escalas Premium', desc: 'Gere PDF profissional para envio.' },
-                { icon: <Zap size={18} className="text-blue-500" />, title: 'Controle Ilimitado', desc: 'Gestão total das suas escalas.' }
-              ].map((b, i) => (
-                <div key={i} style={{ 
-                  background: 'rgba(37, 99, 235, 0.05)', 
-                  padding: '16px',
-                  borderRadius: '1.25rem',
-                  borderLeft: '4px solid #3b82f6', 
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  gap: 12
-                }}>
-                  <div style={{ marginTop: 2 }}>{b.icon}</div>
-                  <div>
-                    <div style={{ fontWeight: 800, fontSize: 14, color: 'var(--accent-blue)' }}>{b.title}</div>
-                    <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{b.desc}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div style={{ background: 'linear-gradient(135deg, rgba(37,99,235,0.05) 0%, rgba(34,211,181,0.05) 100%)', borderRadius: 16, padding: '32px 24px', marginBottom: 24, border: '1px solid var(--border-subtle)', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <div style={{ background: 'var(--accent-teal)', color: '#fff', fontSize: 12, fontWeight: 900, padding: '6px 16px', borderRadius: 20, textTransform: 'uppercase', letterSpacing: 1, boxShadow: '0 4px 10px rgba(34,211,181,0.3)', marginBottom: 16, display: 'inline-block' }}>🔥 Oferta de Lançamento</div>
-              <div style={{ fontSize: 15, color: 'var(--text-secondary)', marginBottom: 8, fontWeight: 600 }}>1 Ano de PRO por apenas</div>
-              <div style={{ fontSize: 48, fontWeight: 900, color: 'var(--text-primary)', display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 6 }}>
-                <span style={{ fontSize: 20, fontWeight: 700 }}>R$</span>9,90
-              </div>
-              <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 8 }}>(Pagamento único)</div>
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <button 
-                className="btn btn-primary" 
-                style={{ 
-                  width: '100%', justifyContent: 'center', 
-                  background: 'linear-gradient(to right, #2563eb, #1e40af)', 
-                  border: 'none', borderRadius: '100px', 
-                  padding: '18px', fontSize: 16, fontWeight: 900,
-                  boxShadow: '0 10px 15px -3px rgba(37, 99, 235, 0.3)'
-                }} 
-                onClick={handleAssinarPro}
-                disabled={loadingCheckout}
-              >
-                {loadingCheckout ? 'Gerando Pagamento...' : '🚀 Desbloquear Oferta de Lançamento'}
-              </button>
-              
-              <button 
-                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }} 
-                onClick={() => setShowProModal('')}
-              >
-                Talvez mais tarde
-              </button>
-            </div>
-
-            <div style={{ marginTop: 24, fontSize: 11, color: "var(--text-muted)", fontWeight: 500 }}>
-              Acesso imediato a todas as funcionalidades.
-            </div>
-          </div>
-        </div>
-      )}
-    </>
+    <button 
+      className="btn btn-primary" 
+      onClick={handleUpgradeClick}
+      style={{ 
+        background: 'linear-gradient(135deg, #f59e0b, #d97706)', 
+        boxShadow: '0 8px 20px rgba(245, 158, 11, 0.25)',
+        width: 'fit-content',
+        padding: '12px 24px'
+      }}
+    >
+      Desbloquear ganhos <DollarSign size={16} className="ml-2" />
+    </button>
   );
 }
 

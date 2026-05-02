@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { supabase, isUserPro, isSubscriptionActive } from '../lib/supabase';
 import { useEffect, useState } from 'react';
 import { LayoutDashboard, CalendarDays, Settings2, PlusCircle, LogOut, Sun, Moon, Activity, Bell, X, AlertTriangle, Star, CreditCard } from 'lucide-react';
+import PremiumModal from './PremiumModal';
 
 const navItems = [
   { icon: LayoutDashboard, label: 'Central de Plantões', href: '/' },
@@ -16,7 +17,7 @@ const navItems = [
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  const [theme] = useState<'dark'>('dark');
   const [unreadCount, setUnreadCount] = useState(0);
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>('default');
 
@@ -274,20 +275,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
 
   useEffect(() => {
-    const saved = localStorage.getItem('plantao-theme');
-    if (saved === 'dark') {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setTheme('dark');
-      document.documentElement.setAttribute('data-theme', 'dark');
-    }
+    document.documentElement.setAttribute('data-theme', 'dark');
+    localStorage.setItem('plantao-theme', 'dark');
   }, []);
-
-  const toggleTheme = () => {
-    const newTheme = theme === 'light' ? 'dark' : 'light';
-    setTheme(newTheme);
-    localStorage.setItem('plantao-theme', newTheme);
-    document.documentElement.setAttribute('data-theme', newTheme);
-  };
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -359,10 +349,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             {/* Desktop spacer to push buttons to bottom */}
             <div className="desktop-spacer" style={{ flex: 1 }} />
             
-            <button onClick={toggleTheme} className="nav-item" style={{ marginBottom: 8 }}>
-              {theme === 'light' ? <Moon className="nav-icon" size={20} /> : <Sun className="nav-icon" size={20} />}
-              {theme === 'light' ? 'Modo Escuro' : 'Modo Claro'}
-            </button>
 
             <button onClick={handleLogout} className="nav-item logout-btn" style={{ color: '#EF4444' }}>
               <LogOut className="nav-icon" size={20} />
@@ -375,19 +361,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         <div className="main-container" style={{ width: '100%', maxWidth: '1280px', margin: '0 auto', position: 'relative' }}>
         {pathname !== '/login' && (
           <div className="top-actions-bar">
-            <button 
-              onClick={toggleTheme} 
-              className="mobile-only"
-              style={{
-                background: 'var(--bg-secondary)', padding: 10, borderRadius: '50%',
-                boxShadow: 'var(--shadow-sm)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                color: 'var(--text-primary)', border: '1px solid var(--border-subtle)', cursor: 'pointer',
-                transition: 'all 0.2s', width: 40, height: 40
-              }}
-              title="Trocar Tema"
-            >
-              {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
-            </button>
 
             <button 
               onClick={handleBellClick}
@@ -563,7 +536,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 <button 
                   className="btn btn-primary" 
                   style={{ width: '100%', justifyContent: 'center', background: '#2563EB', boxShadow: '0 0 15px rgba(37, 99, 235, 0.25)', borderRadius: '1.5rem' }}
-                  onClick={() => {}}
+                  onClick={() => {
+                    window.dispatchEvent(new CustomEvent('open-upgrade-modal'));
+                  }}
                 >
                   <Star size={18} fill="currentColor" /> Assinar Versão Pro
                 </button>
@@ -630,6 +605,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         </nav>
       )}
 
+      <PremiumModal />
     </div>
   );
 }

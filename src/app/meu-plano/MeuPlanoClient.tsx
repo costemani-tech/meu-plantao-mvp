@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { XCircle, CheckCircle2, AlertCircle } from 'lucide-react';
+import { XCircle, CheckCircle2, AlertCircle, Rocket } from 'lucide-react';
 
 interface MeuPlanoClientProps {
   planName: React.ReactNode;
@@ -96,6 +96,19 @@ export default function MeuPlanoClient({ planName, isActive, subStatus, endDate,
         {isActive && !localAutoRenew && localSubStatus !== 'canceled' && (
           <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: 20, marginTop: 10, fontSize: 13, color: 'var(--text-secondary)', fontStyle: 'italic' }}>
             Seu plano é um pagamento único e expira naturalmente em <strong>{formattedEndDate}</strong>.
+          </div>
+        )}
+
+        {/* Upgrade Button para FREE */}
+        {!isActive && (
+          <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: 20, marginTop: 10 }}>
+            <button 
+              onClick={() => window.dispatchEvent(new CustomEvent('open-upgrade-modal'))}
+              className="btn btn-primary"
+              style={{ width: '100%', justifyContent: 'center', background: '#2563EB', fontWeight: 800 }}
+            >
+              🚀 Assinar Meu Plantão Pro
+            </button>
           </div>
         )}
       </div>

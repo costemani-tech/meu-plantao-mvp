@@ -22,7 +22,6 @@ export default function PlantaoExtraPage() {
 
   const [isPro, setIsPro] = useState<boolean | null>(null);
   const [limiteExtrasAtingido, setLimiteExtrasAtingido] = useState(false);
-  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   useEffect(() => {
     const checkPro = async () => {
@@ -97,7 +96,7 @@ export default function PlantaoExtraPage() {
           .neq('status', 'Cancelado');
 
         if (count && count >= 4) {
-          toast.error('Limite de 4 plantões extras no mês atingido. Assine o plano Pro para registros ilimitados.');
+          window.dispatchEvent(new CustomEvent('open-upgrade-modal'));
           setSaving(false);
           return;
         }
@@ -266,7 +265,7 @@ export default function PlantaoExtraPage() {
             <div className="form-group" style={{ marginTop: 20 }}>
               <label className="form-label">Valor do Plantão (R$)</label>
               <div 
-                onClick={() => setShowUpgradeModal(true)}
+                onClick={() => window.dispatchEvent(new CustomEvent('open-upgrade-modal'))}
                 style={{ 
                   background: 'var(--bg-primary)', 
                   padding: '16px', 
@@ -292,7 +291,7 @@ export default function PlantaoExtraPage() {
             style={{ width: '100%', justifyContent: 'center', marginTop: 16, padding: '14px', background: 'var(--accent-blue)', opacity: (!isPro && limiteExtrasAtingido) ? 0.6 : 1 }}
             onClick={() => {
               if (!isPro && limiteExtrasAtingido) {
-                toast.error('Limite de 4 plantões extras no mês atingido. Assine o plano Pro para registros ilimitados.');
+                window.dispatchEvent(new CustomEvent('open-upgrade-modal'));
               } else {
                 salvarPlantaoExtra();
               }
@@ -324,35 +323,6 @@ export default function PlantaoExtraPage() {
                 onClick={() => salvarPlantaoExtra(true)}
                 disabled={saving}
               >{saving ? '...' : ' Confirmar'}</button>
-            </div>
-          </div>
-        </div>
-      )}
-    
-      {showUpgradeModal && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', zIndex: -1 }} onClick={() => setShowUpgradeModal(false)} />
-          <div className="card" style={{ maxWidth: 420, width: '100%', textAlign: 'center', borderRadius: '32px', padding: '40px 32px', border: 'none', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)' }}>
-            <div style={{ fontSize: 14, fontWeight: 900, color: 'var(--accent-blue)', textTransform: 'uppercase', letterSpacing: 2, marginBottom: 8 }}>Meu Plantão</div>
-            <h2 style={{ fontSize: 24, fontWeight: 900, marginBottom: 24, color: 'var(--text-primary)', lineHeight: 1.2 }}>💎 Leve seu controle para outro nível</h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 32, textAlign: 'left' }}>
-              {[
-                { icon: '💰', title: 'Previsão Financeira', desc: 'Veja quanto vai receber no mês.' },
-                { icon: '📄', title: 'Escalas Premium', desc: 'Gere PDF profissional para envio.' },
-                { icon: '⚡', title: 'Controle Ilimitado', desc: 'Gestão total das suas escalas.' }
-              ].map((b, i) => (
-                <div key={i} style={{ background: 'var(--accent-blue-light)', padding: '16px', borderRadius: '16px', borderLeft: '4px solid var(--accent-blue)', display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-                  <div style={{ fontSize: 18, marginTop: 2 }}>{b.icon}</div>
-                  <div>
-                    <div style={{ fontWeight: 800, fontSize: 14, color: 'var(--accent-blue)' }}>{b.title}</div>
-                    <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{b.desc}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', background: 'linear-gradient(to right, #2563eb, #1e40af)', border: 'none', borderRadius: '100px', padding: '18px', fontSize: 16, fontWeight: 900 }} onClick={() => setShowUpgradeModal(false)}>🚀 Desbloquear agora</button>
-              <button style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }} onClick={() => setShowUpgradeModal(false)}>Talvez mais tarde</button>
             </div>
           </div>
         </div>

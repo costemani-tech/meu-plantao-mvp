@@ -95,10 +95,6 @@ export default function EscalasPage() {
   const [alertasAtivo, setAlertasAtivo] = useState(false);
   const [alertasHoras, setAlertasHoras] = useState('2');
   const [enviandoAlertas, setEnviandoAlertas] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  
-  const [showProModal, setShowProModal] = useState(false);
-  const [loadingCheckout, setLoadingCheckout] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [isPro, setIsPro] = useState<boolean | null>(null);
 
@@ -272,30 +268,8 @@ export default function EscalasPage() {
     }
   };
 
-  const handleAssinarPro = async () => {
-    setLoadingCheckout(true);
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Usuário não autenticado.');
-
-      const response = await fetch('/api/mercadopago/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user.id, userEmail: user.email }),
-      });
-
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Erro ao gerar link de pagamento');
-      
-      if (data.init_point) {
-        window.location.href = data.init_point;
-      }
-    } catch (err: any) {
-      console.error(err);
-      showToast(err.message, 'error');
-    } finally {
-      setLoadingCheckout(false);
-    }
+  const handleAssinarPro = () => {
+    window.dispatchEvent(new CustomEvent('open-upgrade-modal'));
   };
 
   const salvarEscala = async () => {
@@ -348,7 +322,7 @@ export default function EscalasPage() {
             .eq('ativo', true);
           if (count !== null && count >= 2) {
             showToast('Limite de locais gratuitos atingido. Faça upgrade para adicionar mais.', 'error');
-            setShowProModal(true);
+            window.dispatchEvent(new CustomEvent('open-upgrade-modal'));
             setSaving(false);
             return;
           }
@@ -1304,77 +1278,6 @@ export default function EscalasPage() {
         </div>
       )}
 
-      {/* MODAL PLANO PRO */}
-      {showProModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', zIndex: 100000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-          <div className="card" style={{ maxWidth: 440, width: '100%', borderRadius: 24, padding: 32, background: 'var(--bg-primary)', border: '1px solid var(--border-subtle)', position: 'relative', overflow: 'hidden' }}>
-            <div style={{ position: 'absolute', top: -50, left: -50, width: 150, height: 150, background: 'var(--accent-teal)', filter: 'blur(80px)', opacity: 0.3, zIndex: 0 }} />
-            <div style={{ position: 'absolute', bottom: -50, right: -50, width: 150, height: 150, background: 'var(--accent-blue)', filter: 'blur(80px)', opacity: 0.3, zIndex: 0 }} />
-            
-            <div style={{ position: 'relative', zIndex: 1, textAlign: 'center' }}>
-              <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 64, height: 64, background: 'rgba(34, 211, 181, 0.1)', borderRadius: '50%', marginBottom: 16 }}>
-                <Star size={32} color="var(--accent-teal)" fill="var(--accent-teal)" />
-              </div>
-              
-              <h3 style={{ margin: '0 0 12px 0', fontSize: 24, fontWeight: 800, color: 'var(--text-primary)' }}>Evolua para o Plano Pro</h3>
-              <p style={{ fontSize: 15, color: 'var(--text-secondary)', marginBottom: 24, lineHeight: 1.6 }}>
-                Você atingiu o limite gratuito de 2 locais. Assine o <strong>Meu Plantão Pro</strong> e libere todo o potencial do app!
-              </p>
-
-              <div style={{ textAlign: 'left', marginBottom: 24, display: 'flex', flexDirection: 'column', gap: 12 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, color: 'var(--text-primary)' }}>
-                  <span style={{ color: 'var(--accent-teal)', fontWeight: 800 }}>✓</span> Locais de trabalho ilimitados
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, color: 'var(--text-primary)' }}>
-                  <span style={{ color: 'var(--accent-teal)', fontWeight: 800 }}>✓</span> Alertas avançados por WhatsApp (em breve)
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, color: 'var(--text-primary)' }}>
-                  <span style={{ color: 'var(--accent-teal)', fontWeight: 800 }}>✓</span> Personalização de cores exclusiva
-                </div>
-              </div>
-
-              <div style={{ textAlign: 'left', marginBottom: 24, display: 'flex', flexDirection: 'column', gap: 12 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, color: 'var(--text-primary)' }}>
-                  <span style={{ color: 'var(--accent-teal)', fontWeight: 800 }}>✓</span> Locais de trabalho ilimitados
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, color: 'var(--text-primary)' }}>
-                  <span style={{ color: 'var(--accent-teal)', fontWeight: 800 }}>✓</span> Alertas avançados por WhatsApp (em breve)
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, color: 'var(--text-primary)' }}>
-                  <span style={{ color: 'var(--accent-teal)', fontWeight: 800 }}>✓</span> Personalização de cores exclusiva
-                </div>
-              </div>
-
-              <div style={{ background: 'linear-gradient(135deg, rgba(37,99,235,0.05) 0%, rgba(34,211,181,0.05) 100%)', borderRadius: 16, padding: '32px 24px', marginBottom: 24, border: '1px solid var(--border-subtle)', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <div style={{ background: 'var(--accent-teal)', color: '#fff', fontSize: 12, fontWeight: 900, padding: '6px 16px', borderRadius: 20, textTransform: 'uppercase', letterSpacing: 1, boxShadow: '0 4px 10px rgba(34,211,181,0.3)', marginBottom: 16, display: 'inline-block' }}>🔥 Oferta de Lançamento</div>
-                <div style={{ fontSize: 15, color: 'var(--text-secondary)', marginBottom: 8, fontWeight: 600 }}>1 ano de PRO por apenas</div>
-                <div style={{ fontSize: 48, fontWeight: 900, color: 'var(--text-primary)', display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 6 }}>
-                  <span style={{ fontSize: 20, fontWeight: 700 }}>R$</span>9,90
-                </div>
-                <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 8 }}>(Pagamento único via PIX ou Cartão)</div>
-              </div>
-
-              <button 
-                className="btn btn-primary" 
-                style={{ width: '100%', justifyContent: 'center', fontSize: 16, padding: '16px', background: 'linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-teal) 100%)', border: 'none', boxShadow: '0 8px 20px rgba(34, 211, 181, 0.3)', marginBottom: 12 }}
-                onClick={handleAssinarPro}
-                disabled={loadingCheckout}
-              >
-                {loadingCheckout ? 'Gerando Pagamento...' : 'Desbloquear Oferta de Lançamento'}
-              </button>
-              
-              <button 
-                className="btn btn-secondary" 
-                style={{ width: '100%', justifyContent: 'center', background: 'transparent', border: 'none', color: 'var(--text-muted)' }} 
-                onClick={() => setShowProModal(false)}
-                disabled={loadingCheckout}
-              >
-                Continuar na versão gratuita
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
