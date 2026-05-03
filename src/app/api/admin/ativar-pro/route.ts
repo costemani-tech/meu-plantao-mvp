@@ -1,14 +1,14 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-const ADMIN_TOKEN = 'ADMIN_SECRET_2026';
-
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const email = searchParams.get('email');
   const token = searchParams.get('token');
 
-  if (token !== ADMIN_TOKEN) {
+  const adminSecret = process.env.ADMIN_SECRET;
+
+  if (!adminSecret || token !== adminSecret) {
     return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
   }
 
