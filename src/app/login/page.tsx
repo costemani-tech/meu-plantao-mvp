@@ -1,7 +1,9 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { supabase } from '../../lib/supabase';
+import { Mail, ArrowRight, Loader2 } from 'lucide-react';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -26,7 +28,7 @@ export default function LoginPage() {
     const { error } = await supabase.auth.signInWithOtp({ 
       email,
       options: {
-        emailRedirectTo: 'https://meu-plantao-mvp.vercel.app/auth/callback',
+        emailRedirectTo: typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : 'https://meu-plantao-mvp.vercel.app/auth/callback',
       }
     });
 
@@ -73,139 +75,147 @@ export default function LoginPage() {
   };
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      background: 'url(/icons/capa.jpeg), linear-gradient(135deg, var(--bg-primary) 0%, #1a1e2d 100%)',
-      backgroundSize: 'cover',
-      backgroundPosition: 'center',
-      backgroundBlendMode: 'overlay',
-      padding: 24,
-      position: 'relative'
-    }}>
-      {/* Watermark Overlay */}
-      <div style={{
-        position: 'absolute',
-        inset: 0,
-        background: 'var(--bg-primary)',
-        opacity: 0.92,
-        zIndex: 0
-      }} />
+    <div className="min-h-screen bg-[#050816] flex flex-col items-center justify-center p-6 relative overflow-hidden font-inter">
+      {/* Background Decorative Glows */}
+      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-600/10 blur-[120px] rounded-full pointer-events-none" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-500/10 blur-[120px] rounded-full pointer-events-none" />
       
-      <div className="card" style={{ width: '100%', maxWidth: 420, zIndex: 10, padding: '40px 32px' }}>
-        <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <div style={{ 
-            width: 56, height: 56, background: 'linear-gradient(135deg, var(--accent-blue), var(--accent-violet))',
-            borderRadius: 'var(--radius-lg)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 28, margin: '0 auto 16px', color: 'white'
-          }}>🏥</div>
-          <h1 style={{ fontSize: 24, fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.5px' }}>
-            Meu Plantão
-          </h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: 14, marginTop: 4 }}>
-            Sua central médica pessoal segura
-          </p>
+      {/* Header / Logo Section */}
+      <div className="flex flex-col items-center mb-8 z-10 text-center">
+        <div className="w-16 h-16 bg-blue-600/10 rounded-2xl border border-white/10 p-3 mb-4 shadow-[0_0_20px_rgba(37,99,235,0.2)] flex items-center justify-center overflow-hidden">
+          <Image 
+            src="/icons/icon-512x512.png" 
+            alt="Meu Plantão Logo" 
+            width={48} 
+            height={48} 
+            className="object-contain"
+          />
         </div>
-
-        <button 
-          onClick={signInWithGoogle}
-          style={{
-            width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12,
-            background: 'white', color: '#333', border: 'none', padding: '12px 16px',
-            borderRadius: 'var(--radius-md)', fontSize: 14, fontWeight: 600, cursor: 'pointer',
-            marginBottom: 24, transition: 'transform 0.15s'
-          }}
-          onMouseDown={e => e.currentTarget.style.transform = 'scale(0.98)'}
-          onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}
-        >
-          <svg width="20" height="20" viewBox="0 0 48 48">
-             <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"/>
-             <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"/>
-             <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"/>
-             <path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"/>
-          </svg>
-          Entrar com o Google
-        </button>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-          <div style={{ flex: 1, height: 1, background: 'var(--border-subtle)' }} />
-          <span style={{ fontSize: 12, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 1 }}>ou link mágico (sem senha)</span>
-          <div style={{ flex: 1, height: 1, background: 'var(--border-subtle)' }} />
-        </div>
-
-        {!isCodeSent ? (
-          <form onSubmit={handleSendCode}>
-            <div className="form-group">
-              <input 
-                type="email" 
-                className="form-input" 
-                placeholder="Digite seu e-mail" 
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                required
-              />
-            </div>
-            
-            <button 
-              type="submit" 
-              className="btn btn-primary" 
-              style={{ width: '100%', justifyContent: 'center', marginTop: 12, padding: '12px' }}
-              disabled={loading}
-            >
-              {loading ? '⏳ Enviando...' : 'Receber Código de Acesso'}
-            </button>
-          </form>
-        ) : (
-          <form onSubmit={handleVerifyOtp}>
-            <div style={{ textAlign: 'center', marginBottom: 16 }}>
-              <p style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
-                Enviamos um código para <strong>{email}</strong>
-              </p>
-            </div>
-            <div className="form-group">
-              <input 
-                type="text" 
-                className="form-input" 
-                placeholder="Digite o código recebido" 
-                value={otpCode}
-                onChange={e => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 12))}
-                required
-                autoFocus
-                inputMode="numeric"
-                style={{ textAlign: 'center', fontSize: 20, letterSpacing: otpCode.length > 6 ? '2px' : '4px', fontWeight: 700 }}
-              />
-            </div>
-            
-            <button 
-              type="submit" 
-              className="btn btn-primary" 
-              style={{ width: '100%', justifyContent: 'center', marginTop: 12, padding: '12px' }}
-              disabled={loading}
-            >
-              {loading ? '⏳ Verificando...' : 'Confirmar e Entrar'}
-            </button>
-
-            <button 
-              type="button"
-              onClick={() => setIsCodeSent(false)}
-              style={{ 
-                width: '100%', background: 'none', border: 'none', color: 'var(--text-muted)', 
-                fontSize: 13, marginTop: 16, cursor: 'pointer', textDecoration: 'underline' 
-              }}
-            >
-              Usar outro e-mail
-            </button>
-          </form>
-        )}
-
-        <div style={{ textAlign: 'center', marginTop: 24, fontSize: 12, color: 'var(--text-muted)' }}>
-          Esqueceu senhas? Nós também. Enviamos um passe direto para o seu e-mail aprovado.
-        </div>
+        <h1 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight mb-2">
+          Meu Plantão
+        </h1>
+        <p className="text-slate-400 text-sm md:text-base max-w-[280px] md:max-w-none">
+          Organize plantões, escalas e ganhos em um só lugar.
+        </p>
       </div>
-      
-      {toast && <div className={`toast ${toast.type}`}>{toast.msg}</div>}
+
+      {/* Main Glassmorphism Card */}
+      <div className="w-full max-w-[400px] bg-white/5 backdrop-blur-xl border border-white/10 rounded-[2rem] p-8 shadow-2xl shadow-blue-500/10 z-10 relative">
+        <div className="space-y-6">
+          {/* Google Login Button */}
+          <button 
+            onClick={signInWithGoogle}
+            className="w-full h-12 flex items-center justify-center gap-3 bg-transparent border border-white/20 rounded-xl text-white font-semibold text-sm transition-all hover:bg-white/5 hover:border-blue-500/50 active:scale-[0.98]"
+          >
+            <svg width="20" height="20" viewBox="0 0 48 48" className="flex-shrink-0">
+               <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"/>
+               <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"/>
+               <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"/>
+               <path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"/>
+            </svg>
+            Entrar com Google
+          </button>
+
+          <div className="flex items-center gap-3">
+            <div className="flex-1 h-[1px] bg-white/10" />
+            <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest whitespace-nowrap">OU ACESSO POR E-MAIL</span>
+            <div className="flex-1 h-[1px] bg-white/10" />
+          </div>
+
+          {!isCodeSent ? (
+            <form onSubmit={handleSendCode} className="space-y-4">
+              <div className="relative group">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <Mail className="h-5 w-5 text-slate-500 group-focus-within:text-blue-500 transition-colors" />
+                </div>
+                <input 
+                  type="email" 
+                  className="w-full h-14 bg-[#0F172A] border border-white/10 rounded-xl pl-12 pr-4 text-white placeholder:text-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50 transition-all font-semibold" 
+                  placeholder="Seu melhor e-mail" 
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+              
+              <button 
+                type="submit" 
+                className="w-full h-14 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-bold rounded-xl shadow-lg shadow-blue-500/30 flex items-center justify-center gap-2 transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-70 disabled:hover:scale-100"
+                disabled={loading}
+              >
+                {loading ? (
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                ) : (
+                  <>
+                    Receber Link de Acesso
+                    <ArrowRight className="h-5 w-5" />
+                  </>
+                )}
+              </button>
+            </form>
+          ) : (
+            <form onSubmit={handleVerifyOtp} className="space-y-4 text-center">
+              <div>
+                <p className="text-sm text-slate-400 mb-4">
+                  Enviamos um código de acesso para <br/>
+                  <span className="text-white font-bold">{email}</span>
+                </p>
+              </div>
+              <div className="form-group">
+                <input 
+                  type="text" 
+                  className="w-full h-16 bg-[#0F172A] border border-white/10 rounded-xl text-center text-2xl font-bold tracking-[0.5em] text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50 transition-all" 
+                  placeholder="000000" 
+                  value={otpCode}
+                  onChange={e => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  required
+                  autoFocus
+                  inputMode="numeric"
+                />
+              </div>
+              
+              <button 
+                type="submit" 
+                className="w-full h-14 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-bold rounded-xl shadow-lg shadow-blue-500/30 flex items-center justify-center gap-2 transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-70 disabled:hover:scale-100"
+                disabled={loading}
+              >
+                {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Confirmar Código'}
+              </button>
+
+              <button 
+                type="button"
+                onClick={() => setIsCodeSent(false)}
+                className="text-xs text-slate-500 hover:text-white underline underline-offset-4 transition-colors"
+              >
+                Usar outro e-mail
+              </button>
+            </form>
+          )}
+        </div>
+
+        {/* Footer info inside card */}
+        <p className="text-center mt-8 text-xs text-slate-500 font-medium">
+          Sem senha. Sem complicação. <br/> Apenas acesso rápido.
+        </p>
+      </div>
+
+      {/* Toast Notification */}
+      {toast && (
+        <div className={`fixed bottom-8 left-1/2 -translate-x-1/2 z-50 px-6 py-3 rounded-2xl backdrop-blur-md border animate-in fade-in slide-in-from-bottom-4 duration-300 ${
+          toast.type === 'success' 
+            ? 'bg-emerald-500/20 border-emerald-500/20 text-emerald-400' 
+            : 'bg-red-500/20 border-red-500/20 text-red-400'
+        }`}>
+          <div className="flex items-center gap-2 font-semibold">
+            {toast.type === 'success' ? '✅' : '❌'}
+            {toast.msg}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+}
     </div>
   );
 }
