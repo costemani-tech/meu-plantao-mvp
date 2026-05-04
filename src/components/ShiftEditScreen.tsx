@@ -55,18 +55,13 @@ export function ShiftEditScreen({ shift, onSave, onCancel }: ShiftEditScreenProp
   const [previewDates, setPreviewDates] = useState<any[]>([]);
 
   useEffect(() => {
-    if (regra === 'custom' || isCustomRule) {
-      if (regra !== 'custom') setRegra('custom');
-    }
-  }, [regra, isCustomRule]);
-
-  useEffect(() => {
     const calculatePreview = () => {
       const dates = [];
       let current = new Date(`${dataInicio}T${horaInicio}:00`);
-      const regraEfetiva = regra === 'custom' 
+      const regraAtual = isCustomRule ? 'custom' : regra;
+      const regraEfetiva = regraAtual === 'custom'
         ? (tipoPersonalizacao === 'dias' ? diasSelecionados.join(',') : `${horasTrabalho}x${horasDescanso}`) 
-        : regra;
+        : regraAtual;
 
       if (!regraEfetiva) return;
 
@@ -99,7 +94,7 @@ export function ShiftEditScreen({ shift, onSave, onCancel }: ShiftEditScreenProp
       setPreviewDates(dates);
     };
     calculatePreview();
-  }, [dataInicio, regra, horaInicio, horaFim, tipoPersonalizacao, diasSelecionados, horasTrabalho, horasDescanso]);
+  }, [dataInicio, regra, horaInicio, horaFim, tipoPersonalizacao, diasSelecionados, horasTrabalho, horasDescanso, isCustomRule]);
 
   const h = parseInt(horaInicio.split(':')[0]);
   const turnoLabel = (h >= 18 || h < 6) ? 'Noturno' : 'Diurno';
@@ -332,9 +327,10 @@ export function ShiftEditScreen({ shift, onSave, onCancel }: ShiftEditScreenProp
           </button>
           <button 
             onClick={() => {
-              const regraFinal = regra === 'custom' 
+              const regraAtual = isCustomRule ? 'custom' : regra;
+              const regraFinal = regraAtual === 'custom'
                 ? (tipoPersonalizacao === 'dias' ? diasSelecionados.join(',') : `${horasTrabalho}x${horasDescanso}`) 
-                : regra;
+                : regraAtual;
               onSave({ regra: regraFinal, horaInicio, horaFim, cor, dataInicio });
             }}
             style={{ 
