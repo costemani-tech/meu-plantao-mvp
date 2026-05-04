@@ -29,7 +29,7 @@ export async function GET(request: Request) {
     .eq('email', email.toLowerCase());
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: 'Erro ao atualizar usuário' }, { status: 500 });
   }
 
   return NextResponse.json({ success: true, message: `Usuário ${email} agora é PRO.` });
