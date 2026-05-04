@@ -243,7 +243,7 @@ export default function LoginPage() {
               >
                 {loading ? <Loader2 className="animate-spin" /> : (
                   <>
-                    Receber Link de Acesso
+                    Receber Código
                     <ArrowRight size={20} />
                   </>
                 )}
