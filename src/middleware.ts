@@ -38,7 +38,8 @@ export async function middleware(request: NextRequest) {
   const isPublicRoute =
     pathname.startsWith('/login') ||
     pathname.startsWith('/demo') ||
-    pathname.startsWith('/api') ||
+    pathname.startsWith('/api/cron') ||
+    pathname.startsWith('/api/webhooks') ||
     pathname.startsWith('/_next') ||
     pathname.startsWith('/auth/callback') ||
     pathname === '/manifest.json' ||

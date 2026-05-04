@@ -1,21 +1,25 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
 
-// Use Service Role Key — never exposed to the client
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
-const ONESIGNAL_APP_ID = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID!;
-const ONESIGNAL_REST_KEY = process.env.ONESIGNAL_REST_KEY!;
-
 export async function GET(request: NextRequest) {
   // Vercel Cron security: validate the authorization header
-  // const authHeader = request.headers.get('authorization');
-  // if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-  //   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  // }
+  const authHeader = request.headers.get('authorization');
+  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!supabaseUrl || !supabaseServiceKey) {
+    return NextResponse.json({ error: 'Missing Supabase credentials' }, { status: 500 });
+  }
+
+  // Use Service Role Key — never exposed to the client
+  const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+  const ONESIGNAL_APP_ID = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID!;
+  const ONESIGNAL_REST_KEY = process.env.ONESIGNAL_REST_KEY!;
 
   const now = new Date();
   const windowStart = now.toISOString();

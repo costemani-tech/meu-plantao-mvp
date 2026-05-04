@@ -13,6 +13,7 @@ create table public.usuarios (
 -- Table: Locais_Trabalho
 create table public.locais_trabalho (
   id uuid default uuid_generate_v4() primary key,
+  usuario_id uuid references public.usuarios(id) on delete cascade not null,
   nome varchar not null,
   cor_calendario varchar default '#000000',
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
@@ -49,15 +50,25 @@ create table public.trocas_plantao (
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
--- Row Level Security (RLS) Policies (Simplified for MVP, assuming single tenant or open access for now)
+-- Row Level Security (RLS) Policies (Secured per user)
 alter table public.usuarios enable row level security;
 alter table public.locais_trabalho enable row level security;
 alter table public.escalas enable row level security;
 alter table public.plantoes enable row level security;
 alter table public.trocas_plantao enable row level security;
 
-create policy "Allow all operations for anon (MVP)" on public.usuarios for all using (true) with check (true);
-create policy "Allow all operations for anon (MVP)" on public.locais_trabalho for all using (true) with check (true);
-create policy "Allow all operations for anon (MVP)" on public.escalas for all using (true) with check (true);
-create policy "Allow all operations for anon (MVP)" on public.plantoes for all using (true) with check (true);
-create policy "Allow all operations for anon (MVP)" on public.trocas_plantao for all using (true) with check (true);
+create policy "Users can only access their own profile" on public.usuarios for all using (id = auth.uid()) with check (id = auth.uid());
+create policy "Users can only access their own work locations" on public.locais_trabalho for all using (usuario_id = auth.uid()) with check (usuario_id = auth.uid());
+create policy "Users can only access their own schedules" on public.escalas for all using (usuario_id = auth.uid()) with check (usuario_id = auth.uid());
+create policy "Users can only access their own shifts" on public.plantoes for all using (usuario_id = auth.uid()) with check (usuario_id = auth.uid());
+
+-- For shift exchanges, user can access if they are the original owner or the new assigned user
+create policy "Users can access their shift exchanges" on public.trocas_plantao for all
+  using (
+    plantao_original_id in (select id from public.plantoes where usuario_id = auth.uid())
+    or novo_usuario_id = auth.uid()
+  )
+  with check (
+    plantao_original_id in (select id from public.plantoes where usuario_id = auth.uid())
+    or novo_usuario_id = auth.uid()
+  );
