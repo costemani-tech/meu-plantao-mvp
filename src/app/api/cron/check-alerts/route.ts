@@ -1,21 +1,24 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
 
-// Use Service Role Key — never exposed to the client
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
-const ONESIGNAL_APP_ID = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID!;
-const ONESIGNAL_REST_KEY = process.env.ONESIGNAL_REST_KEY!;
+export const dynamic = 'force-dynamic'; // Prevent static evaluation
 
 export async function GET(request: NextRequest) {
+  // Use Service Role Key — never exposed to the client
+  // Instantiate inside the function to avoid build-time errors if env vars are missing
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://dummy.supabase.co',
+    process.env.SUPABASE_SERVICE_ROLE_KEY || 'dummy_key'
+  );
+
+  const ONESIGNAL_APP_ID = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID!;
+  const ONESIGNAL_REST_KEY = process.env.ONESIGNAL_REST_KEY!;
+
   // Vercel Cron security: validate the authorization header
-  // const authHeader = request.headers.get('authorization');
-  // if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-  //   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  // }
+  const authHeader = request.headers.get('authorization');
+  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
 
   const now = new Date();
   const windowStart = now.toISOString();
