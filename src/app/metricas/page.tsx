@@ -123,8 +123,8 @@ export default function DashboardPage() {
             Veja em R$ e horas reais o tamanho do seu esforço.
           </p>
           <div style={{ display: 'flex', gap: 12 }}>
-            <button className="btn btn-secondary" style={{ flex: 1, justifyContent: 'center' }} onClick={() => router.push('/')}>Voltar à Home</button>
-            <button className="btn btn-primary" style={{ flex: 1, justifyContent: 'center', background: 'linear-gradient(to right, #f59e0b, #d97706)', border: 'none' }} onClick={() => router.push('/')}>Assinar Pro</button>
+            <button className="btn btn-secondary" style={{ flex: 1, justifyContent: 'center' }} onClick={() => router.push('/dashboard')}>Voltar à Home</button>
+            <button className="btn btn-primary" style={{ flex: 1, justifyContent: 'center', background: 'linear-gradient(to right, #f59e0b, #d97706)', border: 'none' }} onClick={() => router.push('/dashboard')}>Assinar Pro</button>
           </div>
         </div>
       </div>

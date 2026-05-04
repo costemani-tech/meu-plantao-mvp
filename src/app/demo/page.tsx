@@ -115,7 +115,7 @@ export default function DemoPage() {
     <div style={{ minHeight: '100vh', background: 'var(--bg-primary)', display: 'flex', flexDirection: 'column' }}>
       <div style={{ background: 'linear-gradient(90deg, #7c6af7, #4f8ef7)', padding: '10px 24px', fontSize: 13, fontWeight: 600, color: 'white', display: 'flex', alignItems: 'center', gap: 10, justifyContent: 'center' }}>
         🎯 MODO DEMO — Dados simulados para visualização. O app real conecta ao Supabase.
-        <Link href="/" style={{ marginLeft: 12, background: 'rgba(255,255,255,0.2)', borderRadius: 6, padding: '3px 10px', color: 'white', fontSize: 12 }}>← Voltar ao App Real</Link>
+        <Link href="/dashboard" style={{ marginLeft: 12, background: 'rgba(255,255,255,0.2)', borderRadius: 6, padding: '3px 10px', color: 'white', fontSize: 12 }}>← Voltar ao App Real</Link>
       </div>
 
       <div className="app-shell">

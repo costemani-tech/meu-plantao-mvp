@@ -23,7 +23,7 @@ function RelatorioContent() {
     const fetchData = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        router.push('/');
+        router.push('/dashboard');
         return;
       }
       
@@ -33,12 +33,12 @@ function RelatorioContent() {
 
       if (!userIsPro) {
         // Redirecting without alert
-        router.push('/');
+        router.push('/dashboard');
         return;
       }
 
       if (!mesParam || !anoParam) {
-        router.push('/');
+        router.push('/dashboard');
         return;
       }
 
@@ -124,7 +124,7 @@ function RelatorioContent() {
       `}} />
 
       <div className="no-print" style={{ marginBottom: 24, display: 'flex', gap: 16, alignItems: 'center' }}>
-        <button className="btn btn-secondary" onClick={() => router.push('/')} style={{ padding: '8px 16px' }}>
+        <button className="btn btn-secondary" onClick={() => router.push('/dashboard')} style={{ padding: '8px 16px' }}>
           <ArrowLeft size={18} /> Voltar
         </button>
         <button className="btn btn-primary" onClick={() => window.print()} style={{ background: 'var(--accent-teal)', border: 'none', padding: '8px 16px', display: 'flex', gap: 8, alignItems: 'center' }}>

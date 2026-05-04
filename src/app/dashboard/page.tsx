@@ -18,9 +18,9 @@ import {
   ShareAgendaButton,
   EarningsPrivacyWrapper,
   UpcomingShiftsClient 
-} from './DashboardInteractive';
-import { isUserPro, isSubscriptionActive } from '../lib/supabase';
-import { formatRelativeShiftDate } from '../lib/date-utils';
+} from '../DashboardInteractive';
+import { isUserPro, isSubscriptionActive } from '../../lib/supabase';
+import { formatRelativeShiftDate } from '../../lib/date-utils';
 import { HandMetal } from 'lucide-react';
 
 // Utilitário para pegar o cliente Supabase Server-Side
