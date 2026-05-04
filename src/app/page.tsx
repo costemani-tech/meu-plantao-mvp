@@ -1,296 +1,331 @@
-import { Suspense } from 'react';
-import { cookies } from 'next/headers';
-import { createServerClient } from '@supabase/ssr';
-import { redirect } from 'next/navigation';
+'use client';
+
 import Link from 'next/link';
-import React from 'react';
+import Image from 'next/image';
 import { 
   Calendar, 
-  Clock, 
   TrendingUp, 
-  ChevronRight,
-  Eye,
-  EyeOff,
-  Plus
+  FileText, 
+  CheckCircle2, 
+  ChevronRight, 
+  Menu,
+  X,
+  ArrowRight
 } from 'lucide-react';
-import { 
-  DashboardInteractive,
-  ShareAgendaButton,
-  EarningsPrivacyWrapper,
-  UpcomingShiftsClient 
-} from './DashboardInteractive';
-import { isUserPro, isSubscriptionActive } from '../lib/supabase';
-import { formatRelativeShiftDate } from '../lib/date-utils';
-import { HandMetal } from 'lucide-react';
+import { useState } from 'react';
 
-// Utilitário para pegar o cliente Supabase Server-Side
-async function getSupabase() {
-  const cookieStore = await cookies();
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { cookies: { getAll() { return cookieStore.getAll(); } } }
-  );
-}
-
-// Lógica de Saudação Premium e Inclusiva
-function formatGreeting(fullName: string | null | undefined) {
-  if (!fullName || fullName.trim() === '' || fullName.toLowerCase().includes('médico')) {
-    return { isFallback: true, text: "Olá, bem-vindo(a) ao Meu Plantão!" };
-  }
-  
-  const parts = fullName.trim().split(/\s+/);
-  if (parts.length <= 1) {
-    return { isFallback: false, text: `Olá, ${parts[0]}!` };
-  }
-  
-  // Primeiro + Último Nome
-  const firstName = parts[0];
-  const lastName = parts[parts.length - 1];
-  return { isFallback: false, text: `Olá, ${firstName} ${lastName}!` };
-}
-
-// Sub-componente: Resumo de Ganhos e Plantões
-async function StatsSection({ userId, isPro, greeting }: { userId: string, isPro: boolean, greeting: { isFallback: boolean, text: string } }) {
-  const supabase = await getSupabase();
-  const inicioMes = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
-  const fimMes = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0, 23, 59, 59).toISOString();
-
-  // Executar requests em paralelo
-  const [
-    { count: totalMes },
-    { data: plantoesComValor },
-    { count: locaisAtivos }
-  ] = await Promise.all([
-    supabase.from('plantoes').select('*', { count: 'exact', head: true }).eq('usuario_id', userId).gte('data_hora_inicio', inicioMes).lte('data_hora_inicio', fimMes).neq('status', 'Cancelado'),
-    supabase.from('plantoes').select('notas').eq('usuario_id', userId).neq('status', 'Cancelado').gte('data_hora_inicio', inicioMes).lte('data_hora_inicio', fimMes),
-    supabase.from('locais_trabalho').select('*', { count: 'exact', head: true }).eq('usuario_id', userId).eq('ativo', true)
-  ]);
-
-  if (locaisAtivos === 0) {
-    return (
-      <div style={{ 
-        display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', 
-        padding: '60px 24px', minHeight: '60vh', justifyContent: 'center'
-      }}>
-        <div style={{ fontSize: 64, marginBottom: 24, animation: 'cardEntrance 0.8s ease', color: '#2563EB' }}>
-          <HandMetal size={64} />
-        </div>
-        <h2 style={{ fontSize: 28, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 12 }}>
-          Seja bem-vindo!
-        </h2>
-        <p style={{ fontSize: 16, color: 'var(--text-secondary)', maxWidth: 420, lineHeight: 1.6, marginBottom: 32 }}>
-          Sua agenda está pronta para ser organizada. Comece cadastrando onde você trabalha.
-        </p>
-        <Link href="/locais" style={{ textDecoration: 'none' }}>
-          <button className="btn btn-primary" style={{ padding: '16px 40px', fontSize: 16, borderRadius: '1.5rem', background: '#2563EB', boxShadow: '0 0 15px rgba(37, 99, 235, 0.25)' }}>
-            <Plus size={20} className="mr-2" /> Adicionar Primeiro Local
-          </button>
-        </Link>
-      </div>
-    );
-  }
-
-  let totalGanhos = 0;
-  if (plantoesComValor) {
-    totalGanhos = plantoesComValor.reduce((acc, p) => {
-      if (!p.notas) return acc;
-      const match = p.notas.match(/R\$\s*([\d.,]+)/);
-      if (match) {
-        let valStr = match[1];
-        if (valStr.includes(',')) {
-          valStr = valStr.replace(/\./g, '').replace(',', '.');
-        } else if (valStr.includes('.') && valStr.split('.').pop()?.length === 2) {
-          // OK
-        } else {
-          valStr = valStr.replace(/\./g, '');
-        }
-        return acc + parseFloat(valStr || '0');
-      }
-      return acc;
-    }, 0);
-  }
+export default function LandingPage() {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
-    <div className="card" style={{ marginBottom: 24, position: "relative", overflow: "hidden" }}>
-      <div style={{ position: 'absolute', top: 0, right: 0, width: '100px', height: '100px', background: 'radial-gradient(circle, var(--accent-blue-light) 0%, transparent 70%)', opacity: 0.5, zIndex: 0 }} />
+    <div style={{ backgroundColor: '#050816', color: 'white', minHeight: '100vh', fontFamily: 'Inter, sans-serif' }}>
       
-      <div style={{ position: 'relative', zIndex: 1 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-muted)', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 12 }}>
-          <TrendingUp size={14} color="var(--accent-blue)" />
-          Resumo do Mês
-        </div>
-        
-        <div style={{ fontSize: 32, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 20 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>{totalMes || 0} <span style={{ fontSize: 18, color: "var(--text-secondary)", fontWeight: 600 }}>plantões este mês</span></div>
-        </div>
+      {/* Dynamic Background Glows */}
+      <div style={{
+        position: 'absolute',
+        top: '0%',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        width: '100%',
+        height: '600px',
+        background: 'radial-gradient(circle at 50% 0%, rgba(37, 99, 235, 0.15) 0%, transparent 70%)',
+        zIndex: 0,
+        pointerEvents: 'none'
+      }} />
 
-        <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: 36, marginBottom: 20 }}>
-          <EarningsPrivacyWrapper total={totalGanhos} isPro={isPro} />
-        </div>
-
-        <Link href="/locais" style={{ textDecoration: 'none' }}>
-          <div style={{ 
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between', 
-            borderTop: '1px solid var(--border-subtle)', paddingTop: 20,
-            cursor: 'pointer', transition: 'opacity 0.2s'
-          }} className="hover-opacity">
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700, fontSize: 14, color: 'var(--text-primary)' }}>
-              <span style={{ fontSize: 16 }}><Plus size={16} color="var(--accent-blue)" /></span>
-              {locaisAtivos || 0} locais ativos
+      {/* 1. Header (Navegação) */}
+      <header style={{ 
+        position: 'fixed', 
+        top: 0, 
+        width: '100%', 
+        zIndex: 100, 
+        backdropFilter: 'blur(12px)',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+        background: 'rgba(5, 8, 22, 0.8)'
+      }}>
+        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+          {/* Logo */}
+          <Link href="/" className="flex items-center gap-3">
+            <div style={{
+              width: '40px',
+              height: '40px',
+              background: 'linear-gradient(135deg, #1E40AF 0%, #050816 100%)',
+              borderRadius: '10px',
+              padding: '8px',
+              border: '1px solid rgba(59, 130, 246, 0.3)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 0 15px rgba(37, 99, 235, 0.3)'
+            }}>
+              <Image 
+                src="/icons/icon-512x512.png" 
+                alt="Logo" 
+                width={24} 
+                height={24} 
+              />
             </div>
-            <div style={{ color: 'var(--accent-blue)', display: 'flex', alignItems: 'center' }}>
-              <ChevronRight size={18} />
+            <span className="font-bold text-xl tracking-tight hidden sm:block">Meu Plantão</span>
+          </Link>
+
+          {/* Links Discretos */}
+          <nav className="hidden md:flex items-center gap-8">
+            <a href="#features" className="text-slate-400 hover:text-white transition-colors text-sm font-medium">Funcionalidades</a>
+            <a href="#pricing" className="text-slate-400 hover:text-white transition-colors text-sm font-medium">Preços</a>
+          </nav>
+
+          {/* Botão Acessar App */}
+          <div className="flex items-center gap-4">
+            <Link href="/login" className="hidden sm:flex items-center px-5 py-2.5 rounded-full border border-blue-500/30 text-blue-400 text-sm font-bold hover:bg-blue-500/10 transition-all">
+              Acessar App
+            </Link>
+            <button className="md:hidden text-slate-400" onClick={() => setIsMenuOpen(!isMenuOpen)}>
+              {isMenuOpen ? <X /> : <Menu />}
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* Mobile Menu */}
+      {isMenuOpen && (
+        <div className="fixed inset-0 z-[90] bg-[#050816] pt-24 px-6 md:hidden">
+          <nav className="flex flex-col gap-6">
+            <a href="#features" className="text-2xl font-bold text-white" onClick={() => setIsMenuOpen(false)}>Funcionalidades</a>
+            <a href="#pricing" className="text-2xl font-bold text-white" onClick={() => setIsMenuOpen(false)}>Preços</a>
+            <Link href="/login" className="w-full py-4 text-center rounded-2xl bg-blue-600 text-white font-bold text-lg">
+              Acessar App
+            </Link>
+          </nav>
+        </div>
+      )}
+
+      {/* 2. Hero Section (Destaque) */}
+      <section className="pt-40 pb-20 px-6 relative z-10">
+        <div className="max-w-4xl mx-auto text-center">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-black uppercase tracking-widest mb-8 animate-fade-in">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+            </span>
+            Lançamento Founder Edition
+          </div>
+          
+          <h1 className="text-5xl md:text-7xl font-black text-white mb-6 tracking-tighter leading-[1.1]">
+            Organize plantões, escalas e ganhos em um só lugar.
+          </h1>
+          
+          <p className="text-slate-400 text-lg md:text-xl mb-10 max-w-2xl mx-auto leading-relaxed">
+            A ferramenta essencial para profissionais de saúde modernos. <br className="hidden md:block" />
+            Sem complicação, apenas acesso rápido.
+          </p>
+
+          <Link href="/login" style={{ textDecoration: 'none' }}>
+            <button 
+              style={{
+                padding: '20px 40px',
+                background: 'linear-gradient(90deg, #2563EB 0%, #3B82F6 100%)',
+                borderRadius: '50px',
+                color: 'white',
+                fontWeight: '800',
+                fontSize: '18px',
+                border: 'none',
+                boxShadow: '0 0 40px rgba(37, 99, 235, 0.5)',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '12px',
+                transition: 'transform 0.2s ease'
+              }}
+              onMouseOver={e => e.currentTarget.style.transform = 'scale(1.05)'}
+              onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'}
+            >
+              Quero Organizar Meus Plantões
+              <ArrowRight size={20} />
+            </button>
+          </Link>
+
+          {/* Floating Device Mockup (Simplified for MVP) */}
+          <div className="mt-20 relative">
+            <div style={{
+              width: '100%',
+              maxWidth: '800px',
+              margin: '0 auto',
+              background: 'rgba(15, 23, 42, 0.4)',
+              backdropFilter: 'blur(10px)',
+              borderRadius: '24px',
+              border: '1px solid rgba(255, 255, 255, 0.05)',
+              padding: '12px',
+              boxShadow: '0 50px 100px -20px rgba(0, 0, 0, 0.5)'
+            }}>
+              <div className="bg-[#050816] rounded-xl overflow-hidden aspect-video relative flex items-center justify-center">
+                 <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
+                 <Image 
+                    src="/icons/icon-512x512.png" 
+                    alt="App Interface" 
+                    width={120} 
+                    height={120} 
+                    className="opacity-50 blur-[2px]"
+                 />
+                 <div className="absolute bottom-10 left-10 text-left">
+                    <div className="h-4 w-32 bg-white/10 rounded mb-2"></div>
+                    <div className="h-8 w-48 bg-white/20 rounded"></div>
+                 </div>
+              </div>
+            </div>
+            {/* Ambient Glow behind mockup */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-blue-600/10 blur-[100px] -z-10 rounded-full" />
+          </div>
+        </div>
+      </section>
+
+      {/* 3. Seção de Funcionalidades */}
+      <section id="features" className="py-24 px-6 relative overflow-hidden">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 tracking-tight">Tudo que você precisa para dominar sua agenda</h2>
+            <div className="w-20 h-1 bg-blue-600 mx-auto rounded-full"></div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* Card 1 */}
+            <div style={{
+              background: 'rgba(255, 255, 255, 0.02)',
+              backdropFilter: 'blur(10px)',
+              borderRadius: '24px',
+              padding: '40px',
+              border: '1px solid rgba(255, 255, 255, 0.05)',
+              transition: 'all 0.3s'
+            }} className="hover:border-blue-500/30 hover:bg-white/[0.04]">
+              <div className="w-14 h-14 bg-blue-600/10 rounded-2xl flex items-center justify-center mb-6 text-blue-500">
+                <Calendar size={28} />
+              </div>
+              <h3 className="text-xl font-bold mb-4 text-white">Escalas Inteligentes</h3>
+              <p className="text-slate-400 leading-relaxed">
+                Gerencie múltiplos locais com um calendário visual intuitivo e focado em performance.
+              </p>
+            </div>
+
+            {/* Card 2 */}
+            <div style={{
+              background: 'rgba(255, 255, 255, 0.02)',
+              backdropFilter: 'blur(10px)',
+              borderRadius: '24px',
+              padding: '40px',
+              border: '1px solid rgba(255, 255, 255, 0.05)',
+              transition: 'all 0.3s'
+            }} className="hover:border-blue-500/30 hover:bg-white/[0.04]">
+              <div className="w-14 h-14 bg-emerald-600/10 rounded-2xl flex items-center justify-center mb-6 text-emerald-500">
+                <TrendingUp size={28} />
+              </div>
+              <h3 className="text-xl font-bold mb-4 text-white">Controle Financeiro</h3>
+              <p className="text-slate-400 leading-relaxed">
+                Saiba exatamente quanto vai receber no fim do mês com cálculos automáticos por local.
+              </p>
+            </div>
+
+            {/* Card 3 */}
+            <div style={{
+              background: 'rgba(255, 255, 255, 0.02)',
+              backdropFilter: 'blur(10px)',
+              borderRadius: '24px',
+              padding: '40px',
+              border: '1px solid rgba(255, 255, 255, 0.05)',
+              transition: 'all 0.3s'
+            }} className="hover:border-blue-500/30 hover:bg-white/[0.04]">
+              <div className="w-14 h-14 bg-purple-600/10 rounded-2xl flex items-center justify-center mb-6 text-purple-500">
+                <FileText size={28} />
+              </div>
+              <h3 className="text-xl font-bold mb-4 text-white">Relatórios Profissionais</h3>
+              <p className="text-slate-400 leading-relaxed">
+                Gere PDFs profissionais das suas escalas para enviar aos hospitais e organizar repasses.
+              </p>
             </div>
           </div>
-        </Link>
-      </div>
-    </div>
-  );
-}
+        </div>
+      </section>
 
-// Sub-componente: Próximos Plantões
-async function UpcomingShiftsWrapper({ userId, userName, totalGanhos, isPro }: { userId: string, userName: string, totalGanhos: number, isPro: boolean }) {
-  const supabase = await getSupabase();
+      {/* 4. Seção de Preço (Oferta Única) */}
+      <section id="pricing" className="py-24 px-6 bg-gradient-to-b from-transparent to-blue-600/5">
+        <div className="max-w-7xl mx-auto flex flex-col items-center">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-5xl font-black mb-4 tracking-tighter">Escolha o plano para evoluir</h2>
+            <p className="text-slate-400 font-medium">Preço fixo. Sem surpresas.</p>
+          </div>
 
-  const { data: proximos } = await supabase
-    .from('plantoes')
-    .select('id, data_hora_inicio, data_hora_fim, local:locais_trabalho(nome, cor_calendario)')
-    .eq('usuario_id', userId)
-    .gte('data_hora_inicio', new Date().toISOString())
-    .neq('status', 'Cancelado')
-    .order('data_hora_inicio', { ascending: true })
-    .limit(5);
+          <div style={{
+            width: '100%',
+            maxWidth: '450px',
+            background: 'rgba(15, 23, 42, 0.8)',
+            backdropFilter: 'blur(20px)',
+            borderRadius: '40px',
+            padding: '48px',
+            border: '2px solid #2563EB',
+            boxShadow: '0 0 50px rgba(37, 99, 235, 0.2)',
+            position: 'relative',
+            overflow: 'hidden'
+          }}>
+            {/* Badge Popular */}
+            <div className="absolute top-8 right-[-35px] rotate-45 bg-blue-600 text-white text-[10px] font-black px-10 py-1 uppercase tracking-widest">
+              Mais Popular
+            </div>
 
-  return (
-    <UpcomingShiftsClient 
-      proximos={proximos || []} 
-      isPro={isPro} 
-      userName={userName} 
-      totalGanhos={totalGanhos} 
-    />
-  );
-}
+            <div className="mb-10">
+              <h3 className="text-2xl font-black text-white mb-2">Plano PRO</h3>
+              <div className="flex items-baseline gap-1">
+                <span className="text-4xl font-black text-white tracking-tighter">R$ 9,90</span>
+                <span className="text-slate-500 font-medium">/mês</span>
+              </div>
+            </div>
 
-// Skeletons
-function StatsSkeleton() {
-  return (
-    <div className="card" style={{ padding: '24px', borderRadius: '1.5rem', background: '#0F172A', border: '1px solid rgba(255,255,255,0.05)', boxShadow: 'var(--shadow-md)', marginBottom: 32 }}>
-      <div className="skeleton" style={{ height: 40, width: '80%', borderRadius: 8, marginBottom: 20 }} />
-      <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: 20, marginBottom: 20 }}>
-        <div className="skeleton" style={{ height: 60, width: '100%', borderRadius: 8 }} />
-      </div>
-      <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: 20 }}>
-        <div className="skeleton" style={{ height: 24, width: '50%', borderRadius: 8 }} />
-      </div>
-    </div>
-  );
-}
+            <div className="space-y-4 mb-10">
+              {[
+                'Locais ilimitados',
+                'Alertas de plantão',
+                'Relatórios financeiros',
+                'Exportação PDF',
+                'Dashboard de ganhos',
+                'Sincronização Cloud'
+              ].map((benefit) => (
+                <div key={benefit} className="flex items-center gap-3 text-slate-300">
+                  <CheckCircle2 size={20} className="text-blue-500" />
+                  <span className="text-sm font-semibold">{benefit}</span>
+                </div>
+              ))}
+            </div>
 
-function ShiftsSkeleton() {
-  return (
-    <div style={{ marginBottom: 20 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <h3 style={{ fontSize: 16, fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
-          Próximos Plantões
-        </h3>
-      </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-        <div className="skeleton" style={{ height: 72, borderRadius: 16 }} />
-        <div className="skeleton" style={{ height: 72, borderRadius: 16 }} />
-      </div>
-    </div>
-  );
-}
+            <Link href="/login" style={{ textDecoration: 'none' }}>
+              <button style={{
+                width: '100%',
+                padding: '20px',
+                background: '#2563EB',
+                borderRadius: '24px',
+                color: 'white',
+                fontWeight: '800',
+                fontSize: '16px',
+                border: 'none',
+                boxShadow: '0 10px 20px rgba(37, 99, 235, 0.3)',
+                cursor: 'pointer'
+              }} className="hover:brightness-110 active:scale-95 transition-all">
+                Assinar Agora
+              </button>
+            </Link>
+            
+            <p className="text-center text-slate-500 text-[11px] font-bold mt-6 uppercase tracking-widest">
+              Cancele quando quiser.
+            </p>
+          </div>
+        </div>
+      </section>
 
-// Componente Principal
-export default async function DashboardPage() {
-  const supabase = await getSupabase();
-  const { data: { user } } = await supabase.auth.getUser();
-  
-  if (!user) {
-    redirect('/login');
-  }
+      {/* Footer */}
+      <footer className="py-12 border-t border-white/5 text-center">
+        <div className="max-w-7xl mx-auto px-6">
+          <p className="text-slate-600 text-sm font-medium">
+            © {new Date().getFullYear()} Meu Plantão. Todos os direitos reservados.
+          </p>
+        </div>
+      </footer>
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', user.id)
-    .single();
-
-  const rawName = profile?.nome || user.user_metadata?.full_name || user.user_metadata?.name || '';
-  const fallbackFromEmail = user.email ? user.email.split('@')[0].split(/[._-]/).map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' ') : '';
-  const fullName = rawName || fallbackFromEmail || 'Usuário';
-  
-  const greeting = formatGreeting(fullName);
-  const userName = greeting.isFallback ? 'Doutor(a)' : greeting.text.replace('Olá, ', '').replace('!', '');
-
-  const isPro = isUserPro(user.email) || isSubscriptionActive(profile);
-
-  const inicioMes = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
-  const fimMes = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0, 23, 59, 59).toISOString();
-  const { data: plantoesComValor } = await supabase
-    .from('plantoes')
-    .select('notas')
-    .eq('usuario_id', user.id)
-    .neq('status', 'Cancelado')
-    .gte('data_hora_inicio', inicioMes)
-    .lte('data_hora_inicio', fimMes);
-
-  let totalGanhosGlobal = 0;
-  if (plantoesComValor) {
-    totalGanhosGlobal = plantoesComValor.reduce((acc, p) => {
-      if (!p.notas) return acc;
-      const match = p.notas.match(/R\$\s*([\d.,]+)/);
-      if (match) {
-        let valStr = match[1];
-        if (valStr.includes(',')) {
-          valStr = valStr.replace(/\./g, '').replace(',', '.');
-        } else if (valStr.includes('.') && valStr.split('.').pop()?.length === 2) {
-          // OK
-        } else {
-          valStr = valStr.replace(/\./g, '');
-        }
-        return acc + parseFloat(valStr || '0');
-      }
-      return acc;
-    }, 0);
-  }
-
-  const { count: locaisCount } = await supabase
-    .from('locais_trabalho')
-    .select('*', { count: 'exact', head: true })
-    .eq('usuario_id', user.id)
-    .eq('ativo', true);
-
-  const hasLocations = (locaisCount || 0) > 0;
-
-  return (
-    <div className="page-container" style={{ paddingBottom: '120px' }}>
-      
-      {/* HEADER (Instantâneo) */}
-      <div className="page-header">
-        <h1>{greeting.text}</h1>
-        <p>Acompanhe sua escala e ganhos para o mês de {new Date().toLocaleDateString("pt-BR", { month: "long" })}.</p>
-      </div>
-
-      {/* CARD PRINCIPAL (Assíncrono) */}
-      <Suspense fallback={<StatsSkeleton />}>
-        <StatsSection userId={user.id} isPro={isPro} greeting={greeting} />
-      </Suspense>
-
-      {/* PRÓXIMOS PLANTÕES (Assíncrono) */}
-      <Suspense fallback={<ShiftsSkeleton />}>
-        <UpcomingShiftsWrapper
-          userId={user.id}
-          userName={userName}
-          totalGanhos={totalGanhosGlobal}
-          isPro={isPro}
-        />
-      </Suspense>
-
-      {/* INTERATIVIDADE DO CLIENTE (FAB + Paywall) */}
-      <DashboardInteractive isPro={isPro} hasLocations={hasLocations} />
     </div>
   );
 }

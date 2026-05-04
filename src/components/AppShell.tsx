@@ -8,7 +8,7 @@ import { LayoutDashboard, CalendarDays, Settings2, PlusCircle, LogOut, Sun, Moon
 import PremiumModal from './PremiumModal';
 
 const navItems = [
-  { icon: LayoutDashboard, label: 'Central de Plantões', href: '/' },
+  { icon: LayoutDashboard, label: 'Central de Plantões', href: '/dashboard' },
   { icon: CalendarDays, label: 'Calendário', href: '/calendario' },
   { icon: Settings2, label: 'Escalas', href: '/escalas' },
   { icon: PlusCircle, label: 'Plantão Extra', href: '/plantao-extra' },

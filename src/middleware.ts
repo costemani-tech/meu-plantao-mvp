@@ -36,6 +36,7 @@ export async function middleware(request: NextRequest) {
 
   // Rotas que não exigem login
   const isPublicRoute =
+    pathname === '/' ||
     pathname.startsWith('/login') ||
     pathname.startsWith('/demo') ||
     pathname.startsWith('/api/cron') ||
@@ -48,17 +49,17 @@ export async function middleware(request: NextRequest) {
     pathname === '/favicon.ico'
   const isLoginPage = pathname.startsWith('/login')
 
-  // Redireciona para /login se não estiver logado
+  // Redireciona para /login se não estiver logado e a rota não for pública
   if (!user && !isPublicRoute) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)
   }
 
-  // Se já estiver logado e tentar ir pro login, joga pro Dashboard
-  if (user && isLoginPage) {
+  // Se já estiver logado e tentar ir pro login ou para a landing page (opcional), joga pro Dashboard
+  if (user && (isLoginPage || pathname === '/')) {
     const url = request.nextUrl.clone()
-    url.pathname = '/'
+    url.pathname = '/dashboard'
     return NextResponse.redirect(url)
   }
 

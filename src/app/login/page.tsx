@@ -59,7 +59,7 @@ export default function LoginPage() {
       showToast('Código inválido ou expirado.', 'error');
     } else {
       showToast('Sucesso! Entrando...', 'success');
-      window.location.href = '/';
+      window.location.href = '/dashboard';
     }
     setLoading(false);
   };

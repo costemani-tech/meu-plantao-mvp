@@ -5,7 +5,7 @@ import { cookies } from 'next/headers';
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get('code');
-  const next = searchParams.get('next') ?? '/';
+  const next = searchParams.get('next') ?? '/dashboard';
 
   if (code) {
     const cookieStore = await cookies();
@@ -41,8 +41,8 @@ export async function GET(request: Request) {
       // Tentamos redirecionar para a home para ver se o cookie de sessão "pegou" mesmo com erro de verifier
       // ou mostramos uma mensagem instrutiva.
       if (error.message.includes('code verifier')) {
-        console.error("PKCE Error detected. Redirecting to home to check session...");
-        return NextResponse.redirect(`${origin}/?auth_error=pkce_mismatch`);
+        console.error("PKCE Error detected. Redirecting to dashboard to check session...");
+        return NextResponse.redirect(`${origin}/dashboard?auth_error=pkce_mismatch`);
       }
       return new Response(`ERRO DE AUTENTICAÇÃO: ${error.message}`, { status: 400 });
     }

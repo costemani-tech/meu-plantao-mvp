@@ -1,186 +1,296 @@
-'use client';
+import { Suspense } from 'react';
+import { cookies } from 'next/headers';
+import { createServerClient } from '@supabase/ssr';
+import { redirect } from 'next/navigation';
+import Link from 'next/link';
+import React from 'react';
+import { 
+  Calendar, 
+  Clock, 
+  TrendingUp, 
+  ChevronRight,
+  Eye,
+  EyeOff,
+  Plus
+} from 'lucide-react';
+import { 
+  DashboardInteractive,
+  ShareAgendaButton,
+  EarningsPrivacyWrapper,
+  UpcomingShiftsClient 
+} from './DashboardInteractive';
+import { isUserPro, isSubscriptionActive } from '../lib/supabase';
+import { formatRelativeShiftDate } from '../lib/date-utils';
+import { HandMetal } from 'lucide-react';
 
-import { useEffect, useState, useRef, useCallback } from 'react';
-import { supabase, Plantao, LocalTrabalho, isUserPro, isSubscriptionActive } from '../../lib/supabase';
-import { ReportTemplate } from '../../components/ReportTemplate';
-import { ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
-
-interface PlantaoComLocal extends Plantao {
-  local?: LocalTrabalho;
+// Utilitário para pegar o cliente Supabase Server-Side
+async function getSupabase() {
+  const cookieStore = await cookies();
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { cookies: { getAll() { return cookieStore.getAll(); } } }
+  );
 }
 
-const MESES = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
-
-export default function DashboardPage() {
-  const router = useRouter();
-  const [plantoes, setPlantoes] = useState<PlantaoComLocal[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [gerandoPdf, setGerandoPdf] = useState(false);
-  const [showProModal, setShowProModal] = useState(false);
+// Lógica de Saudação Premium e Inclusiva
+function formatGreeting(fullName: string | null | undefined) {
+  if (!fullName || fullName.trim() === '' || fullName.toLowerCase().includes('médico')) {
+    return { isFallback: true, text: "Olá, bem-vindo(a) ao Meu Plantão!" };
+  }
   
-  const [mes, setMes] = useState(new Date().getMonth());
-  const [ano, setAno] = useState(new Date().getFullYear());
-  const reportRef = useRef<HTMLDivElement>(null);
+  const parts = fullName.trim().split(/\s+/);
+  if (parts.length <= 1) {
+    return { isFallback: false, text: `Olá, ${parts[0]}!` };
+  }
+  
+  // Primeiro + Último Nome
+  const firstName = parts[0];
+  const lastName = parts[parts.length - 1];
+  return { isFallback: false, text: `Olá, ${firstName} ${lastName}!` };
+}
 
-  const [isPro, setIsPro] = useState(false); // false por default durante carregamento
+// Sub-componente: Resumo de Ganhos e Plantões
+async function StatsSection({ userId, isPro, greeting }: { userId: string, isPro: boolean, greeting: { isFallback: boolean, text: string } }) {
+  const supabase = await getSupabase();
+  const inicioMes = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
+  const fimMes = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0, 23, 59, 59).toISOString();
 
-  useEffect(() => {
-    const checkPro = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
-      setIsPro(isUserPro(user.email) || isSubscriptionActive(profile));
-    };
-    checkPro();
-  }, []);
+  // Executar requests em paralelo
+  const [
+    { count: totalMes },
+    { data: plantoesComValor },
+    { count: locaisAtivos }
+  ] = await Promise.all([
+    supabase.from('plantoes').select('*', { count: 'exact', head: true }).eq('usuario_id', userId).gte('data_hora_inicio', inicioMes).lte('data_hora_inicio', fimMes).neq('status', 'Cancelado'),
+    supabase.from('plantoes').select('notas').eq('usuario_id', userId).neq('status', 'Cancelado').gte('data_hora_inicio', inicioMes).lte('data_hora_inicio', fimMes),
+    supabase.from('locais_trabalho').select('*', { count: 'exact', head: true }).eq('usuario_id', userId).eq('ativo', true)
+  ]);
 
-  const fetchPlantoes = useCallback(async () => {
-    // OFFLINE FIRST
-    const cachedData = localStorage.getItem(`calendario_cache_${ano}_${mes}`);
-    if (cachedData) {
-      setPlantoes(JSON.parse(cachedData));
-      setLoading(false);
-    } else {
-      setLoading(true);
-    }
-
-    try {
-      const inicioMes = new Date(ano, mes, 1).toISOString();
-      const fimMes = new Date(ano, mes + 1, 0, 23, 59, 59).toISOString();
-      const { data } = await supabase
-        .from('plantoes')
-        .select('*, local:locais_trabalho(*)')
-        .gte('data_hora_inicio', inicioMes)
-        .lte('data_hora_inicio', fimMes)
-        .neq('status', 'Cancelado')
-        .order('data_hora_inicio', { ascending: true });
-        
-      const freshData = (data as PlantaoComLocal[]) ?? [];
-      setPlantoes(freshData);
-      localStorage.setItem(`calendario_cache_${ano}_${mes}`, JSON.stringify(freshData));
-    } catch (e) {
-      console.warn("Offline mode - mantendo dados antigos do cache.", e);
-    } finally {
-      setLoading(false);
-    }
-  }, [ano, mes]);
-
-  useEffect(() => {
-    if (!isPro) {
-      setShowProModal(true);
-      return;
-    }
-    fetchPlantoes();
-  }, [fetchPlantoes, isPro]);
-
-  const exportPDF = async () => {
-    if (!reportRef.current || !isPro) return;
-    setGerandoPdf(true);
-    try {
-      await new Promise(r => setTimeout(r, 100)); // Render tick
-      
-      const canvas = await html2canvas(reportRef.current, { 
-        scale: 2, 
-        useCORS: true,
-        onclone: (documentClone) => {
-          const el = documentClone.getElementById('report-template-container');
-          if (el) {
-            el.style.width = '800px';
-            el.style.maxWidth = '800px';
-            el.style.minHeight = '1131px';
-            el.style.padding = '40px'; 
-          }
-        }
-      });
-      const imgData = canvas.toDataURL('image/png');
-      
-      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-      const imgProps = pdf.getImageProperties(imgData);
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-      
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-      pdf.save(`meu-plantao-${MESES[mes].toLowerCase()}-${ano}.pdf`);
-    } catch (err) {
-      console.error('Erro ao gerar PDF', err);
-      alert('Houve um problema ao gerar o PDF. Verifique sua conexão e tente novamente.');
-    } finally {
-      setGerandoPdf(false);
-    }
-  };
-
-  if (showProModal) {
+  if (locaisAtivos === 0) {
     return (
-      <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-        <div className="card" style={{ maxWidth: 400, width: '100%', textAlign: 'center' }}>
-          <span style={{ fontSize: 48, display: 'block', marginBottom: 16 }}>⭐</span>
-          <h2 style={{ fontSize: 20, fontWeight: 800, marginBottom: 8, color: 'var(--text-primary)' }}>Upgrade para o Pro</h2>
-          <p style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 24, lineHeight: 1.5 }}>
-            Tenha acesso ao Dashboard exclusivo de Produtividade em PDF.<br/>
-            Veja em R$ e horas reais o tamanho do seu esforço.
-          </p>
-          <div style={{ display: 'flex', gap: 12 }}>
-            <button className="btn btn-secondary" style={{ flex: 1, justifyContent: 'center' }} onClick={() => router.push('/')}>Voltar à Home</button>
-            <button className="btn btn-primary" style={{ flex: 1, justifyContent: 'center', background: 'linear-gradient(to right, #f59e0b, #d97706)', border: 'none' }} onClick={() => router.push('/')}>Assinar Pro</button>
-          </div>
+      <div style={{ 
+        display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', 
+        padding: '60px 24px', minHeight: '60vh', justifyContent: 'center'
+      }}>
+        <div style={{ fontSize: 64, marginBottom: 24, animation: 'cardEntrance 0.8s ease', color: '#2563EB' }}>
+          <HandMetal size={64} />
         </div>
+        <h2 style={{ fontSize: 28, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 12 }}>
+          Seja bem-vindo!
+        </h2>
+        <p style={{ fontSize: 16, color: 'var(--text-secondary)', maxWidth: 420, lineHeight: 1.6, marginBottom: 32 }}>
+          Sua agenda está pronta para ser organizada. Comece cadastrando onde você trabalha.
+        </p>
+        <Link href="/locais" style={{ textDecoration: 'none' }}>
+          <button className="btn btn-primary" style={{ padding: '16px 40px', fontSize: 16, borderRadius: '1.5rem', background: '#2563EB', boxShadow: '0 0 15px rgba(37, 99, 235, 0.25)' }}>
+            <Plus size={20} className="mr-2" /> Adicionar Primeiro Local
+          </button>
+        </Link>
       </div>
     );
   }
 
+  let totalGanhos = 0;
+  if (plantoesComValor) {
+    totalGanhos = plantoesComValor.reduce((acc, p) => {
+      if (!p.notas) return acc;
+      const match = p.notas.match(/R\$\s*([\d.,]+)/);
+      if (match) {
+        let valStr = match[1];
+        if (valStr.includes(',')) {
+          valStr = valStr.replace(/\./g, '').replace(',', '.');
+        } else if (valStr.includes('.') && valStr.split('.').pop()?.length === 2) {
+          // OK
+        } else {
+          valStr = valStr.replace(/\./g, '');
+        }
+        return acc + parseFloat(valStr || '0');
+      }
+      return acc;
+    }, 0);
+  }
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: 'var(--bg-secondary)' }}>
-      {/* HEADER DE NAVEGAÇÃO */}
-      <div style={{ padding: '16px 24px', background: 'var(--bg-primary)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', zIndex: 10 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <button 
-            className="btn btn-secondary" 
-            onClick={() => router.back()}
-            style={{ borderRadius: '50%', width: 44, height: 44, padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-          >
-            <ArrowLeft size={20} />
-          </button>
-          <div>
-            <h2 style={{ fontSize: 18, fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>Métricas</h2>
-          </div>
+    <div className="card" style={{ marginBottom: 24, position: "relative", overflow: "hidden" }}>
+      <div style={{ position: 'absolute', top: 0, right: 0, width: '100px', height: '100px', background: 'radial-gradient(circle, var(--accent-blue-light) 0%, transparent 70%)', opacity: 0.5, zIndex: 0 }} />
+      
+      <div style={{ position: 'relative', zIndex: 1 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-muted)', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 12 }}>
+          <TrendingUp size={14} color="var(--accent-blue)" />
+          Resumo do Mês
+        </div>
+        
+        <div style={{ fontSize: 32, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 20 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>{totalMes || 0} <span style={{ fontSize: 18, color: "var(--text-secondary)", fontWeight: 600 }}>plantões este mês</span></div>
         </div>
 
-        <button 
-          className="btn btn-primary" 
-          onClick={exportPDF} 
-          disabled={gerandoPdf}
-          style={{ background: 'linear-gradient(135deg, #10b981, #059669)', border: 'none', boxShadow: '0 4px 12px rgba(16, 185, 129, 0.4)' }}
-        >
-          {gerandoPdf ? '⏳ Gerando...' : '📥 Exportar PDF'}
-        </button>
-      </div>
+        <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: 36, marginBottom: 20 }}>
+          <EarningsPrivacyWrapper total={totalGanhos} isPro={isPro} />
+        </div>
 
-      {/* CONTROLES DE MÊS */}
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 16, padding: '20px 0', background: 'var(--bg-primary)', borderBottom: '1px solid var(--border-subtle)' }}>
-        <button className="btn btn-secondary" onClick={() => { setMes(prev => prev === 0 ? 11 : prev - 1); setAno(prev => mes === 0 ? prev - 1 : prev); }} style={{ padding: 8 }}>
-          <ChevronLeft />
-        </button>
-        <span style={{ fontSize: 16, fontWeight: 700, minWidth: 140, textAlign: 'center' }}>
-          {MESES[mes]} {ano}
-        </span>
-        <button className="btn btn-secondary" onClick={() => { setMes(prev => prev === 11 ? 0 : prev + 1); setAno(prev => mes === 11 ? prev + 1 : prev); }} style={{ padding: 8 }}>
-          <ChevronRight />
-        </button>
-      </div>
-
-      {/* DASHBOARD ROLÁVEL */}
-      <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', padding: '24px 16px' }}>
-        {loading ? (
-          <div style={{ textAlign: 'center', padding: 40, color: 'var(--accent-blue)' }}>⟳ Carregando Métricas...</div>
-        ) : (
-          <div style={{ width: '100%', maxWidth: '800px', margin: '0 auto', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 10px 30px rgba(0,0,0,0.08)', marginBottom: '80px', background: '#fff' }}>
-            <ReportTemplate ref={reportRef} plantoes={plantoes} mesNome={MESES[mes]} ano={ano} />
+        <Link href="/locais" style={{ textDecoration: 'none' }}>
+          <div style={{ 
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between', 
+            borderTop: '1px solid var(--border-subtle)', paddingTop: 20,
+            cursor: 'pointer', transition: 'opacity 0.2s'
+          }} className="hover-opacity">
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700, fontSize: 14, color: 'var(--text-primary)' }}>
+              <span style={{ fontSize: 16 }}><Plus size={16} color="var(--accent-blue)" /></span>
+              {locaisAtivos || 0} locais ativos
+            </div>
+            <div style={{ color: 'var(--accent-blue)', display: 'flex', alignItems: 'center' }}>
+              <ChevronRight size={18} />
+            </div>
           </div>
-        )}
+        </Link>
       </div>
+    </div>
+  );
+}
+
+// Sub-componente: Próximos Plantões
+async function UpcomingShiftsWrapper({ userId, userName, totalGanhos, isPro }: { userId: string, userName: string, totalGanhos: number, isPro: boolean }) {
+  const supabase = await getSupabase();
+
+  const { data: proximos } = await supabase
+    .from('plantoes')
+    .select('id, data_hora_inicio, data_hora_fim, local:locais_trabalho(nome, cor_calendario)')
+    .eq('usuario_id', userId)
+    .gte('data_hora_inicio', new Date().toISOString())
+    .neq('status', 'Cancelado')
+    .order('data_hora_inicio', { ascending: true })
+    .limit(5);
+
+  return (
+    <UpcomingShiftsClient 
+      proximos={proximos || []} 
+      isPro={isPro} 
+      userName={userName} 
+      totalGanhos={totalGanhos} 
+    />
+  );
+}
+
+// Skeletons
+function StatsSkeleton() {
+  return (
+    <div className="card" style={{ padding: '24px', borderRadius: '1.5rem', background: '#0F172A', border: '1px solid rgba(255,255,255,0.05)', boxShadow: 'var(--shadow-md)', marginBottom: 32 }}>
+      <div className="skeleton" style={{ height: 40, width: '80%', borderRadius: 8, marginBottom: 20 }} />
+      <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: 20, marginBottom: 20 }}>
+        <div className="skeleton" style={{ height: 60, width: '100%', borderRadius: 8 }} />
+      </div>
+      <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: 20 }}>
+        <div className="skeleton" style={{ height: 24, width: '50%', borderRadius: 8 }} />
+      </div>
+    </div>
+  );
+}
+
+function ShiftsSkeleton() {
+  return (
+    <div style={{ marginBottom: 20 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+        <h3 style={{ fontSize: 16, fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
+          Próximos Plantões
+        </h3>
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div className="skeleton" style={{ height: 72, borderRadius: 16 }} />
+        <div className="skeleton" style={{ height: 72, borderRadius: 16 }} />
+      </div>
+    </div>
+  );
+}
+
+// Componente Principal
+export default async function DashboardPage() {
+  const supabase = await getSupabase();
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (!user) {
+    redirect('/login');
+  }
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', user.id)
+    .single();
+
+  const rawName = profile?.nome || user.user_metadata?.full_name || user.user_metadata?.name || '';
+  const fallbackFromEmail = user.email ? user.email.split('@')[0].split(/[._-]/).map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' ') : '';
+  const fullName = rawName || fallbackFromEmail || 'Usuário';
+  
+  const greeting = formatGreeting(fullName);
+  const userName = greeting.isFallback ? 'Doutor(a)' : greeting.text.replace('Olá, ', '').replace('!', '');
+
+  const isPro = isUserPro(user.email) || isSubscriptionActive(profile);
+
+  const inicioMes = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
+  const fimMes = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0, 23, 59, 59).toISOString();
+  const { data: plantoesComValor } = await supabase
+    .from('plantoes')
+    .select('notas')
+    .eq('usuario_id', user.id)
+    .neq('status', 'Cancelado')
+    .gte('data_hora_inicio', inicioMes)
+    .lte('data_hora_inicio', fimMes);
+
+  let totalGanhosGlobal = 0;
+  if (plantoesComValor) {
+    totalGanhosGlobal = plantoesComValor.reduce((acc, p) => {
+      if (!p.notas) return acc;
+      const match = p.notas.match(/R\$\s*([\d.,]+)/);
+      if (match) {
+        let valStr = match[1];
+        if (valStr.includes(',')) {
+          valStr = valStr.replace(/\./g, '').replace(',', '.');
+        } else if (valStr.includes('.') && valStr.split('.').pop()?.length === 2) {
+          // OK
+        } else {
+          valStr = valStr.replace(/\./g, '');
+        }
+        return acc + parseFloat(valStr || '0');
+      }
+      return acc;
+    }, 0);
+  }
+
+  const { count: locaisCount } = await supabase
+    .from('locais_trabalho')
+    .select('*', { count: 'exact', head: true })
+    .eq('usuario_id', user.id)
+    .eq('ativo', true);
+
+  const hasLocations = (locaisCount || 0) > 0;
+
+  return (
+    <div className="page-container" style={{ paddingBottom: '120px' }}>
+      
+      {/* HEADER (Instantâneo) */}
+      <div className="page-header">
+        <h1>{greeting.text}</h1>
+        <p>Acompanhe sua escala e ganhos para o mês de {new Date().toLocaleDateString("pt-BR", { month: "long" })}.</p>
+      </div>
+
+      {/* CARD PRINCIPAL (Assíncrono) */}
+      <Suspense fallback={<StatsSkeleton />}>
+        <StatsSection userId={user.id} isPro={isPro} greeting={greeting} />
+      </Suspense>
+
+      {/* PRÓXIMOS PLANTÕES (Assíncrono) */}
+      <Suspense fallback={<ShiftsSkeleton />}>
+        <UpcomingShiftsWrapper
+          userId={user.id}
+          userName={userName}
+          totalGanhos={totalGanhosGlobal}
+          isPro={isPro}
+        />
+      </Suspense>
+
+      {/* INTERATIVIDADE DO CLIENTE (FAB + Paywall) */}
+      <DashboardInteractive isPro={isPro} hasLocations={hasLocations} />
     </div>
   );
 }
