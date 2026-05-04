@@ -285,7 +285,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     router.refresh();
   };
 
-  if (pathname === '/login') {
+  if (pathname === '/login' || pathname === '/') {
     return <>{children}</>;
   }
 

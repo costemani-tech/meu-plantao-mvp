@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { 
   Calendar, 
   TrendingUp, 
@@ -9,317 +10,277 @@ import {
   Activity,
   ArrowRight,
   Menu,
-  X
+  X,
+  ChevronDown,
+  Plus
 } from 'lucide-react';
 import { useState } from 'react';
+
+// Subcomponente FAQ para organização
+function FAQItem({ question, answer }: { question: string, answer: string }) {
+  const [isOpen, setIsOpen] = useState(false);
+  return (
+    <div className="border-b border-white/5 py-4">
+      <button 
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex w-full items-center justify-between text-left focus:outline-none"
+      >
+        <span className="text-sm md:text-base font-semibold text-slate-200">{question}</span>
+        <div className={`transition-transform duration-300 ${isOpen ? 'rotate-45' : 'rotate-0'}`}>
+          <Plus size={18} className="text-slate-500" />
+        </div>
+      </button>
+      {isOpen && (
+        <div className="mt-3 text-sm text-slate-400 leading-relaxed animate-fade-in">
+          {answer}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function LandingPage() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
-    <div style={{ 
-      backgroundColor: '#050816', 
-      color: 'white', 
-      minHeight: '100vh', 
-      fontFamily: '"Inter", sans-serif',
-      overflowX: 'hidden'
-    }}>
+    <div className="bg-[#050816] text-white min-h-screen font-sans selection:bg-blue-500/30 overflow-x-hidden">
       
-      {/* Background Glows (Efeito Premium) */}
-      <div style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        width: '100%',
-        height: '100%',
-        zIndex: 0,
-        pointerEvents: 'none',
-        overflow: 'hidden'
-      }}>
-        <div style={{
-          position: 'absolute',
-          top: '-10%',
-          left: '-10%',
-          width: '50%',
-          height: '50%',
-          background: 'radial-gradient(circle, rgba(37, 99, 235, 0.08) 0%, transparent 70%)',
-          filter: 'blur(80px)'
-        }} />
-        <div style={{
-          position: 'absolute',
-          bottom: '10%',
-          right: '-10%',
-          width: '60%',
-          height: '60%',
-          background: 'radial-gradient(circle, rgba(37, 99, 235, 0.05) 0%, transparent 70%)',
-          filter: 'blur(100px)'
-        }} />
-      </div>
-
-      {/* 1. Header (Navegação Elite) */}
-      <header style={{ 
-        position: 'fixed', 
-        top: 0, 
-        width: '100%', 
-        zIndex: 100, 
-        backdropFilter: 'blur(16px)',
-        borderBottom: '1px solid rgba(255, 255, 255, 0.03)',
-        background: 'rgba(5, 8, 22, 0.7)'
-      }}>
-        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+      {/* 1. HEADER (Isolado e Mobile-First) */}
+      <header className="fixed top-0 w-full z-[100] backdrop-blur-xl border-b border-white/5 bg-[#050816]/80">
+        <div className="max-w-6xl mx-auto px-6 h-20 flex items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 group">
-            <div style={{
-              width: '32px',
-              height: '32px',
-              background: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)',
-              borderRadius: '8px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 0 15px rgba(37, 99, 235, 0.4)'
-            }}>
+            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center shadow-[0_0_15px_rgba(37,99,235,0.4)]">
               <Activity size={18} className="text-white" />
             </div>
             <span className="font-bold text-lg tracking-tight">Meu Plantão</span>
           </Link>
 
-          {/* Links Discretos Centralizados */}
+          {/* Nav Desktop */}
           <nav className="hidden md:flex items-center gap-10 absolute left-1/2 -translate-x-1/2">
             <a href="#features" className="text-slate-400 hover:text-white transition-colors text-sm font-medium">Funcionalidades</a>
             <a href="#pricing" className="text-slate-400 hover:text-white transition-colors text-sm font-medium">Preços</a>
-            <a href="#" className="text-slate-400 hover:text-white transition-colors text-sm font-medium">Suporte</a>
           </nav>
 
-          {/* Botão Entrar */}
+          {/* CTA Header */}
           <div className="flex items-center gap-4">
-            <Link href="/login" className="hidden sm:block px-5 py-2 rounded-full border border-white/10 text-white text-sm font-semibold hover:bg-white/5 transition-all">
-              Entrar
+            <Link href="/login" className="px-5 py-2.5 rounded-full border border-white/10 text-white text-sm font-bold hover:bg-white/5 transition-all">
+              Acessar App
             </Link>
-            <button className="md:hidden text-slate-400" onClick={() => setIsMenuOpen(!isMenuOpen)}>
+            <button className="md:hidden text-slate-400 p-2" onClick={() => setIsMenuOpen(!isMenuOpen)}>
               {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
           </div>
         </div>
       </header>
 
-      {/* Mobile Menu Overlay */}
+      {/* Mobile Menu Modal */}
       {isMenuOpen && (
-        <div className="fixed inset-0 z-[90] bg-[#050816]/95 backdrop-blur-xl pt-24 px-8 md:hidden">
-          <nav className="flex flex-col gap-8">
-            <a href="#features" className="text-3xl font-bold text-white" onClick={() => setIsMenuOpen(false)}>Funcionalidades</a>
-            <a href="#pricing" className="text-3xl font-bold text-white" onClick={() => setIsMenuOpen(false)}>Preços</a>
-            <Link href="/login" className="w-full py-4 text-center rounded-2xl bg-blue-600 text-white font-bold text-lg shadow-lg shadow-blue-600/20">
+        <div className="fixed inset-0 z-[110] bg-[#050816] pt-24 px-8 md:hidden animate-fade-in">
+          <div className="flex flex-col gap-6">
+            <div className="flex justify-between items-center mb-4">
+               <span className="text-slate-500 text-xs font-bold uppercase tracking-widest">Navegação</span>
+               <button onClick={() => setIsMenuOpen(false)}><X size={24} /></button>
+            </div>
+            <a href="#features" className="text-2xl font-bold text-white py-2" onClick={() => setIsMenuOpen(false)}>Funcionalidades</a>
+            <a href="#pricing" className="text-2xl font-bold text-white py-2" onClick={() => setIsMenuOpen(false)}>Preços</a>
+            <div className="h-px bg-white/5 my-4"></div>
+            <Link href="/login" className="w-full py-4 text-center rounded-2xl bg-blue-600 text-white font-bold text-lg">
               Acessar App
             </Link>
-          </nav>
+          </div>
         </div>
       )}
 
-      {/* 2. Hero Section (Centralizado e Limpo) */}
-      <section className="relative z-10 pt-48 pb-32 px-6">
-        <div className="max-w-4xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[11px] font-bold uppercase tracking-widest mb-10">
-            Lançamento Founder Edition
+      {/* 2. HERO SECTION (Impacto Centralizado) */}
+      <section className="pt-44 pb-20 px-6 relative">
+        {/* Glow sutil de fundo */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-3xl h-[500px] bg-blue-600/10 blur-[120px] -z-10 pointer-events-none" />
+        
+        <div className="max-w-4xl mx-auto text-center animate-fade-in-up">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.03] border border-white/5 text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-10">
+            <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
+            Oferta de Lançamento
           </div>
           
-          <h1 className="text-5xl md:text-7xl font-extrabold text-white mb-8 tracking-tighter leading-[1.05]">
-            Organize plantões, escalas <br className="hidden md:block" /> e ganhos em um só lugar.
+          <h1 className="text-4xl md:text-6xl font-extrabold text-white mb-6 tracking-tight leading-[1.1] max-w-3xl mx-auto">
+            Organize plantões, escalas e ganhos em um só lugar.
           </h1>
           
-          <p className="text-slate-400 text-lg md:text-xl mb-12 max-w-2xl mx-auto leading-relaxed font-medium">
-            A ferramenta essencial para profissionais de saúde modernos. <br className="hidden md:block" />
-            Sem complicação, apenas acesso rápido.
+          <p className="text-slate-400 text-base md:text-lg mb-10 max-w-xl mx-auto leading-relaxed">
+            A plataforma moderna para profissionais da saúde. <br className="hidden md:block" />
+            Simples, rápido e no seu controle.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link href="/login" style={{ textDecoration: 'none' }}>
-              <button 
-                style={{
-                  padding: '18px 36px',
-                  background: 'linear-gradient(90deg, #2563EB 0%, #3B82F6 100%)',
-                  borderRadius: '50px',
-                  color: 'white',
-                  fontWeight: '700',
-                  fontSize: '16px',
-                  border: 'none',
-                  boxShadow: '0 10px 40px rgba(37, 99, 235, 0.4)',
-                  cursor: 'pointer',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '10px',
-                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
-                }}
-                className="hover:scale-105 active:scale-95"
-              >
-                Quero Organizar Meus Plantões
-                <ArrowRight size={18} />
-              </button>
+            <Link href="/login" className="group px-8 py-4 bg-blue-600 rounded-full text-white font-bold text-base hover:bg-blue-500 transition-all flex items-center gap-2 shadow-lg shadow-blue-600/20">
+              Começar Agora
+              <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>
         </div>
       </section>
 
-      {/* 3. Seção de Funcionalidades (Grid 3 Colunas) */}
-      <section id="features" className="relative z-10 py-32 px-6">
-        <div className="max-w-6xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {/* Funcionalidade 1 */}
-            <div style={{
-              background: 'rgba(255, 255, 255, 0.02)',
-              backdropFilter: 'blur(20px)',
-              borderRadius: '24px',
-              padding: '48px 32px',
-              border: '1px solid rgba(255, 255, 255, 0.04)',
-              textAlign: 'center',
-              transition: 'all 0.4s ease'
-            }} className="hover:bg-white/[0.05] hover:border-blue-500/30 group">
-              <div className="w-16 h-16 bg-blue-500/10 rounded-2xl flex items-center justify-center mb-8 mx-auto text-blue-500 transition-transform group-hover:scale-110">
-                <Calendar size={32} />
+      {/* 3. SHOWCASE / MOCKUPS (NOVA SEÇÃO) */}
+      <section className="pb-32 px-6">
+        <div className="max-w-5xl mx-auto">
+          <div className="relative group p-2 rounded-[2.5rem] bg-white/[0.02] border border-white/5 shadow-2xl">
+            <div className="rounded-[2rem] overflow-hidden bg-[#0a0f1d] border border-white/5 aspect-[16/9] relative">
+              {/* Placeholder para imagem real */}
+              <div className="absolute inset-0 flex items-center justify-center opacity-20">
+                <Image 
+                   src="/icons/icon-512x512.png" 
+                   alt="App Mockup Placeholder" 
+                   width={120} 
+                   height={120} 
+                   className="grayscale"
+                />
               </div>
-              <h3 className="text-xl font-bold mb-4 text-white">Escalas Inteligentes</h3>
-              <p className="text-slate-400 text-sm leading-relaxed font-medium">
-                Gerencie múltiplos locais com um calendário visual intuitivo e focado em performance.
-              </p>
-            </div>
-
-            {/* Funcionalidade 2 */}
-            <div style={{
-              background: 'rgba(255, 255, 255, 0.02)',
-              backdropFilter: 'blur(20px)',
-              borderRadius: '24px',
-              padding: '48px 32px',
-              border: '1px solid rgba(255, 255, 255, 0.04)',
-              textAlign: 'center',
-              transition: 'all 0.4s ease'
-            }} className="hover:bg-white/[0.05] hover:border-emerald-500/30 group">
-              <div className="w-16 h-16 bg-emerald-500/10 rounded-2xl flex items-center justify-center mb-8 mx-auto text-emerald-500 transition-transform group-hover:scale-110">
-                <TrendingUp size={32} />
-              </div>
-              <h3 className="text-xl font-bold mb-4 text-white">Controle Financeiro</h3>
-              <p className="text-slate-400 text-sm leading-relaxed font-medium">
-                Saiba exatamente quanto vai receber no fim do mês com cálculos automáticos por local.
-              </p>
-            </div>
-
-            {/* Funcionalidade 3 */}
-            <div style={{
-              background: 'rgba(255, 255, 255, 0.02)',
-              backdropFilter: 'blur(20px)',
-              borderRadius: '24px',
-              padding: '48px 32px',
-              border: '1px solid rgba(255, 255, 255, 0.04)',
-              textAlign: 'center',
-              transition: 'all 0.4s ease'
-            }} className="hover:bg-white/[0.05] hover:border-purple-500/30 group">
-              <div className="w-16 h-16 bg-purple-500/10 rounded-2xl flex items-center justify-center mb-8 mx-auto text-purple-500 transition-transform group-hover:scale-110">
-                <FileText size={32} />
-              </div>
-              <h3 className="text-xl font-bold mb-4 text-white">Relatórios Profissionais</h3>
-              <p className="text-slate-400 text-sm leading-relaxed font-medium">
-                Gere PDFs profissionais das suas escalas para enviar aos hospitais e organizar repasses.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 4. Seção de Preços (Destaque Central) */}
-      <section id="pricing" className="relative z-10 py-32 px-6">
-        <div className="max-w-xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-extrabold mb-4 tracking-tight">O plano para sua evolução</h2>
-            <p className="text-slate-400 font-medium">Comece hoje e transforme sua rotina.</p>
-          </div>
-
-          <div style={{
-            background: 'rgba(255, 255, 255, 0.02)',
-            backdropFilter: 'blur(30px)',
-            borderRadius: '40px',
-            padding: '60px 40px',
-            border: '1px solid rgba(37, 99, 235, 0.2)',
-            boxShadow: '0 30px 60px -12px rgba(0, 0, 0, 0.5), 0 0 40px rgba(37, 99, 235, 0.1)',
-            position: 'relative',
-            overflow: 'hidden'
-          }}>
-            {/* Subtle Gradient Glow inside card */}
-            <div style={{
-              position: 'absolute',
-              top: '-20%',
-              right: '-20%',
-              width: '50%',
-              height: '50%',
-              background: 'radial-gradient(circle, rgba(37, 99, 235, 0.15) 0%, transparent 70%)',
-              filter: 'blur(40px)',
-              pointerEvents: 'none'
-            }} />
-
-            <div className="text-center mb-10">
-              <span className="text-blue-500 font-black text-xs uppercase tracking-widest mb-4 block">Melhor Escolha</span>
-              <h3 className="text-3xl font-black text-white mb-2 tracking-tight">Plano PRO</h3>
-              <div className="flex items-baseline justify-center gap-2">
-                <span className="text-5xl font-black text-white tracking-tighter">R$ 9,90</span>
-                <span className="text-slate-500 font-bold">/mês</span>
-              </div>
-            </div>
-
-            <div className="space-y-5 mb-12 max-w-[280px] mx-auto">
-              {[
-                'Locais ilimitados',
-                'Alertas de plantão',
-                'Relatórios financeiros',
-                'Exportação PDF'
-              ].map((benefit) => (
-                <div key={benefit} className="flex items-center gap-4 text-slate-300">
-                  <div className="w-5 h-5 rounded-full bg-blue-500/20 flex items-center justify-center flex-shrink-0">
-                    <CheckCircle2 size={14} className="text-blue-500" />
-                  </div>
-                  <span className="text-sm font-bold tracking-tight">{benefit}</span>
+              {/* Overlay de carregamento/espera */}
+              <div className="absolute inset-0 bg-gradient-to-t from-[#050816] via-transparent to-transparent"></div>
+              
+              <div className="absolute bottom-8 left-8 right-8 flex justify-between items-end">
+                <div className="space-y-2">
+                  <div className="h-2 w-24 bg-white/10 rounded"></div>
+                  <div className="h-4 w-48 bg-white/20 rounded"></div>
                 </div>
-              ))}
+                <div className="w-12 h-12 rounded-full bg-blue-600/20 border border-blue-500/30 flex items-center justify-center">
+                  <Activity size={20} className="text-blue-500" />
+                </div>
+              </div>
             </div>
-
-            <Link href="/login" style={{ textDecoration: 'none' }}>
-              <button style={{
-                width: '100%',
-                padding: '22px',
-                background: 'linear-gradient(90deg, #2563EB 0%, #1D4ED8 100%)',
-                borderRadius: '20px',
-                color: 'white',
-                fontWeight: '800',
-                fontSize: '16px',
-                border: 'none',
-                boxShadow: '0 15px 30px rgba(37, 99, 235, 0.3)',
-                cursor: 'pointer',
-                transition: 'all 0.3s ease'
-              }} className="hover:brightness-110 active:scale-95 shadow-lg">
-                Assinar Agora
-              </button>
-            </Link>
+            {/* Sombras laterais para profundidade */}
+            <div className="absolute -inset-1 bg-gradient-to-r from-blue-600/10 to-purple-600/10 blur-xl -z-10 opacity-50"></div>
           </div>
         </div>
       </section>
 
-      {/* 5. Rodapé (Centralizado e Discreto) */}
-      <footer className="relative z-10 py-16 border-t border-white/5">
-        <div className="max-w-6xl mx-auto px-6 text-center">
-          <p className="text-slate-400 text-sm font-medium tracking-tight mb-4">
-            Sem senha. Sem complicação. Apenas acesso rápido.
-          </p>
-          <p className="text-slate-600 text-xs font-semibold uppercase tracking-widest">
-            © {new Date().getFullYear()} Meu Plantão. Todos os direitos reservados.
-          </p>
+      {/* 4. BENEFÍCIOS (Cards Diretos) */}
+      <section id="features" className="py-24 px-6 bg-white/[0.01]">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[
+              { icon: Calendar, title: 'Escalas Inteligentes', desc: 'Gerencie múltiplos locais com um calendário focado em performance.' },
+              { icon: TrendingUp, title: 'Controle Financeiro', desc: 'Saiba exatamente quanto vai receber no fim do mês automaticamente.' },
+              { icon: FileText, title: 'Relatórios Profissionais', desc: 'Gere PDFs das suas escalas para hospitais e repasses em segundos.' }
+            ].map((f, i) => (
+              <div key={i} className="p-8 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-white/10 transition-all">
+                <div className="w-10 h-10 bg-blue-600/10 rounded-xl flex items-center justify-center mb-6 text-blue-500">
+                  <f.icon size={20} strokeWidth={2.5} />
+                </div>
+                <h3 className="text-base font-bold mb-2">{f.title}</h3>
+                <p className="text-slate-400 text-sm leading-relaxed">{f.desc}</p>
+              </div>
+            ))}
+          </div>
         </div>
-      </footer>
+      </section>
 
-      {/* Global CSS for Animations & Cleanup */}
+      {/* 5. CONFIANÇA & FAQ (NOVA SEÇÃO) */}
+      <section className="py-32 px-6">
+        <div className="max-w-3xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-2xl md:text-3xl font-bold mb-4 tracking-tight">Feito para profissionais da saúde</h2>
+            <p className="text-slate-400 text-sm md:text-base font-medium">Organize plantões com mais controle e menos estresse.</p>
+          </div>
+
+          <div className="space-y-2">
+            <FAQItem 
+              question="Funciona no celular?" 
+              answer="Sim! O Meu Plantão é um PWA moderno que funciona perfeitamente em qualquer smartphone, Android ou iOS." 
+            />
+            <FAQItem 
+              question="Precisa instalar pela App Store?" 
+              answer="Não. Basta acessar pelo navegador e 'Adicionar à tela de início' para ter a experiência de um aplicativo nativo." 
+            />
+            <FAQItem 
+              question="Como funciona o PRO?" 
+              answer="O plano PRO libera locais ilimitados, alertas inteligentes e exportação de relatórios financeiros detalhados." 
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* 6. OFERTA / PLANO PRO (Contraste e Escassez) */}
+      <section id="pricing" className="py-24 px-6 relative">
+        <div className="max-w-md mx-auto relative">
+          <div className="p-1 rounded-[2.5rem] bg-gradient-to-b from-blue-500/20 to-transparent">
+            <div className="bg-[#0a0f1d] rounded-[2.3rem] p-10 border border-white/5 relative overflow-hidden">
+              {/* Badge de Escassez */}
+              <div className="absolute top-8 right-[-35px] rotate-45 bg-blue-600 text-white text-[10px] font-black px-10 py-1 uppercase tracking-widest shadow-xl">
+                Lançamento
+              </div>
+
+              <div className="mb-8">
+                <span className="inline-block px-3 py-1 rounded-full bg-blue-500/10 text-blue-500 text-[10px] font-bold uppercase tracking-widest mb-4">
+                  6 meses de PRO inclusos
+                </span>
+                <h3 className="text-2xl font-black mb-2">Plano PRO</h3>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-slate-500 line-through text-sm">R$ 89,90/ano</span>
+                  <span className="text-4xl font-black text-white tracking-tighter">R$ 9,90</span>
+                </div>
+              </div>
+
+              <div className="space-y-4 mb-10">
+                {['Locais ilimitados', 'Alertas de plantão', 'Relatórios financeiros', 'Exportação PDF'].map((b) => (
+                  <div key={b} className="flex items-center gap-3 text-slate-300">
+                    <CheckCircle2 size={16} className="text-blue-500" />
+                    <span className="text-sm font-medium">{b}</span>
+                  </div>
+                ))}
+              </div>
+
+              <Link href="/login" className="block w-full py-5 bg-blue-600 rounded-2xl text-white font-bold text-center hover:bg-blue-500 transition-all shadow-xl shadow-blue-600/20">
+                Assinar Agora
+              </Link>
+              
+              <div className="mt-6 flex items-center justify-center gap-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                <span className="flex h-2 w-2 rounded-full bg-emerald-500"></span>
+                Primeiros 100 usuários • 97 vagas restantes
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 7. FINAL CTA & FOOTER */}
+      <section className="py-32 px-6 text-center border-t border-white/5">
+        <div className="max-w-xl mx-auto">
+          <h2 className="text-2xl md:text-3xl font-bold mb-8 tracking-tight">Pronto para simplificar sua escala?</h2>
+          <Link href="/login" className="inline-block px-10 py-5 bg-white text-[#050816] rounded-full font-bold text-base hover:bg-slate-200 transition-all">
+            Começar Agora
+          </Link>
+          
+          <footer className="mt-32 opacity-40">
+             <div className="flex items-center justify-center gap-2 mb-4">
+               <Activity size={16} className="text-blue-500" />
+               <span className="font-bold text-sm tracking-tight">Meu Plantão</span>
+             </div>
+             <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-2">
+               Sem senha. Sem complicação. Apenas acesso rápido.
+             </p>
+             <p className="text-[10px] text-slate-600">
+               © {new Date().getFullYear()} Meu Plantão. Todos os direitos reservados.
+             </p>
+          </footer>
+        </div>
+      </section>
+
       <style jsx global>{`
-        html { scroll-behavior: smooth; }
-        body { background-color: #050816; margin: 0; }
-        @keyframes float {
-          0% { transform: translateY(0px); }
-          50% { transform: translateY(-10px); }
-          100% { transform: translateY(0px); }
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes fadeInUp {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+          animation: fadeIn 0.8s ease-out forwards;
+        }
+        .animate-fade-in-up {
+          animation: fadeInUp 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
       `}</style>
 
