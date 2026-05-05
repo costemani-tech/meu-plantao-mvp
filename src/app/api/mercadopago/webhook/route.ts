@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { MercadoPagoConfig, Payment } from 'mercadopago';
 import { createClient } from '@supabase/supabase-js';
+import crypto from 'crypto';
+
+export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
   try {
@@ -23,6 +26,38 @@ export async function POST(req: Request) {
 
     if (!dataId) {
       return NextResponse.json({ received: true });
+    }
+
+    // Validação de assinatura do Webhook do Mercado Pago (x-signature)
+    const xSignature = req.headers.get('x-signature');
+    const xRequestId = req.headers.get('x-request-id');
+    const webhookSecret = process.env.MERCADOPAGO_WEBHOOK_SECRET;
+
+    if (xSignature && xRequestId && webhookSecret) {
+      const parts = xSignature.split(',');
+      let ts, hash;
+      for (const part of parts) {
+        const [key, value] = part.split('=');
+        if (key === 'ts') ts = value;
+        if (key === 'v1') hash = value;
+      }
+
+      if (ts && hash) {
+        // Valida x-signature usando HMAC SHA256 com os mesmos parâmetros do header
+        const manifest = `id:${dataId};request-id:${xRequestId};ts:${ts};`;
+        const hmac = crypto.createHmac('sha256', webhookSecret);
+        hmac.update(manifest);
+        const computedHash = hmac.digest('hex');
+
+        if (computedHash !== hash) {
+          console.warn('[MercadoPago Webhook] Assinatura inválida bloqueada.');
+          return NextResponse.json({ error: 'Assinatura inválida' }, { status: 403 });
+        }
+      } else {
+        console.warn('[MercadoPago Webhook] Cabeçalho de assinatura mal formatado.');
+      }
+    } else {
+      console.warn('[MercadoPago Webhook] Faltam cabeçalhos ou SECRET para validação.');
     }
 
     const client = new MercadoPagoConfig({
