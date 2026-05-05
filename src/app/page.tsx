@@ -37,44 +37,45 @@ export default function LandingPage() {
   return (
     <div className="bg-[#050816] text-white min-h-screen font-sans selection:bg-blue-500/30 overflow-x-hidden antialiased">
       
-      {/* 1. Header (Elegante e Compacto) */}
+      {/* 1. Header (Ajustado para não encavalar) */}
       <header className="fixed top-0 w-full z-[100] backdrop-blur-xl border-b border-white/5 bg-[#050816]/60">
-        <div className="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
+        <div className="max-w-6xl mx-auto px-5 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-              <Calendar size={18} className="text-white" />
+            <div className="w-7 h-7 bg-blue-600 rounded-lg flex items-center justify-center">
+              <Calendar size={16} className="text-white" />
             </div>
-            <span className="font-bold text-base tracking-tight">Meu Plantão</span>
+            <span className="font-bold text-sm md:text-base tracking-tight">Meu Plantão</span>
           </Link>
 
-          <Link href="/login" className="px-5 py-2 rounded-xl border border-white/10 text-white text-[12px] font-bold hover:bg-white/5 transition-all">
+          <Link href="/login" className="px-4 py-1.5 border border-white/10 rounded-xl text-white text-[11px] font-bold hover:bg-white/5 transition-all">
             Entrar
           </Link>
         </div>
       </header>
 
-      {/* 2. Hero Section (Fiel à Imagem 2) */}
+      {/* 2. Hero Section (Ajustes de Proporção) */}
       <section className="pt-32 pb-12 px-6 flex flex-col items-center text-center relative overflow-hidden">
         {/* Glow suave no topo */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-2xl h-[400px] bg-blue-600/10 blur-[100px] pointer-events-none -z-10" />
 
-        <div className="w-full max-w-4xl mx-auto">
-          <h1 className="text-[34px] md:text-6xl font-bold text-white mb-6 tracking-tight leading-[1.1]">
+        <div className="w-full max-w-4xl mx-auto flex flex-col items-center">
+          <h1 className="text-[30px] md:text-6xl font-extrabold text-white mb-6 tracking-tight leading-[1.15] md:leading-[1.1]">
             Organize sua escala, controle ganhos e nunca mais perca um plantão.
           </h1>
           
-          <p className="text-slate-400 text-sm md:text-lg mb-10 max-w-xl mx-auto leading-relaxed">
+          <p className="text-slate-400 text-[13px] md:text-lg mb-10 max-w-xl mx-auto leading-relaxed px-4">
             A solução premium e inteligente para profissionais da saúde que buscam praticidade e organização.
           </p>
 
-          <Link href="/login" className="inline-flex items-center justify-center w-full max-w-[320px] py-4 bg-blue-600 rounded-2xl text-white font-bold text-base shadow-lg shadow-blue-600/30 hover:bg-blue-500 active:scale-95 transition-all">
+          {/* Botão CTA Ajustado */}
+          <Link href="/login" className="inline-flex items-center justify-center w-full max-w-[280px] md:max-w-[320px] py-4 bg-blue-600 rounded-2xl text-white font-bold text-base shadow-lg shadow-blue-600/30 hover:bg-blue-500 active:scale-95 transition-all mb-16">
             Começar Agora
           </Link>
 
-          {/* 3. Mockup do iPhone (Centralizado) */}
-          <div className="mt-16 w-full max-w-[280px] md:max-w-[340px] mx-auto relative animate-float">
-            <div className="p-1 rounded-[3rem] bg-gradient-to-b from-white/10 to-transparent border border-white/5 shadow-2xl">
-              <div className="rounded-[2.8rem] overflow-hidden bg-[#0a0f1d] border border-white/5 aspect-[9/18.5] relative">
+          {/* 3. Mockup do iPhone (Imagem da Agenda Real) */}
+          <div className="w-full max-w-[260px] md:max-w-[320px] mx-auto relative animate-float">
+            <div className="p-1 rounded-[2.8rem] bg-gradient-to-b from-white/10 to-transparent border border-white/5 shadow-2xl">
+              <div className="rounded-[2.6rem] overflow-hidden bg-[#0a0f1d] border border-white/5 aspect-[9/18.5] relative">
                  <Image 
                    src="/mockup-iphone.png" 
                    alt="App Preview" 
@@ -90,7 +91,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* 4. Funcionalidades (Cards Verticalizados conforme Ref) */}
+      {/* 4. Funcionalidades */}
       <section id="features" className="py-20 px-6">
         <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
           {[
@@ -111,7 +112,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* 5. Oferta de Lançamento (IDÊNTICO À REFERÊNCIA) */}
+      {/* 5. Oferta de Lançamento */}
       <section id="pricing" className="py-20 px-6 text-center">
         <div className="w-full max-w-md mx-auto space-y-10">
           <h2 className="text-3xl font-bold tracking-tight">Oferta de Lançamento</h2>
@@ -136,7 +137,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* 6. Footer (Simples conforme Imagem 2) */}
+      {/* 6. Footer */}
       <footer className="py-12 px-6 border-t border-white/5 text-center">
         <div className="max-w-5xl mx-auto flex flex-col items-center gap-6">
           <div className="flex gap-8 text-[11px] text-slate-500 font-bold uppercase tracking-widest">
