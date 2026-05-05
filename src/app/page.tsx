@@ -3,228 +3,150 @@
 import Link from 'next/link';
 import { 
   Calendar, 
-  TrendingUp, 
+  LineChart, 
   FileText, 
   CheckCircle2, 
   Activity,
-  ArrowRight,
-  Menu,
-  X,
-  Plus
+  ArrowRight
 } from 'lucide-react';
-import { useState } from 'react';
-
-function FAQItem({ question, answer }: { question: string, answer: string }) {
-  const [isOpen, setIsOpen] = useState(false);
-  return (
-    <div className="border-b border-white/5 py-4 w-full">
-      <button 
-        onClick={() => setIsOpen(!isOpen)}
-        className="flex w-full items-center justify-between text-left focus:outline-none"
-      >
-        <span className="text-sm font-semibold text-slate-200 pr-4">{question}</span>
-        <Plus size={16} className={`text-slate-500 transition-transform duration-300 ${isOpen ? 'rotate-45' : 'rotate-0'}`} />
-      </button>
-      {isOpen && (
-        <div className="mt-3 text-[13px] text-slate-400 leading-relaxed animate-fade-in">
-          {answer}
-        </div>
-      )}
-    </div>
-  );
-}
 
 export default function LandingPage() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-
   return (
-    <div className="bg-[#050816] text-white min-h-screen font-sans selection:bg-blue-500/30 overflow-x-hidden">
+    <div className="min-h-screen bg-[#050816] text-[#F8FAFC] antialiased font-sans selection:bg-blue-500/30">
       
-      {/* 1. HEADER (Mobile-First) */}
-      <header className="fixed top-0 w-full z-[100] backdrop-blur-xl border-b border-white/5 bg-[#050816]/80">
-        <div className="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
-          {/* Logo Reduzida */}
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-7 h-7 bg-blue-600 rounded-lg flex items-center justify-center">
-              <Activity size={16} className="text-white" />
+      {/* 1. Header (Navegação) */}
+      <header className="w-full">
+        <div className="w-full max-w-7xl mx-auto flex items-center justify-between p-6">
+          {/* Logo */}
+          <Link href="/" className="flex items-center gap-2 group">
+            <div className="w-8 h-8 bg-[#2563EB] rounded-lg flex items-center justify-center shadow-[0_0_20px_rgba(37,99,235,0.3)]">
+              <Activity size={18} className="text-white" />
             </div>
-            <span className="font-bold text-base tracking-tight">Meu Plantão</span>
+            <span className="text-2xl font-bold text-white tracking-tight">Meu Plantão</span>
           </Link>
 
-          {/* CTA & Menu */}
-          <div className="flex items-center gap-3">
-            <Link href="/login" className="px-3 py-1.5 rounded-full border border-white/10 text-white text-[12px] font-bold hover:bg-white/5 transition-all">
-              Acessar App
-            </Link>
-            <button className="text-slate-400" onClick={() => setIsMenuOpen(!isMenuOpen)}>
-              <Menu size={22} />
-            </button>
-          </div>
+          {/* Botão Entrar */}
+          <Link 
+            href="/login" 
+            className="px-6 py-2 border border-white/10 rounded-2xl text-sm font-semibold hover:bg-white/5 hover:border-white/20 transition-all"
+          >
+            Entrar
+          </Link>
         </div>
       </header>
 
-      {/* Mobile Menu Modal */}
-      {isMenuOpen && (
-        <div className="fixed inset-0 z-[110] bg-[#050816] pt-20 px-6 md:hidden animate-fade-in">
-          <div className="flex flex-col gap-6 w-full max-w-[420px] mx-auto">
-            <div className="flex justify-between items-center mb-2">
-               <span className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Menu Principal</span>
-               <button onClick={() => setIsMenuOpen(false)} className="text-slate-400"><X size={24} /></button>
-            </div>
-            <a href="#features" className="text-2xl font-bold text-white border-b border-white/5 pb-4" onClick={() => setIsMenuOpen(false)}>Funcionalidades</a>
-            <a href="#pricing" className="text-2xl font-bold text-white border-b border-white/5 pb-4" onClick={() => setIsMenuOpen(false)}>Preços</a>
-            <Link href="/login" className="w-full py-4 mt-4 text-center rounded-xl bg-blue-600 text-white font-bold text-lg">
-              Entrar no Sistema
-            </Link>
-          </div>
-        </div>
-      )}
-
-      {/* 2. HERO SECTION (Centralizado Mobile) */}
-      <section className="pt-32 pb-12 px-6 flex flex-col items-center text-center">
-        <div className="w-full max-w-[420px] mx-auto flex flex-col items-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.03] border border-white/5 text-blue-400 text-[9px] font-bold uppercase tracking-widest mb-6">
-            <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
-            Oferta de Lançamento
-          </div>
-          
-          <h1 className="text-[34px] md:text-6xl font-bold text-white mb-5 tracking-tight leading-[1.15]">
-            Organize plantões, escalas e ganhos em um só lugar.
+      {/* 2. Hero Section (A Promessa) */}
+      <section className="relative overflow-hidden">
+        {/* Glow de Fundo */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-[500px] bg-[#2563EB]/10 blur-[120px] -z-10" />
+        
+        <div className="w-full max-w-7xl mx-auto py-24 px-6 text-center">
+          <h1 className="text-5xl md:text-7xl font-extrabold text-white leading-tight tracking-tighter">
+            Organize plantões, escalas <br className="hidden md:block" /> e ganhos em um só lugar.
           </h1>
           
-          <p className="text-slate-400 text-sm md:text-lg mb-8 leading-relaxed max-w-[320px]">
-            A plataforma moderna para profissionais da saúde. Simples, rápido e no seu controle.
+          <p className="mt-6 text-xl text-[#94A3B8] max-w-3xl mx-auto leading-relaxed">
+            A plataforma moderna para profissionais da saúde que buscam controle absoluto da sua rotina. 
+            Sem complicação, apenas acesso rápido.
           </p>
 
-          <Link href="/login" className="flex items-center justify-center w-full max-w-[320px] h-14 bg-gradient-to-r from-blue-600 to-blue-500 rounded-xl text-white font-bold text-base shadow-lg shadow-blue-500/30 active:scale-95 transition-transform">
+          <Link 
+            href="/login" 
+            className="mt-12 inline-flex items-center gap-3 px-10 py-4 bg-[#2563EB] text-white font-bold rounded-2xl shadow-[0_10px_40px_rgba(37,99,235,0.3)] hover:bg-[#1E40AF] hover:-translate-y-1 transition-all text-lg"
+          >
             Começar Agora
-            <ArrowRight size={18} className="ml-2" />
+            <ArrowRight size={20} />
           </Link>
+        </div>
+      </section>
 
-          {/* 3. MOCKUP (Imagem Ajustada) */}
-          <div className="mt-12 w-full max-w-[320px] relative">
-            <div className="p-1 rounded-[2rem] bg-white/[0.02] border border-white/5">
-              <div className="rounded-[1.8rem] overflow-hidden bg-[#0a0f1d] border border-white/5 aspect-video flex items-center justify-center relative">
-                <Activity size={40} className="text-blue-600 opacity-20" />
-                <div className="absolute bottom-4 left-4 right-4 flex justify-between items-center">
-                  <div className="h-1.5 w-16 bg-white/10 rounded"></div>
-                  <div className="h-1.5 w-8 bg-blue-600/30 rounded"></div>
-                </div>
+      {/* 3. Features Section (Cards Premium) */}
+      <section className="w-full max-w-7xl mx-auto py-20 px-6">
+        <div className="grid md:grid-cols-3 gap-8">
+          {/* Card 1 */}
+          <div className="bg-[#0F172A] p-8 rounded-2xl border border-white/5 space-y-5 shadow-2xl hover:border-blue-500/30 transition-colors group">
+            <div className="w-12 h-12 text-[#2563EB] bg-[#050816] p-2.5 rounded-xl border border-white/5 group-hover:scale-110 transition-transform">
+              <Calendar className="w-full h-full" />
+            </div>
+            <h3 className="text-2xl font-bold text-white tracking-tight">Escalas Inteligentes</h3>
+            <p className="text-[#94A3B8] leading-relaxed">
+              Gerencie múltiplos locais com um calendário visual intuitivo focado em produtividade.
+            </p>
+          </div>
+
+          {/* Card 2 */}
+          <div className="bg-[#0F172A] p-8 rounded-2xl border border-white/5 space-y-5 shadow-2xl hover:border-blue-500/30 transition-colors group">
+            <div className="w-12 h-12 text-[#2563EB] bg-[#050816] p-2.5 rounded-xl border border-white/5 group-hover:scale-110 transition-transform">
+              <LineChart className="w-full h-full" />
+            </div>
+            <h3 className="text-2xl font-bold text-white tracking-tight">Controle Financeiro</h3>
+            <p className="text-[#94A3B8] leading-relaxed">
+              Saiba exatamente quanto vai receber no fim do mês com cálculos automáticos baseados nos seus plantões.
+            </p>
+          </div>
+
+          {/* Card 3 */}
+          <div className="bg-[#0F172A] p-8 rounded-2xl border border-white/5 space-y-5 shadow-2xl hover:border-blue-500/30 transition-colors group">
+            <div className="w-12 h-12 text-[#2563EB] bg-[#050816] p-2.5 rounded-xl border border-white/5 group-hover:scale-110 transition-transform">
+              <FileText className="w-full h-full" />
+            </div>
+            <h3 className="text-2xl font-bold text-white tracking-tight">Relatórios Profissionais</h3>
+            <p className="text-[#94A3B8] leading-relaxed">
+              Gere PDFs detalhados das suas escalas para conferência com hospitais e grupos médicos.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* 4. Oferta de Lançamento (Página de Conversão) */}
+      <section className="w-full py-24 bg-[#0F172A] px-6">
+        <div className="max-w-lg mx-auto p-10 bg-[#050816] rounded-2xl border-2 border-[#2563EB] shadow-[0_0_50px_rgba(37,99,235,0.2)] text-center space-y-8 relative overflow-hidden">
+          {/* Badge de Oferta */}
+          <div className="absolute top-6 right-[-35px] rotate-45 bg-[#2563EB] text-white text-[10px] font-black px-10 py-1 uppercase tracking-widest shadow-xl">
+            Founder Edition
+          </div>
+
+          <div className="space-y-2">
+            <h4 className="text-xl text-[#94A3B8] font-medium uppercase tracking-widest">Oferta Especial</h4>
+            <div className="flex flex-col items-center">
+              <span className="text-7xl font-extrabold text-white tracking-tighter">R$ 9,90</span>
+              <p className="text-lg text-[#94A3B8] mt-2 font-medium">por 6 meses • pagamento único</p>
+            </div>
+          </div>
+
+          <div className="space-y-4 text-left border-t border-white/5 pt-8">
+            {[
+              'Acesso PRO completo por 180 dias',
+              'Relatórios ilimitados em PDF',
+              'Alertas de plantão via Push',
+              'Sincronização em múltiplos dispositivos'
+            ].map((item) => (
+              <div key={item} className="flex items-center gap-3 text-sm text-[#94A3B8]">
+                <CheckCircle2 size={18} className="text-[#2563EB] flex-shrink-0" />
+                <span>{item}</span>
               </div>
-            </div>
-            {/* Glow sutil */}
-            <div className="absolute -inset-4 bg-blue-600/5 blur-2xl -z-10"></div>
-          </div>
-        </div>
-      </section>
-
-      {/* 4. BENEFÍCIOS (Cards Mobile-First) */}
-      <section id="features" className="py-16 px-6 bg-white/[0.01]">
-        <div className="w-full max-w-[420px] mx-auto flex flex-col gap-6">
-          <h2 className="text-center text-xs font-bold text-slate-500 uppercase tracking-[0.2em] mb-2">Tudo em um só app</h2>
-          {[
-            { icon: Calendar, title: 'Escalas Inteligentes', desc: 'Gerencie múltiplos locais com um calendário focado em performance.' },
-            { icon: TrendingUp, title: 'Controle Financeiro', desc: 'Saiba exatamente quanto vai receber no fim do mês automaticamente.' },
-            { icon: FileText, title: 'Relatórios em PDF', desc: 'Gere PDFs das suas escalas para hospitais e repasses em segundos.' }
-          ].map((f, i) => (
-            <div key={i} className="p-7 rounded-[2rem] bg-white/[0.03] border border-white/5 flex flex-col items-center text-center w-full">
-              <div className="w-12 h-12 bg-blue-600/10 rounded-2xl flex items-center justify-center mb-5 text-blue-500">
-                <f.icon size={22} strokeWidth={2} />
-              </div>
-              <h3 className="text-base font-bold mb-2 text-white">{f.title}</h3>
-              <p className="text-slate-400 text-[13px] leading-relaxed">{f.desc}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* 5. FAQ (Mobile-First) */}
-      <section className="py-20 px-6">
-        <div className="w-full max-w-[420px] mx-auto">
-          <div className="text-center mb-10">
-            <h2 className="text-2xl font-bold mb-3 tracking-tight">Perguntas comuns</h2>
-            <p className="text-slate-400 text-[13px]">Tire suas dúvidas rápidas abaixo.</p>
+            ))}
           </div>
 
-          <div className="bg-white/[0.02] rounded-3xl p-6 border border-white/5">
-            <FAQItem 
-              question="Funciona no celular?" 
-              answer="Sim! O Meu Plantão é um PWA moderno que funciona perfeitamente em qualquer smartphone." 
-            />
-            <FAQItem 
-              question="Precisa instalar?" 
-              answer="Não. Basta acessar pelo navegador e 'Adicionar à tela de início' para ter o ícone no seu celular." 
-            />
-            <FAQItem 
-              question="Como funciona o PRO?" 
-              answer="O plano PRO libera locais ilimitados, alertas inteligentes e exportação de PDFs financeiros." 
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* 6. OFERTA / PLANO PRO (Vertical) */}
-      <section id="pricing" className="py-16 px-6">
-        <div className="w-full max-w-[420px] mx-auto">
-          <div className="bg-[#0a0f1d] rounded-[2.5rem] p-8 border border-blue-500/20 relative overflow-hidden flex flex-col items-center text-center">
-            <div className="absolute top-6 right-[-30px] rotate-45 bg-blue-600 text-[9px] font-black px-8 py-1 uppercase tracking-widest">
-              PRO
-            </div>
-
-            <div className="mb-8 flex flex-col items-center">
-              <span className="inline-block px-3 py-1 rounded-full bg-blue-500/10 text-blue-500 text-[9px] font-bold uppercase tracking-widest mb-4">
-                6 meses inclusos
-              </span>
-              <h3 className="text-xl font-bold mb-4">Plano Anual PRO</h3>
-              
-              <div className="flex flex-col items-center">
-                <span className="text-xs text-slate-500 line-through mb-1">De R$ 89,90/ano</span>
-                <span className="text-4xl font-bold text-white mb-2">R$ 9,90<span className="text-lg text-slate-400 font-normal">/mês</span></span>
-              </div>
-            </div>
-
-            <div className="space-y-4 mb-10 w-full px-2">
-              {['Locais ilimitados', 'Alertas de plantão', 'Relatórios financeiros', 'Exportação PDF'].map((b) => (
-                <div key={b} className="flex items-center gap-3 text-slate-300 text-sm">
-                  <CheckCircle2 size={16} className="text-blue-500" />
-                  <span className="font-medium">{b}</span>
-                </div>
-              ))}
-            </div>
-
-            <Link href="/login" className="w-full max-w-[280px] py-4 bg-blue-600 rounded-xl text-white font-bold text-center active:scale-95 transition-transform shadow-lg shadow-blue-600/20">
-              Assinar Agora
-            </Link>
-            
-            <div className="mt-6 flex items-center justify-center gap-2 text-[9px] font-bold text-slate-500 uppercase tracking-widest">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-              97 vagas restantes
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 7. FOOTER (Padding Ajustado) */}
-      <footer className="pb-12 pt-8 px-6 text-center border-t border-white/5">
-        <div className="w-full max-w-[420px] mx-auto">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <Activity size={16} className="text-blue-500" />
-            <span className="font-bold text-sm tracking-tight">Meu Plantão</span>
-          </div>
-          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-600 mb-3 leading-relaxed">
-            Sem senha. Sem complicação. <br/> Apenas acesso rápido.
-          </p>
-          <p className="text-[9px] text-slate-700">
-            © {new Date().getFullYear()} Todos os direitos reservados.
+          <Link 
+            href="/login" 
+            className="block w-full py-5 bg-[#2563EB] text-white font-bold rounded-2xl shadow-[0_10px_30px_rgba(37,99,235,0.4)] hover:bg-[#1E40AF] hover:scale-[1.02] active:scale-[0.98] transition-all text-xl"
+          >
+            Assinar PRO — R$ 9,90
+          </Link>
+          
+          <p className="text-[10px] text-[#94A3B8] uppercase tracking-[0.2em] font-bold">
+            Liberação imediata após o login
           </p>
         </div>
+      </section>
+
+      {/* Footer Minimalista */}
+      <footer className="w-full py-12 px-6 text-center border-t border-white/5">
+        <p className="text-sm text-[#94A3B8]">
+          © {new Date().getFullYear()} Meu Plantão. Desenvolvido para transformar a rotina médica.
+        </p>
       </footer>
-
-      <style jsx global>{`
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
-        html { scroll-behavior: smooth; }
-      `}</style>
 
     </div>
   );
