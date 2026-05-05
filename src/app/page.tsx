@@ -91,12 +91,12 @@ export default function LandingPage() {
       <section className="w-full max-w-6xl mx-auto py-20 px-6">
         <div className="grid md:grid-cols-3 gap-6">
           {/* Card 1 */}
-          <div className="bg-[#0F172A]/50 backdrop-blur-sm p-8 rounded-3xl border border-white/5 flex flex-col items-center text-center space-y-6 hover:border-blue-500/20 transition-all group">
-            <div className="w-10 h-10 text-blue-500 bg-blue-500/10 flex items-center justify-center rounded-xl transition-transform group-hover:scale-110">
-              <Calendar size={20} />
+          <div className="bg-[#0F172A] p-8 rounded-3xl border border-white/5 flex flex-col items-center text-center hover:border-blue-500/20 transition-all group">
+            <div className="w-16 h-16 text-blue-500 bg-[#050816] p-4 rounded-2xl border border-white/5 flex items-center justify-center transition-transform group-hover:scale-110">
+              <Calendar size={24} />
             </div>
-            <div className="space-y-3">
-              <h3 className="text-lg font-bold text-white tracking-tight">Calendário Inteligente</h3>
+            <div className="mt-8 space-y-3">
+              <h3 className="text-xl font-bold text-white tracking-tight">Calendário Inteligente</h3>
               <p className="text-sm text-[#94A3B8] leading-relaxed">
                 Visualize sua escala completa de forma intuitiva e focada em produtividade.
               </p>
@@ -104,12 +104,12 @@ export default function LandingPage() {
           </div>
 
           {/* Card 2 */}
-          <div className="bg-[#0F172A]/50 backdrop-blur-sm p-8 rounded-3xl border border-white/5 flex flex-col items-center text-center space-y-6 hover:border-blue-500/20 transition-all group">
-            <div className="w-10 h-10 text-blue-500 bg-blue-500/10 flex items-center justify-center rounded-xl transition-transform group-hover:scale-110">
-              <LineChart size={20} />
+          <div className="bg-[#0F172A] p-8 rounded-3xl border border-white/5 flex flex-col items-center text-center hover:border-blue-500/20 transition-all group">
+            <div className="w-16 h-16 text-blue-500 bg-[#050816] p-4 rounded-2xl border border-white/5 flex items-center justify-center transition-transform group-hover:scale-110">
+              <LineChart size={24} />
             </div>
-            <div className="space-y-3">
-              <h3 className="text-lg font-bold text-white tracking-tight">Controle Financeiro</h3>
+            <div className="mt-8 space-y-3">
+              <h3 className="text-xl font-bold text-white tracking-tight">Controle Financeiro</h3>
               <p className="text-sm text-[#94A3B8] leading-relaxed">
                 Acompanhe e projete seus ganhos mensais automaticamente com base nos plantões.
               </p>
@@ -117,12 +117,12 @@ export default function LandingPage() {
           </div>
 
           {/* Card 3 */}
-          <div className="bg-[#0F172A]/50 backdrop-blur-sm p-8 rounded-3xl border border-white/5 flex flex-col items-center text-center space-y-6 hover:border-blue-500/20 transition-all group">
-            <div className="w-10 h-10 text-blue-500 bg-blue-500/10 flex items-center justify-center rounded-xl transition-transform group-hover:scale-110">
-              <FileText size={20} />
+          <div className="bg-[#0F172A] p-8 rounded-3xl border border-white/5 flex flex-col items-center text-center hover:border-blue-500/20 transition-all group">
+            <div className="w-16 h-16 text-blue-500 bg-[#050816] p-4 rounded-2xl border border-white/5 flex items-center justify-center transition-transform group-hover:scale-110">
+              <FileText size={24} />
             </div>
-            <div className="space-y-3">
-              <h3 className="text-lg font-bold text-white tracking-tight">Relatórios Profissionais</h3>
+            <div className="mt-8 space-y-3">
+              <h3 className="text-xl font-bold text-white tracking-tight">Relatórios Profissionais</h3>
               <p className="text-sm text-[#94A3B8] leading-relaxed">
                 Gere PDFs detalhados das suas escalas para conferência e exportação rápida.
               </p>
