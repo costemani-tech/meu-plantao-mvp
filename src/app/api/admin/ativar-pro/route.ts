@@ -1,12 +1,19 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-const ADMIN_TOKEN = 'ADMIN_SECRET_2026';
+export const dynamic = 'force-dynamic';
+
+const ADMIN_TOKEN = process.env.ADMIN_SECRET;
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const email = searchParams.get('email');
   const token = searchParams.get('token');
+
+  if (!ADMIN_TOKEN) {
+    console.error('CRITICAL: ADMIN_SECRET is not set in environment variables.');
+    return NextResponse.json({ error: 'Configuração do servidor ausente' }, { status: 500 });
+  }
 
   if (token !== ADMIN_TOKEN) {
     return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
@@ -29,7 +36,8 @@ export async function GET(request: Request) {
     .eq('email', email.toLowerCase());
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error('Erro ao ativar PRO:', error);
+    return NextResponse.json({ error: 'Erro interno ao ativar PRO' }, { status: 500 });
   }
 
   return NextResponse.json({ success: true, message: `Usuário ${email} agora é PRO.` });
