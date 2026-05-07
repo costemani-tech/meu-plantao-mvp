@@ -20,21 +20,21 @@ import { useState, useEffect } from 'react';
 function FAQItem({ question, answer }: { question: string, answer: string }) {
   const [isOpen, setIsOpen] = useState(false);
   return (
-    <div className="bg-[#0A1128]/80 backdrop-blur-md rounded-[24px] border border-[#3B82F6]/15 overflow-hidden transition-all duration-300 hover:border-[#3B82F6]/30">
+    <div className="bg-[#0A1128] rounded-[18px] border border-[#78a0ff]/20 overflow-hidden transition-all duration-500 hover:border-[#78a0ff]/40">
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        className="flex w-full items-center justify-between p-6 text-left focus:outline-none"
+        className="flex w-full items-center justify-between p-6 md:p-8 text-left focus:outline-none"
       >
-        <span className="text-base font-bold text-white">{question}</span>
-        <div className={`flex-shrink-0 ml-4 transition-transform duration-300 ${isOpen ? 'rotate-45' : 'rotate-0'}`}>
+        <span className="text-base md:text-lg font-bold text-white">{question}</span>
+        <div className={`flex-shrink-0 ml-4 transition-transform duration-500 ${isOpen ? 'rotate-45' : 'rotate-0'}`}>
           <Plus size={24} className="text-[#3B82F6]" />
         </div>
       </button>
       <div 
-        className={`grid transition-all duration-300 ease-in-out ${isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}
+        className={`grid transition-all duration-500 ease-in-out ${isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}
       >
         <div className="overflow-hidden">
-          <p className="px-6 pb-6 text-[#94A3B8] text-sm leading-relaxed font-medium">
+          <p className="px-6 md:px-8 pb-6 md:pb-8 text-[#94A3B8] text-sm md:text-base leading-relaxed font-medium">
             {answer}
           </p>
         </div>
@@ -84,7 +84,7 @@ export default function LandingPage() {
       </header>
 
       {/* 2. HERO SECTION */}
-      <section className="relative pt-24 pb-20 md:pt-40 md:pb-32 px-6 overflow-hidden">
+      <section className="relative pt-24 pb-24 md:pt-40 md:pb-32 px-6 overflow-hidden">
         {/* Glow Blue de Profundidade */}
         <div className="absolute top-20 left-1/2 -translate-x-1/2 w-full max-w-4xl h-[600px] bg-[#3B82F6]/10 blur-[140px] -z-10" />
         
@@ -99,17 +99,23 @@ export default function LandingPage() {
           </div>
 
           <div className="flex flex-col items-center gap-16">
-            <div className="flex flex-col items-center gap-3">
-              <Link href="/login" className="px-8 py-4 bg-[#3B82F6] text-white font-semibold rounded-full shadow-[0_10px_30px_rgba(59,130,246,0.3)] hover:bg-[#2563EB] hover:scale-105 active:scale-95 transition-all text-base group flex items-center gap-2">
-                Começar Gratuitamente
-                <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
-              </Link>
-              <span className="text-sm font-medium text-[#94A3B8]">Sem cartão • acesso imediato</span>
+            <div className="flex flex-col items-center gap-4">
+              <div className="flex flex-col items-center gap-2">
+                <Link href="/login" className="flex items-center justify-center gap-2 h-14 px-10 bg-gradient-to-r from-blue-600 to-blue-400 text-white font-bold rounded-full shadow-[0_0_20px_rgba(59,130,246,0.5)] hover:shadow-[0_0_30px_rgba(59,130,246,0.8)] hover:scale-105 active:scale-95 transition-all text-lg group">
+                  <span className="text-xl">🚀</span>
+                  Começar Gratuitamente
+                  <ArrowRight size={20} className="text-white group-hover:translate-x-1 transition-transform" />
+                </Link>
+                <span className="text-sm font-medium text-[#94A3B8]">Sem cartão • acesso imediato</span>
+              </div>
+              <div className="text-xs font-semibold text-slate-400 uppercase tracking-widest mt-2">
+                feito para médicos, enfermeiros e plantonistas
+              </div>
             </div>
 
             {/* Mockup Premium */}
             <div className="relative w-full max-w-[260px] md:max-w-[320px] mx-auto group">
-              <div className="relative z-10 rounded-[2.5rem] border border-[#3B82F6]/15 shadow-[0_20px_60px_rgba(59,130,246,0.15)] overflow-hidden bg-[#0A1128]/50 backdrop-blur-sm aspect-[9/18.5] flex items-center justify-center p-3 transform transition-transform duration-1000 ease-out">
+              <div className="relative z-10 rounded-[2.5rem] border border-[#78a0ff]/15 shadow-[0_20px_60px_rgba(59,130,246,0.15)] overflow-hidden bg-[#0A1128]/50 backdrop-blur-sm aspect-[9/18.5] flex items-center justify-center p-3 transform transition-transform duration-1000 ease-out">
                 <div className="relative w-full h-full rounded-[2rem] overflow-hidden bg-[#020817]">
                   <Image 
                     src="/mockup-app.png"
@@ -128,20 +134,20 @@ export default function LandingPage() {
       </section>
 
       {/* 3. PADRONIZAÇÃO DOS CARDS */}
-      <section id="features" className="max-w-5xl mx-auto py-20 px-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+      <section id="features" className="max-w-5xl mx-auto py-24 md:py-32 px-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {[
             { icon: Calendar, title: 'Agenda Inteligente', desc: 'Visualize sua escala completa de forma intuitiva e profissional.' },
             { icon: LineChart, title: 'Controle Financeiro', desc: 'Acompanhe e projete seus ganhos mensais automaticamente.' },
             { icon: FileText, title: 'Relatórios em PDF', desc: 'Gere relatórios detalhados para conferência com hospitais.' }
           ].map((f, i) => (
-            <div key={i} className="bg-[#0A1128]/60 backdrop-blur-md p-8 rounded-[24px] border border-[#3B82F6]/15 flex flex-col items-center text-center gap-6 hover:border-[#3B82F6]/40 hover:shadow-[0_0_30px_rgba(59,130,246,0.15)] hover:-translate-y-1 transition-all duration-300 group">
-              <div className="w-14 h-14 bg-[#3B82F6]/10 rounded-2xl flex items-center justify-center text-[#3B82F6] shadow-[0_0_20px_rgba(59,130,246,0.2)]">
-                <f.icon size={28} className="drop-shadow-[0_0_8px_rgba(59,130,246,0.8)]" />
+            <div key={i} className="bg-[#0A1128]/60 backdrop-blur-md px-8 py-10 rounded-[24px] border border-[#78a0ff]/15 flex flex-col items-center text-center gap-5 hover:border-[#78a0ff]/30 hover:shadow-[0_0_30px_rgba(120,160,255,0.15)] hover:-translate-y-1 transition-all duration-300 group">
+              <div className="w-12 h-12 bg-[#3B82F6]/10 rounded-2xl flex items-center justify-center text-[#3B82F6] shadow-[0_0_20px_rgba(59,130,246,0.2)]">
+                <f.icon size={24} className="drop-shadow-[0_0_8px_rgba(59,130,246,0.8)]" />
               </div>
-              <div className="flex flex-col gap-3">
-                <h3 className="text-xl font-bold text-white tracking-tight">{f.title}</h3>
-                <p className="text-sm font-medium text-[#94A3B8] leading-relaxed">{f.desc}</p>
+              <div className="flex flex-col gap-2 items-center">
+                <h3 className="text-lg font-bold text-white tracking-tight">{f.title}</h3>
+                <p className="text-sm font-medium text-[#94A3B8] leading-relaxed max-w-[240px]">{f.desc}</p>
               </div>
             </div>
           ))}
@@ -149,50 +155,50 @@ export default function LandingPage() {
       </section>
 
       {/* 4. CARD DO PRO */}
-      <section id="pricing" className="py-20 md:py-32 px-6">
+      <section id="pricing" className="py-24 md:py-32 px-6">
         <div className="max-w-[420px] mx-auto relative group">
           {/* Brilho da Oferta */}
           <div className="absolute inset-0 bg-[#3B82F6]/20 blur-[100px] rounded-full" />
           
-          <div className="relative bg-[#0A1128]/80 backdrop-blur-xl p-8 md:p-10 rounded-[32px] border border-[#3B82F6]/30 shadow-[0_0_50px_rgba(59,130,246,0.15)] flex flex-col gap-8 overflow-hidden">
+          <div className="relative bg-[#0A1128]/80 backdrop-blur-xl px-8 py-12 md:px-10 md:py-14 rounded-[32px] border border-[#78a0ff]/15 shadow-[0_0_50px_rgba(59,130,246,0.15)] flex flex-col gap-10 overflow-hidden">
             
-            <div className="flex flex-col items-center gap-3 text-center">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#3B82F6]/10 border border-[#3B82F6]/20 text-[#3B82F6] text-xs font-bold uppercase tracking-wider">
+            <div className="flex flex-col items-center gap-2 text-center">
+              <div className="inline-flex items-center gap-2 text-[#3B82F6] text-xs font-bold uppercase tracking-widest mb-1">
                 <span>🔥</span> Oferta de lançamento
               </div>
               <h2 className="text-2xl font-bold text-white">Plano PRO</h2>
             </div>
 
             <div className="flex flex-col items-center gap-2 text-center">
-              <div className="flex items-start justify-center gap-1">
-                <span className="text-xl text-slate-400 font-medium mt-2">R$</span>
-                <span className="text-6xl font-bold text-white tracking-tighter">9,90</span>
+              <div className="flex items-start justify-center gap-2">
+                <span className="text-2xl text-slate-400 font-medium mt-2">R$</span>
+                <span className="text-7xl font-bold text-white tracking-tighter">9,90</span>
               </div>
               <p className="text-sm text-[#94A3B8] font-medium">6 meses de acesso • pagamento único</p>
             </div>
 
-            <div className="flex flex-col gap-4 pt-6 border-t border-white/5">
+            <div className="flex flex-col gap-4">
               {[
                 'Relatórios financeiros', 
                 'PDF profissional', 
                 'Locais ilimitados', 
                 'Suporte prioritário'
               ].map((item) => (
-                <div key={item} className="flex items-center gap-3 text-sm text-slate-200 font-medium">
+                <div key={item} className="flex items-center gap-3 text-base text-slate-200 font-medium">
                   <CheckCircle2 size={20} className="text-[#3B82F6] drop-shadow-[0_0_8px_rgba(59,130,246,0.5)]" />
                   <span>{item}</span>
                 </div>
               ))}
             </div>
 
-            <div className="flex flex-col gap-3 mt-4">
+            <div className="flex flex-col gap-3 mt-2">
               <Link 
                 href="/login" 
-                className="w-full py-4 bg-[#3B82F6] text-white font-semibold rounded-2xl shadow-[0_10px_30px_rgba(59,130,246,0.3)] hover:bg-[#2563EB] hover:scale-[1.02] active:scale-[0.98] transition-all text-center text-base"
+                className="flex items-center justify-center w-full h-14 bg-gradient-to-r from-blue-600 to-blue-400 text-white font-bold rounded-2xl shadow-[0_10px_30px_rgba(59,130,246,0.4)] hover:shadow-[0_10px_40px_rgba(59,130,246,0.6)] hover:scale-[1.02] active:scale-[0.98] transition-all text-lg"
               >
                 Garantir Oferta
               </Link>
-              <p className="text-center text-xs text-[#3B82F6] font-semibold">
+              <p className="text-center text-sm text-[#3B82F6] font-semibold">
                 97 vagas restantes
               </p>
             </div>
@@ -201,7 +207,7 @@ export default function LandingPage() {
       </section>
 
       {/* 5. FAQ PREMIUM */}
-      <section className="max-w-3xl mx-auto py-20 px-6">
+      <section className="max-w-3xl mx-auto py-24 md:py-32 px-6">
         <div className="flex flex-col gap-10">
           <div className="text-center flex flex-col gap-3">
             <h2 className="text-2xl font-bold text-white">Dúvidas Frequentes</h2>
@@ -225,24 +231,26 @@ export default function LandingPage() {
       </section>
 
       {/* 6. FOOTER SaaS */}
-      <footer className="py-20 px-6 bg-[#02050A] text-center border-t border-white/5">
-        <div className="max-w-4xl mx-auto flex flex-col items-center gap-8">
-          <div className="flex items-center gap-2">
-            <Activity size={24} className="text-[#3B82F6] drop-shadow-[0_0_8px_rgba(59,130,246,0.8)]" />
-            <span className="text-xl font-bold tracking-tight text-white">Meu Plantão</span>
+      <footer className="py-24 px-6 bg-[#02050A] text-center border-t border-[#78a0ff]/10">
+        <div className="max-w-4xl mx-auto flex flex-col items-center gap-6">
+          <div className="flex flex-col items-center gap-4">
+            <div className="flex items-center gap-2">
+              <Activity size={20} className="text-[#3B82F6] drop-shadow-[0_0_8px_rgba(59,130,246,0.8)]" />
+              <span className="text-lg font-bold tracking-tight text-white">Meu Plantão</span>
+            </div>
+            
+            <p className="text-[#94A3B8] text-sm font-medium">
+              Organização inteligente para profissionais da saúde
+            </p>
           </div>
           
-          <p className="text-[#94A3B8] text-sm font-medium">
-            Organização inteligente para profissionais da saúde
-          </p>
-          
-          <div className="flex items-center gap-6 text-sm text-slate-500 font-medium">
+          <div className="flex items-center justify-center gap-8 text-sm text-slate-500 font-medium my-4">
             <Link href="#" className="hover:text-white transition-colors">Privacidade</Link>
             <Link href="#" className="hover:text-white transition-colors">Termos</Link>
             <Link href="#" className="hover:text-white transition-colors">Contato</Link>
           </div>
           
-          <p className="text-xs text-slate-700 font-medium mt-4">
+          <p className="text-[10px] text-slate-700 font-medium">
             © 2026 Meu Plantão
           </p>
         </div>
