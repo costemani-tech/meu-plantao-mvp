@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
@@ -19,7 +20,7 @@ export async function GET() {
 
     if (error) {
       console.error('[OfertaStatus] Erro ao contar assinantes PRO:', error);
-      return NextResponse.json({ ofertaAtiva: false, proCount: 0, error: error.message }, { status: 500 });
+      return NextResponse.json({ ofertaAtiva: false, proCount: 0, error: "Ocorreu um erro no servidor" }, { status: 500 });
     }
 
     const proCount = count ?? 0;
@@ -36,6 +37,6 @@ export async function GET() {
     });
   } catch (error: any) {
     console.error('[OfertaStatus] Erro interno:', error);
-    return NextResponse.json({ ofertaAtiva: false, proCount: 0, error: error.message }, { status: 500 });
+    return NextResponse.json({ ofertaAtiva: false, proCount: 0, error: "Ocorreu um erro no servidor" }, { status: 500 });
   }
 }

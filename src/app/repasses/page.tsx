@@ -47,7 +47,7 @@ export default function RepassesPage() {
     const { error } = await supabase.rpc('aceitar_repasse', { p_repasse_id: repasse_id });
     
     if (error) {
-      showToast(error.message, 'error');
+      showToast('Ocorreu um erro ao processar o repasse. Tente novamente.', 'error');
     } else {
       showToast('🎉 Plantão assumido com sucesso! Já está na sua agenda.', 'success');
       fetchRepasses(); // Recarrega o mural

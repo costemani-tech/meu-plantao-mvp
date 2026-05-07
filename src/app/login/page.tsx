@@ -33,7 +33,7 @@ export default function LoginPage() {
     });
 
     if (error) {
-      showToast(error.message, 'error');
+      showToast('Ocorreu um erro. Tente novamente.', 'error');
     } else {
       setIsCodeSent(true);
       showToast('Código enviado! Verifique seu e-mail.', 'success');
@@ -71,7 +71,7 @@ export default function LoginPage() {
         redirectTo: `${window.location.origin}/auth/callback`
       }
     });
-    if (error) showToast(error.message, 'error');
+    if (error) showToast('Ocorreu um erro. Tente novamente.', 'error');
   };
 
   return (

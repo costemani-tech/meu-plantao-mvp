@@ -44,7 +44,7 @@ export async function GET(request: Request) {
         console.error("PKCE Error detected. Redirecting to dashboard to check session...");
         return NextResponse.redirect(`${origin}/dashboard?auth_error=pkce_mismatch`);
       }
-      return new Response(`ERRO DE AUTENTICAÇÃO: ${error.message}`, { status: 400 });
+      return new Response(`ERRO DE AUTENTICAÇÃO: Ocorreu um erro durante a autenticação.`, { status: 400 });
     }
   }
 
