@@ -20,10 +20,10 @@ import { useState, useEffect } from 'react';
 function FAQItem({ question, answer }: { question: string, answer: string }) {
   const [isOpen, setIsOpen] = useState(false);
   return (
-    <div className="bg-[#0F172A] border border-white/5 rounded-xl mb-4 overflow-hidden transition-colors hover:bg-white/5">
+    <div className="bg-[#0F172A] border border-white/10 rounded-xl p-4 mb-4 overflow-hidden transition-colors hover:bg-white/5">
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        className="flex w-full items-center justify-between p-5 text-left focus:outline-none cursor-pointer"
+        className="flex w-full items-center justify-between text-left focus:outline-none cursor-pointer"
       >
         <span className="text-base md:text-lg font-bold text-white">{question}</span>
         <div className={`flex-shrink-0 ml-4 transition-transform duration-500 ${isOpen ? 'rotate-45' : 'rotate-0'}`}>
@@ -34,7 +34,7 @@ function FAQItem({ question, answer }: { question: string, answer: string }) {
         className={`grid transition-all duration-500 ease-in-out ${isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}
       >
         <div className="overflow-hidden">
-          <p className="px-5 pb-5 text-[#94A3B8] text-sm md:text-base leading-relaxed font-medium">
+          <p className="pt-4 text-[#94A3B8] text-sm md:text-base leading-relaxed font-medium">
             {answer}
           </p>
         </div>
@@ -100,12 +100,12 @@ export default function LandingPage() {
 
           <div className="flex flex-col items-center gap-16">
             <div className="flex flex-col items-center gap-4">
-              <Link href="/login" className="flex items-center justify-center gap-2 bg-[#2563EB] text-white font-bold rounded-2xl px-10 py-4 shadow-[0_0_20px_rgba(37,99,235,0.4)] hover:shadow-[0_0_30px_rgba(37,99,235,0.6)] hover:scale-105 active:scale-95 transition-all text-lg group">
+              <Link href="/login" className="flex items-center justify-center gap-2 bg-[#2563EB] text-white font-bold rounded-2xl px-10 py-4 shadow-[0_0_25px_rgba(37,99,235,0.6)] hover:shadow-[0_0_30px_rgba(37,99,235,0.8)] hover:scale-105 active:scale-95 transition-all text-lg group">
                 Começar Agora
                 <ArrowRight size={20} className="text-white group-hover:translate-x-1 transition-transform" />
               </Link>
               <div className="text-xs font-semibold text-slate-400 uppercase tracking-widest mt-2">
-                feito para médicos, enfermeiros e plantonistas
+                Solução inteligente para os profissionais de plantão.
               </div>
             </div>
 
@@ -152,7 +152,7 @@ export default function LandingPage() {
 
       {/* 4. CARD DO PRO */}
       <section id="pricing" className="py-24 md:py-32 px-6">
-        <div className="bg-[#0F172A] border-2 border-[#2563EB] rounded-3xl p-10 max-w-md mx-auto shadow-2xl relative">
+        <div className="bg-[#0A0F1D] border border-[#2563EB] shadow-[0_0_40px_rgba(37,99,235,0.3)] rounded-3xl p-10 max-w-md mx-auto relative">
           
           <div className="flex flex-col items-center gap-2 text-center">
             <div className="inline-flex items-center gap-2 text-[#3B82F6] text-xs font-bold uppercase tracking-widest mb-1">
