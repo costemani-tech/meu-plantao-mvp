@@ -94,13 +94,13 @@ export default function LandingPage() {
               Organize seus plantões <br className="hidden md:block" /> sem complicação.
             </h1>
             <p className="text-base md:text-lg text-[#94A3B8] font-medium max-w-xl mx-auto leading-relaxed">
-              A ferramenta inteligente feita por médicos para médicos. <br className="hidden md:block" /> Simplicidade e controle total na palma da sua mão.
+              Simplicidade e controle total dos seu plantões na palma da sua mão.
             </p>
           </div>
 
           <div className="flex flex-col items-center gap-16">
-            <div className="flex flex-col items-center gap-4">
-              <Link href="/login" className="flex items-center justify-center gap-2 bg-[#2563EB] text-white font-bold rounded-2xl px-10 py-4 shadow-[0_0_25px_rgba(37,99,235,0.6)] hover:shadow-[0_0_30px_rgba(37,99,235,0.8)] hover:scale-105 active:scale-95 transition-all text-lg group">
+            <div className="flex flex-col items-center gap-4 w-full px-6">
+              <Link href="/login" className="flex items-center justify-center gap-2 w-full max-w-[340px] bg-gradient-to-r from-blue-600 to-blue-400 text-white font-bold rounded-2xl px-8 py-4 shadow-[0_0_25px_rgba(59,130,246,0.6)] hover:shadow-[0_0_35px_rgba(59,130,246,0.8)] hover:scale-105 active:scale-95 transition-all text-lg group">
                 Começar Agora
                 <ArrowRight size={20} className="text-white group-hover:translate-x-1 transition-transform" />
               </Link>
@@ -152,16 +152,18 @@ export default function LandingPage() {
 
       {/* 4. CARD DO PRO */}
       <section id="pricing" className="py-24 md:py-32 px-6">
-        <div className="bg-[#0A0F1D] border border-[#2563EB] shadow-[0_0_40px_rgba(37,99,235,0.3)] rounded-3xl p-10 max-w-md mx-auto relative">
+        <div className="bg-[#0A1128]/80 backdrop-blur-xl border border-[#3B82F6]/50 shadow-[0_0_50px_rgba(59,130,246,0.25)] rounded-[32px] p-8 md:p-10 max-w-md mx-auto relative overflow-hidden group">
+          {/* Brilho interno do Card PRO */}
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-1/2 bg-[#3B82F6]/10 blur-[80px] pointer-events-none" />
           
-          <div className="flex flex-col items-center gap-2 text-center">
+          <div className="relative flex flex-col items-center gap-2 text-center">
             <div className="inline-flex items-center gap-2 text-[#3B82F6] text-xs font-bold uppercase tracking-widest mb-1">
               <span>🔥</span> Oferta de lançamento
             </div>
             <h2 className="text-2xl font-bold text-white">Plano PRO</h2>
           </div>
 
-          <div className="flex flex-col items-center text-center my-6">
+          <div className="relative flex flex-col items-center text-center my-6">
             <div className="flex items-start justify-center gap-2">
               <span className="text-2xl text-slate-400 font-medium mt-2">R$</span>
               <span className="text-6xl md:text-7xl font-black text-white tracking-tighter">9,90</span>
@@ -169,12 +171,12 @@ export default function LandingPage() {
             <p className="text-sm text-[#94A3B8] font-medium mt-2">6 meses de acesso • pagamento único</p>
           </div>
 
-          <div className="flex flex-col space-y-4 my-8 text-left">
+          <div className="relative flex flex-col space-y-4 my-8 text-left">
             {[
               'Relatórios financeiros', 
               'PDF profissional', 
               'Locais ilimitados', 
-              'Suporte prioritário'
+              'Controle de repasses e extras'
             ].map((item) => (
               <div key={item} className="flex items-center gap-3 text-base text-slate-200 font-medium">
                 <CheckCircle2 size={20} className="text-[#3B82F6]" />
@@ -183,10 +185,10 @@ export default function LandingPage() {
             ))}
           </div>
 
-          <div className="flex flex-col gap-3 mt-2">
+          <div className="relative flex flex-col gap-3 mt-2">
             <Link 
               href="/login" 
-              className="flex items-center justify-center w-full bg-[#2563EB] hover:bg-[#1D4ED8] text-white py-4 rounded-xl font-bold text-lg transition-all"
+              className="flex items-center justify-center w-full bg-gradient-to-r from-blue-600 to-blue-400 shadow-[0_0_20px_rgba(59,130,246,0.4)] hover:shadow-[0_0_30px_rgba(59,130,246,0.6)] text-white py-4 rounded-xl font-bold text-lg hover:scale-[1.02] active:scale-[0.98] transition-all"
             >
               Garantir Oferta
             </Link>
