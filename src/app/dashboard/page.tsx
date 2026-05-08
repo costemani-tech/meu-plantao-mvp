@@ -3,24 +3,17 @@ import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import React from 'react';
 import { 
-  Calendar, 
-  Clock, 
   TrendingUp, 
   ChevronRight,
-  Eye,
-  EyeOff,
   Plus
 } from 'lucide-react';
 import { 
   DashboardInteractive,
-  ShareAgendaButton,
   EarningsPrivacyWrapper,
   UpcomingShiftsClient 
 } from '../DashboardInteractive';
 import { isUserPro, isSubscriptionActive } from '../../lib/supabase';
-import { formatRelativeShiftDate } from '../../lib/date-utils';
 import { HandMetal } from 'lucide-react';
 
 // Utilitário para pegar o cliente Supabase Server-Side
