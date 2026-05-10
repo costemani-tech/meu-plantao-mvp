@@ -1,9 +1,63 @@
 import { NextResponse } from 'next/server';
 import { MercadoPagoConfig, Payment } from 'mercadopago';
 import { createClient } from '@supabase/supabase-js';
+import crypto from 'crypto';
+
+export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
   try {
+    const webhookSecret = process.env.MERCADOPAGO_WEBHOOK_SECRET;
+
+    if (!webhookSecret) {
+      console.error('[MercadoPago Webhook] MERCADOPAGO_WEBHOOK_SECRET não configurado');
+      return NextResponse.json({ error: 'Erro interno de configuração' }, { status: 500 });
+    }
+
+    // Validação de assinatura HMAC-SHA256
+    const signatureHeader = req.headers.get('x-signature');
+    const requestId = req.headers.get('x-request-id');
+    const urlObj = new URL(req.url);
+    const dataIdQuery = urlObj.searchParams.get('data.id');
+
+    if (!signatureHeader || !requestId || !dataIdQuery) {
+      console.warn('[MercadoPago Webhook] Headers ou query params de assinatura ausentes');
+      return NextResponse.json({ error: 'Assinatura inválida ou ausente' }, { status: 400 });
+    }
+
+    const parts = signatureHeader.split(',');
+    let ts;
+    let v1;
+
+    parts.forEach(part => {
+      const [key, value] = part.split('=');
+      if (key && value) {
+        if (key.trim() === 'ts') ts = value.trim();
+        if (key.trim() === 'v1') v1 = value.trim();
+      }
+    });
+
+    if (!ts || !v1) {
+      console.warn('[MercadoPago Webhook] Formato de x-signature inválido');
+      return NextResponse.json({ error: 'Formato de assinatura inválido' }, { status: 400 });
+    }
+
+    const manifest = `id:${dataIdQuery};request-id:${requestId};ts:${ts};`;
+
+    const hmac = crypto.createHmac('sha256', webhookSecret);
+    hmac.update(manifest);
+    const sha = hmac.digest('hex');
+
+    try {
+      if (!crypto.timingSafeEqual(Buffer.from(sha), Buffer.from(v1))) {
+        console.warn('[MercadoPago Webhook] Assinatura HMAC não confere');
+        return NextResponse.json({ error: 'Assinatura inválida' }, { status: 401 });
+      }
+    } catch (err) {
+       console.warn('[MercadoPago Webhook] Erro ao comparar assinaturas:', err);
+       return NextResponse.json({ error: 'Assinatura inválida' }, { status: 401 });
+    }
+
     let dataId;
     let type;
 
@@ -17,9 +71,8 @@ export async function POST(req: Request) {
     }
 
     // Se não veio no body, tentar ler das query params (IPN)
-    const url = new URL(req.url);
-    if (!dataId) dataId = url.searchParams.get('data.id') || url.searchParams.get('id');
-    if (!type) type = url.searchParams.get('type') || url.searchParams.get('topic');
+    if (!dataId) dataId = urlObj.searchParams.get('data.id') || urlObj.searchParams.get('id');
+    if (!type) type = urlObj.searchParams.get('type') || urlObj.searchParams.get('topic');
 
     if (!dataId) {
       return NextResponse.json({ received: true });
