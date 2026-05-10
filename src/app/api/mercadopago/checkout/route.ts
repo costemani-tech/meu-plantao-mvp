@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { MercadoPagoConfig, Preference } from 'mercadopago';
 import { createClient } from '@supabase/supabase-js';
 
+export const dynamic = 'force-dynamic';
+
 // Parâmetros da Oferta de Lançamento (devem bater com /api/mercadopago/oferta-status)
 const OFERTA_MAX_ASSINANTES = 100;
 const OFERTA_DATA_LIMITE = new Date('2026-08-31T23:59:59-03:00');
