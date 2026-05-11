@@ -26,6 +26,8 @@ create table public.escalas (
   local_id uuid references public.locais_trabalho(id) on delete cascade not null,
   data_inicio date not null,
   regra varchar not null, -- Ex: '12x36', '24x48', '24x72'
+  alerta_ativo boolean default false,
+  antecedencia_horas integer default 2,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
@@ -38,6 +40,9 @@ create table public.plantoes (
   data_hora_inicio timestamp with time zone not null,
   data_hora_fim timestamp with time zone not null,
   status varchar default 'Agendado', -- 'Agendado', 'Cancelado', 'Trocado'
+  alerta_ativo boolean default true,
+  antecedencia_horas integer default 2,
+  alert_sent boolean default false,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 

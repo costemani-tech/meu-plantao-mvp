@@ -223,6 +223,8 @@ export async function POST(req: NextRequest) {
         local_id,
         data_inicio: new Date(data_inicio).toISOString().split('T')[0],
         regra,
+        alerta_ativo: body.antecedencia !== false, // Default to true unless explicitly sent as false
+        antecedencia_horas: body.antecedencia ? Number(body.antecedencia) : 2,
       })
       .select()
       .single();
@@ -244,6 +246,8 @@ export async function POST(req: NextRequest) {
       data_hora_fim: s.fim.toISOString(),
       status: 'Agendado',
       status_conflito: forcar_conflito === true,
+      alerta_ativo: body.antecedencia !== false, // Default to true unless explicitly sent as false
+      antecedencia_horas: body.antecedencia ? Number(body.antecedencia) : 2,
     }));
 
     const { error: erroInsert } = await supabaseAdmin

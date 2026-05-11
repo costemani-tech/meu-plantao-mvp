@@ -16,6 +16,9 @@ export default function PlantaoExtraPage() {
   const [tipoExtra, setTipoExtra] = useState<'Remunerado' | 'Troca'>('Remunerado');
   const [valorGanho, setValorGanho] = useState('');
 
+  const [alertaAtivo, setAlertaAtivo] = useState(true);
+  const [antecedenciaHoras, setAntecedenciaHoras] = useState('2');
+
   const [saving, setSaving] = useState(false);
   const [conflitoPendente, setConflitoPendente] = useState<{ inicio: string; fim: string } | null>(null);
   const [payloadPendente, setPayloadPendente] = useState<{ inicioIso: string; fimIso: string } | null>(null);
@@ -138,6 +141,8 @@ export default function PlantaoExtraPage() {
         is_extra: true,
         status: safeTipoExtra === 'Troca' ? 'Trocado' : 'Agendado',
         notas: (isPro && valorNumerico > 0) ? `R$ ${valorNumerico.toFixed(2)} [${safeTipoExtra}]` : (isPro ? safeTipoExtra : 'Plantão Extra (Free)'),
+        alerta_ativo: alertaAtivo,
+        antecedencia_horas: Number(antecedenciaHoras),
       });
 
       if (error) throw error;
@@ -283,6 +288,42 @@ export default function PlantaoExtraPage() {
                   📊 Veja seus ganhos extras automaticamente
                 </div>
               </div>
+            </div>
+          )}
+
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--bg-secondary)', padding: 16, borderRadius: 16, border: '1px solid var(--border-subtle)', marginTop: 24, marginBottom: 16 }}>
+            <div>
+              <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>Alertas Ativados</div>
+              <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Receber push notifications</div>
+            </div>
+            <button
+              onClick={() => setAlertaAtivo(!alertaAtivo)}
+              style={{
+                width: 44, height: 24, borderRadius: 12, background: alertaAtivo ? 'var(--accent-teal)' : 'var(--border-subtle)',
+                border: 'none', position: 'relative', cursor: 'pointer', transition: '0.2s'
+              }}
+            >
+              <div style={{
+                width: 20, height: 20, borderRadius: '50%', background: 'white', position: 'absolute', top: 2, left: alertaAtivo ? 22 : 2,
+                transition: '0.2s', boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+              }} />
+            </button>
+          </div>
+
+          {alertaAtivo && (
+            <div className="form-group" style={{ marginBottom: 24 }}>
+              <label className="form-label">Antecedência do Alerta</label>
+              <select
+                className="form-select"
+                value={antecedenciaHoras}
+                onChange={e => setAntecedenciaHoras(e.target.value)}
+              >
+                <option value="1">1 hora antes</option>
+                <option value="2">2 horas antes</option>
+                <option value="4">4 horas antes</option>
+                <option value="8">8 horas antes</option>
+                <option value="12">12 horas antes</option>
+              </select>
             </div>
           )}
 

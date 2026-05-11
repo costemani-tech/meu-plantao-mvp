@@ -220,13 +220,17 @@ export default function CalendarioPage() {
             local_id: shiftParaEditar.local_id, 
             regra: regra, 
             data_inicio: dataNovaFormatada, 
-            hora_fim: horaFim 
+            hora_fim: horaFim,
+            antecedencia: data.antecedenciaHoras, // Add antecedent value in Escala payload
+            alerta_ativo: data.alertaAtivo
           }) 
         });
       } else {
         await supabase.from('plantoes').update({
            data_hora_inicio: dataNovaFormatada,
-           data_hora_fim: dataInicio + 'T' + horaFim + ':00'
+           data_hora_fim: dataInicio + 'T' + horaFim + ':00',
+           alerta_ativo: data.alertaAtivo,
+           antecedencia_horas: data.antecedenciaHoras
         }).eq('id', shiftParaEditar.id);
       }
 

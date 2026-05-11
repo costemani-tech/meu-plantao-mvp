@@ -22,15 +22,17 @@ export async function GET(request: NextRequest) {
   const ONESIGNAL_REST_KEY = process.env.ONESIGNAL_REST_KEY!;
 
   const now = new Date();
-  const windowStart = now.toISOString();
-  const windowEnd = new Date(now.getTime() + 2 * 60 * 60 * 1000).toISOString(); // now + 2h
+  const nowISO = now.toISOString();
 
-  // 1. Fetch upcoming shifts within the next 2 hours where alert_sent is false/null
+  // 1. Fetch upcoming shifts that are active for alerts and haven't been sent yet.
+  // We fetch a wide window (e.g. next 24h) and then filter in memory to allow variable `antecedencia_horas` logic.
+  const maxWindow = new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString();
+
   const { data: plantoes, error } = await supabase
     .from('plantoes')
-    .select('id, usuario_id, data_hora_inicio, local:locais_trabalho(nome)')
-    .gte('data_hora_inicio', windowStart)
-    .lte('data_hora_inicio', windowEnd)
+    .select('id, usuario_id, data_hora_inicio, antecedencia_horas, alerta_ativo, local:locais_trabalho(nome)')
+    .gte('data_hora_inicio', nowISO)
+    .lte('data_hora_inicio', maxWindow)
     .neq('status', 'Cancelado')
     .or('alert_sent.is.null,alert_sent.eq.false');
 
@@ -47,6 +49,16 @@ export async function GET(request: NextRequest) {
   const errors: string[] = [];
 
   for (const plantao of plantoes) {
+    if (plantao.alerta_ativo === false) continue; // Skip if alerts are explicitly disabled for this shift
+
+    const antecedenciaMs = (plantao.antecedencia_horas || 2) * 60 * 60 * 1000;
+    const shiftStartTime = new Date(plantao.data_hora_inicio).getTime();
+
+    // Check if it's time to send the alert (now is within or past the antecedencia threshold)
+    if (now.getTime() < shiftStartTime - antecedenciaMs) {
+      continue; // Not time yet
+    }
+
     const localNome = (plantao.local as any)?.nome ?? 'seu local';
     const horaEntrada = new Date(plantao.data_hora_inicio).toLocaleTimeString('pt-BR', {
       hour: '2-digit',
