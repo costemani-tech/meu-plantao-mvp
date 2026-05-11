@@ -1,11 +1,65 @@
 import { NextResponse } from 'next/server';
 import { MercadoPagoConfig, Payment } from 'mercadopago';
 import { createClient } from '@supabase/supabase-js';
+import crypto from 'crypto';
+
+export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
+  const secret = process.env.MERCADOPAGO_WEBHOOK_SECRET;
+
+  if (!secret) {
+    console.error('[MercadoPago Webhook] Missing MERCADOPAGO_WEBHOOK_SECRET');
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  }
+
   try {
     let dataId;
     let type;
+
+    // Validate Signature
+    const xSignature = req.headers.get('x-signature');
+    const xRequestId = req.headers.get('x-request-id');
+
+    if (!xSignature || !xRequestId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const url = new URL(req.url);
+    const dataIDFromUrl = url.searchParams.get('data.id') || url.searchParams.get('id');
+
+    const parts = xSignature.split(',');
+    let ts;
+    let hash;
+
+    parts.forEach(part => {
+      const keyValue = part.split('=');
+      if (keyValue.length === 2) {
+        const key = keyValue[0].trim();
+        const value = keyValue[1].trim();
+        if (key === 'ts') {
+          ts = value;
+        } else if (key === 'v1') {
+          hash = value;
+        }
+      }
+    });
+
+    if (!ts || !hash) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const manifest = `id:${dataIDFromUrl};request-id:${xRequestId};ts:${ts};`;
+    const hmac = crypto.createHmac('sha256', secret);
+    hmac.update(manifest);
+    const sha = hmac.digest('hex');
+
+    const expectedHashBuffer = Buffer.from(sha, 'hex');
+    const actualHashBuffer = Buffer.from(hash, 'hex');
+
+    if (expectedHashBuffer.length !== actualHashBuffer.length || !crypto.timingSafeEqual(expectedHashBuffer, actualHashBuffer)) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
     // Tentar ler do body (Webhook normal)
     try {
@@ -17,8 +71,7 @@ export async function POST(req: Request) {
     }
 
     // Se não veio no body, tentar ler das query params (IPN)
-    const url = new URL(req.url);
-    if (!dataId) dataId = url.searchParams.get('data.id') || url.searchParams.get('id');
+    if (!dataId) dataId = dataIDFromUrl;
     if (!type) type = url.searchParams.get('type') || url.searchParams.get('topic');
 
     if (!dataId) {
