@@ -2,8 +2,7 @@
 
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { supabase, Plantao, LocalTrabalho, isUserPro, isSubscriptionActive } from '../../lib/supabase';
-import { Clock, MoreVertical, ChevronLeft, ChevronRight, Info, Edit2, Trash2, Calendar as CalendarIcon, Settings } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { Clock, ChevronLeft, ChevronRight, Info, Edit2, Trash2 } from 'lucide-react';
 import { ShareAgendaModal } from '../../components/ShareAgendaModal';
 import { ShiftEditScreen } from '../../components/ShiftEditScreen';
 import { formatDaysArray } from '../../lib/date-utils';
@@ -26,17 +25,13 @@ export default function CalendarioPage() {
   const [modalExclusao, setModalExclusao] = useState<PlantaoComLocal | null>(null);
   const [excluindo, setExcluindo] = useState(false);
   
-  const [menuAberto, setMenuAberto] = useState(false);
   const [shiftParaEditar, setShiftParaEditar] = useState<PlantaoComLocal | null>(null);
-  const [salvandoCiclo, setSalvandoCiclo] = useState(false);
   
   const [showExportModal, setShowExportModal] = useState(false);
-  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   
-  const router = useRouter();
   const [isPro, setIsPro] = useState<boolean | null>(null);
   const [userName, setUserName] = useState('Médico');
-  const [totalGanhos, setTotalGanhos] = useState(0);
+  const [totalGanhos] = useState(0);
 
   useEffect(() => {
     const checkPro = async () => {

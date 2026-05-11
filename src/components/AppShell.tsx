@@ -4,7 +4,8 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { supabase, isUserPro, isSubscriptionActive } from '../lib/supabase';
 import { useEffect, useState } from 'react';
-import { LayoutDashboard, CalendarDays, Settings2, PlusCircle, LogOut, Sun, Moon, Activity, Bell, X, AlertTriangle, Star, CreditCard } from 'lucide-react';
+import { LayoutDashboard, CalendarDays, Settings2, PlusCircle, LogOut, Bell, X, AlertTriangle, Star, CreditCard } from 'lucide-react';
+import Image from 'next/image';
 import PremiumModal from './PremiumModal';
 
 const navItems = [
@@ -17,7 +18,6 @@ const navItems = [
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const [theme] = useState<'dark'>('dark');
   const [unreadCount, setUnreadCount] = useState(0);
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>('default');
 
@@ -226,7 +226,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             plan_type: 'FREE',
             status: 'expired'
           }).eq('id', user.id);
-          console.log('[SaaS] Plano PRO expirado. Rebaixando usuário para FREE.');
         }
 
         if (!proStatus && pathname !== '/login' && pathname !== '/locais') {
@@ -312,7 +311,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
       <aside className="sidebar" style={{ background: '#0F172A', borderRight: '1px solid rgba(255,255,255,0.05)' }}>
         <div className="sidebar-logo" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <img src="/icons/icon-192x192.png" alt="Meu Plantão" style={{ height: 38, width: 'auto', borderRadius: '8px' }} />
+          <Image src="/icons/icon-192x192.png" alt="Meu Plantão" width={38} height={38} style={{ borderRadius: '8px', objectFit: 'cover' }} />
           <div className="sidebar-logo-text" style={{ fontSize: '1.25rem', fontWeight: 800 }}>
             Meu <span style={{ color: '#2563EB' }}>Plantão</span>
           </div>
@@ -432,11 +431,13 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             animation: 'cardEntrance 0.6s cubic-bezier(0.16, 1, 0.3, 1)'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-              <img 
+              <Image
                 src="/icons/icon-192x192.png" 
                 alt="Logo" 
+                width={48}
+                height={48}
                 style={{ 
-                  width: 48, height: 48, borderRadius: '12px', flexShrink: 0, 
+                  borderRadius: '12px', flexShrink: 0,
                   boxShadow: '0 4px 12px rgba(0,0,0,0.1)', objectFit: 'cover' 
                 }} 
               />

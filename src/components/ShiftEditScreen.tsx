@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { X, Clock, Calendar, Check, Info, Building, ChevronRight } from 'lucide-react';
 import { formatDaysArray } from '../lib/date-utils';
 
@@ -54,52 +54,73 @@ export function ShiftEditScreen({ shift, onSave, onCancel }: ShiftEditScreenProp
 
   const [previewDates, setPreviewDates] = useState<any[]>([]);
 
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const calculatePreview = useCallback(() => {
+    const dates = [];
+    const current = new Date(`${dataInicio}T${horaInicio}:00`);
+    const regraEfetiva = regra === 'custom'
+      ? (tipoPersonalizacao === 'dias' ? diasSelecionados.join(',') : `${horasTrabalho}x${horasDescanso}`)
+      : regra;
+
+    if (!regraEfetiva) return;
+
+    for (let i = 0; i < 5; i++) {
+      if (regraEfetiva.includes('x')) {
+        const [ht, hd] = regraEfetiva.split('x').map(Number);
+        dates.push({
+          diaSemana: current.toLocaleDateString('pt-BR', { weekday: 'short' }).toUpperCase().replace('.', ''),
+          dia: current.getDate(),
+          mes: current.getMonth() + 1,
+          horaInicio,
+          horaFim
+        });
+        current.setHours(current.getHours() + ht + hd);
+      } else {
+        const dias = regraEfetiva.split(',').map(Number);
+        if (dias.length === 0 || dias.some(isNaN)) break;
+
+        // Prevent infinite loop if no days match
+        let attempts = 0;
+        while (!dias.includes(current.getDay()) && attempts < 14) {
+          current.setDate(current.getDate() + 1);
+          attempts++;
+        }
+
+        dates.push({
+          diaSemana: current.toLocaleDateString('pt-BR', { weekday: 'short' }).toUpperCase().replace('.', ''),
+          dia: current.getDate(),
+          mes: current.getMonth() + 1,
+          horaInicio,
+          horaFim
+        });
+        current.setDate(current.getDate() + 1);
+      }
+    }
+    setPreviewDates(dates);
+  }, [dataInicio, regra, horaInicio, horaFim, tipoPersonalizacao, diasSelecionados, horasTrabalho, horasDescanso]);
+
   useEffect(() => {
     if (regra === 'custom' || isCustomRule) {
-      if (regra !== 'custom') setRegra('custom');
+      if (regra !== 'custom') {
+         setTimeout(() => setRegra('custom'), 0);
+      }
     }
   }, [regra, isCustomRule]);
 
   useEffect(() => {
-    const calculatePreview = () => {
-      const dates = [];
-      let current = new Date(`${dataInicio}T${horaInicio}:00`);
-      const regraEfetiva = regra === 'custom' 
-        ? (tipoPersonalizacao === 'dias' ? diasSelecionados.join(',') : `${horasTrabalho}x${horasDescanso}`) 
-        : regra;
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    // Debounce preview calculation
+    timeoutRef.current = setTimeout(() => {
+      calculatePreview();
+    }, 300);
 
-      if (!regraEfetiva) return;
-
-      for (let i = 0; i < 5; i++) {
-        if (regraEfetiva.includes('x')) {
-          const [ht, hd] = regraEfetiva.split('x').map(Number);
-          dates.push({
-            diaSemana: current.toLocaleDateString('pt-BR', { weekday: 'short' }).toUpperCase().replace('.', ''),
-            dia: current.getDate(),
-            mes: current.getMonth() + 1,
-            horaInicio,
-            horaFim
-          });
-          current.setHours(current.getHours() + ht + hd);
-        } else {
-          const dias = regraEfetiva.split(',').map(Number);
-          while (!dias.includes(current.getDay())) {
-            current.setDate(current.getDate() + 1);
-          }
-          dates.push({
-            diaSemana: current.toLocaleDateString('pt-BR', { weekday: 'short' }).toUpperCase().replace('.', ''),
-            dia: current.getDate(),
-            mes: current.getMonth() + 1,
-            horaInicio,
-            horaFim
-          });
-          current.setDate(current.getDate() + 1);
-        }
-      }
-      setPreviewDates(dates);
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
     };
-    calculatePreview();
-  }, [dataInicio, regra, horaInicio, horaFim, tipoPersonalizacao, diasSelecionados, horasTrabalho, horasDescanso]);
+  }, [calculatePreview]);
 
   const h = parseInt(horaInicio.split(':')[0]);
   const turnoLabel = (h >= 18 || h < 6) ? 'Noturno' : 'Diurno';
@@ -109,6 +130,9 @@ export function ShiftEditScreen({ shift, onSave, onCancel }: ShiftEditScreenProp
       prev.includes(id) ? prev.filter(d => d !== id) : [...prev, id].sort((a, b) => a - b)
     );
   };
+
+  const inputStyle = { width: '100%', background: 'rgba(15, 23, 42, 0.6)', border: '1px solid #1e293b', borderRadius: 16, padding: '16px 16px 16px 44px', color: '#fff', fontSize: 16, fontWeight: 800, outline: 'none' };
+  const cardStyle = { background: 'rgba(15, 23, 42, 0.6)', border: '1px solid #1e293b' };
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: '#020617', zIndex: 100000, display: 'flex', flexDirection: 'column', color: '#fff', animation: 'slideUp 0.3s ease', fontFamily: 'Inter, sans-serif' }}>
@@ -125,7 +149,7 @@ export function ShiftEditScreen({ shift, onSave, onCancel }: ShiftEditScreenProp
 
       <div style={{ flex: 1, overflowY: 'auto', padding: '0 24px 180px' }}>
         {/* Hospital Context Card */}
-        <div style={{ background: 'rgba(15, 23, 42, 0.6)', border: '1px solid #1e293b', borderRadius: 20, padding: '16px', display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24 }}>
+        <div style={{ ...cardStyle, borderRadius: 20, padding: '16px', display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24 }}>
           <div style={{ background: '#3b82f6', width: 44, height: 44, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Building size={24} color="#fff" />
           </div>
@@ -168,8 +192,8 @@ export function ShiftEditScreen({ shift, onSave, onCancel }: ShiftEditScreenProp
                 key={r.id}
                 onClick={() => setRegra(r.id)}
                 style={{ 
-                  padding: '14px 24px', borderRadius: 16, border: '1px solid #1e293b', fontWeight: 800, fontSize: 14, cursor: 'pointer',
-                  background: regra === r.id ? '#3b82f6' : 'rgba(15, 23, 42, 0.6)',
+                  padding: '14px 24px', borderRadius: 16, border: cardStyle.border, fontWeight: 800, fontSize: 14, cursor: 'pointer',
+                  background: regra === r.id ? '#3b82f6' : cardStyle.background,
                   color: '#fff',
                   boxShadow: regra === r.id ? '0 0 20px rgba(59, 130, 246, 0.4)' : 'none'
                 }}
@@ -188,7 +212,7 @@ export function ShiftEditScreen({ shift, onSave, onCancel }: ShiftEditScreenProp
                 type="date" 
                 value={dataInicio} 
                 onChange={e => setDataInicio(e.target.value)}
-                style={{ width: '100%', background: 'rgba(15, 23, 42, 0.6)', border: '1px solid #1e293b', borderRadius: 16, padding: '16px 16px 16px 48px', color: '#fff', fontSize: 16, fontWeight: 800, outline: 'none' }} 
+                style={{ ...inputStyle, paddingLeft: 48 }}
               />
               <Calendar size={20} color="#475569" style={{ position: 'absolute', left: 16, top: 18 }} />
            </div>
@@ -203,8 +227,8 @@ export function ShiftEditScreen({ shift, onSave, onCancel }: ShiftEditScreenProp
                <button 
                  onClick={() => setTipoPersonalizacao('dias')}
                  style={{ 
-                   padding: '20px', borderRadius: 24, background: 'rgba(15, 23, 42, 0.6)', textAlign: 'left', cursor: 'pointer',
-                   border: tipoPersonalizacao === 'dias' ? '2px solid #3b82f6' : '1px solid #1e293b', position: 'relative'
+                   padding: '20px', borderRadius: 24, background: cardStyle.background, textAlign: 'left', cursor: 'pointer',
+                   border: tipoPersonalizacao === 'dias' ? '2px solid #3b82f6' : cardStyle.border, position: 'relative'
                  }}
                >
                  {tipoPersonalizacao === 'dias' && <Check size={16} color="#fff" style={{ position: 'absolute', top: 12, right: 12, background: '#3b82f6', borderRadius: '50%', padding: 2 }} />}
@@ -215,8 +239,8 @@ export function ShiftEditScreen({ shift, onSave, onCancel }: ShiftEditScreenProp
                <button 
                  onClick={() => setTipoPersonalizacao('horas')}
                  style={{ 
-                   padding: '20px', borderRadius: 24, background: 'rgba(15, 23, 42, 0.6)', textAlign: 'left', cursor: 'pointer',
-                   border: tipoPersonalizacao === 'horas' ? '2px solid #3b82f6' : '1px solid #1e293b', position: 'relative'
+                   padding: '20px', borderRadius: 24, background: cardStyle.background, textAlign: 'left', cursor: 'pointer',
+                   border: tipoPersonalizacao === 'horas' ? '2px solid #3b82f6' : cardStyle.border, position: 'relative'
                  }}
                >
                  {tipoPersonalizacao === 'horas' && <Check size={16} color="#fff" style={{ position: 'absolute', top: 12, right: 12, background: '#3b82f6', borderRadius: '50%', padding: 2 }} />}
@@ -236,8 +260,8 @@ export function ShiftEditScreen({ shift, onSave, onCancel }: ShiftEditScreenProp
                       onClick={() => toggleDia(d.id)}
                       style={{ 
                         padding: '14px 0', borderRadius: 12, fontWeight: 800, fontSize: 12, cursor: 'pointer', position: 'relative',
-                        background: diasSelecionados.includes(d.id) ? '#3b82f6' : 'rgba(15, 23, 42, 0.6)',
-                        border: '1px solid #1e293b', color: '#fff'
+                        background: diasSelecionados.includes(d.id) ? '#3b82f6' : cardStyle.background,
+                        border: cardStyle.border, color: '#fff'
                       }}
                     >
                       {d.label}
@@ -250,11 +274,11 @@ export function ShiftEditScreen({ shift, onSave, onCancel }: ShiftEditScreenProp
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div>
                   <label style={{ fontSize: 11, fontWeight: 800, color: '#64748b', textTransform: 'uppercase', marginBottom: 8, display: 'block' }}>Horas Trabalhadas</label>
-                  <input type="number" value={horasTrabalho} onChange={e => setHorasTrabalho(e.target.value)} style={{ width: '100%', background: 'rgba(15, 23, 42, 0.6)', border: '1px solid #1e293b', borderRadius: 16, padding: '16px', color: '#fff', fontSize: 18, fontWeight: 800 }} />
+                  <input type="number" value={horasTrabalho} onChange={e => setHorasTrabalho(e.target.value)} style={{ ...inputStyle, padding: '16px' }} />
                 </div>
                 <div>
                   <label style={{ fontSize: 11, fontWeight: 800, color: '#64748b', textTransform: 'uppercase', marginBottom: 8, display: 'block' }}>Horas de Descanso</label>
-                  <input type="number" value={horasDescanso} onChange={e => setHorasDescanso(e.target.value)} style={{ width: '100%', background: 'rgba(15, 23, 42, 0.6)', border: '1px solid #1e293b', borderRadius: 16, padding: '16px', color: '#fff', fontSize: 18, fontWeight: 800 }} />
+                  <input type="number" value={horasDescanso} onChange={e => setHorasDescanso(e.target.value)} style={{ ...inputStyle, padding: '16px' }} />
                 </div>
               </div>
             )}
@@ -271,7 +295,7 @@ export function ShiftEditScreen({ shift, onSave, onCancel }: ShiftEditScreenProp
                   type="time" 
                   value={horaInicio} 
                   onChange={e => setHoraInicio(e.target.value)}
-                  style={{ width: '100%', background: 'rgba(15, 23, 42, 0.6)', border: '1px solid #1e293b', borderRadius: 16, padding: '16px 16px 16px 44px', color: '#fff', fontSize: 16, fontWeight: 800, outline: 'none' }} 
+                  style={inputStyle}
                 />
                 <Clock size={18} color="#475569" style={{ position: 'absolute', left: 16, top: 19 }} />
               </div>
@@ -283,7 +307,7 @@ export function ShiftEditScreen({ shift, onSave, onCancel }: ShiftEditScreenProp
                   type="time" 
                   value={horaFim} 
                   onChange={e => setHoraFim(e.target.value)}
-                  style={{ width: '100%', background: 'rgba(15, 23, 42, 0.6)', border: '1px solid #1e293b', borderRadius: 16, padding: '16px 16px 16px 44px', color: '#fff', fontSize: 16, fontWeight: 800, outline: 'none' }} 
+                  style={inputStyle}
                 />
                 <Clock size={18} color="#475569" style={{ position: 'absolute', left: 16, top: 19 }} />
               </div>
@@ -300,7 +324,7 @@ export function ShiftEditScreen({ shift, onSave, onCancel }: ShiftEditScreenProp
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 8 }}>
             {previewDates.map((d, i) => (
               <div key={i} style={{ 
-                background: 'rgba(15, 23, 42, 0.6)', border: '1px solid #1e293b', borderRadius: 16, padding: '12px 6px', textAlign: 'center'
+                ...cardStyle, borderRadius: 16, padding: '12px 6px', textAlign: 'center'
               }}>
                 <div style={{ fontSize: 10, fontWeight: 900, color: '#475569', marginBottom: 6 }}>{d.diaSemana}</div>
                 <div style={{ fontSize: 16, fontWeight: 900, color: '#fff', marginBottom: 2 }}>{d.dia}/{d.mes < 10 ? `0${d.mes}` : d.mes}</div>

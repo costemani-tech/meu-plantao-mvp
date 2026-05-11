@@ -17,7 +17,6 @@ function RelatorioContent() {
   const [plantoesExtra, setPlantoesExtra] = useState<any[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [isPro, setIsPro] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -29,7 +28,6 @@ function RelatorioContent() {
       
       const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
       const userIsPro = isUserPro(user.email) || isSubscriptionActive(profile);
-      setIsPro(userIsPro);
 
       if (!userIsPro) {
         // Redirecting without alert
@@ -48,7 +46,7 @@ function RelatorioContent() {
       const inicioMes = new Date(anoNum, mesNum - 1, 1).toISOString();
       const fimMes = new Date(anoNum, mesNum, 0, 23, 59, 59).toISOString();
 
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('plantoes')
         .select(`
           id, data_hora_inicio, data_hora_fim, notas, is_extra, status,

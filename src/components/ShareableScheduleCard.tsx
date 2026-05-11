@@ -1,4 +1,4 @@
-import React, { forwardRef } from 'react';
+import React, { forwardRef, memo } from 'react';
 import { formatRelativeShiftDate, formatBRTTime } from '../lib/date-utils';
 import { Activity } from 'lucide-react';
 
@@ -22,7 +22,7 @@ export interface ShareableScheduleCardProps {
   hideValues?: boolean;
 }
 
-export const ShareableScheduleCard = forwardRef<HTMLDivElement, ShareableScheduleCardProps>(({ 
+export const ShareableScheduleCard = memo(forwardRef<HTMLDivElement, ShareableScheduleCardProps>(({
   userName, 
   monthYear, 
   shifts, 
@@ -240,6 +240,6 @@ export const ShareableScheduleCard = forwardRef<HTMLDivElement, ShareableSchedul
       </div>
     </div>
   );
-});
+}));
 
 ShareableScheduleCard.displayName = 'ShareableScheduleCard';
