@@ -43,6 +43,8 @@ export function ShiftEditScreen({ shift, onSave, onCancel }: ShiftEditScreenProp
   const [dataInicio, setDataInicio] = useState(shift.data_hora_inicio.substring(0, 10));
   const [horaInicio, setHoraInicio] = useState(new Date(shift.data_hora_inicio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }));
   const [horaFim, setHoraFim] = useState(new Date(shift.data_hora_fim).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }));
+  const [alertaAtivo, setAlertaAtivo] = useState(shift.alerta_ativo ?? true);
+  const [antecedenciaHoras, setAntecedenciaHoras] = useState(String(shift.antecedencia_horas ?? 2));
   
   const isCustomRule = regra === 'custom' || regra.includes(',') || (regra.includes('x') && !['12x36', '24x72'].includes(regra));
   const initialTipo = (regra.includes('x') && !['12x36', '24x72'].includes(regra)) ? 'horas' : 'dias';
@@ -312,6 +314,48 @@ export function ShiftEditScreen({ shift, onSave, onCancel }: ShiftEditScreenProp
             ))}
           </div>
         </div>
+
+        {/* Notificacoes */}
+        <div style={{ marginTop: 24 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(15, 23, 42, 0.6)', padding: 16, borderRadius: 16, border: '1px solid #1e293b', marginBottom: 16 }}>
+            <div>
+              <div style={{ fontSize: 14, fontWeight: 600, color: '#fff' }}>Alertas Ativados</div>
+              <div style={{ fontSize: 12, color: '#64748b' }}>Receber push notifications</div>
+            </div>
+            <button
+              onClick={() => setAlertaAtivo(!alertaAtivo)}
+              style={{
+                width: 44, height: 24, borderRadius: 12, background: alertaAtivo ? '#3b82f6' : '#1e293b',
+                border: 'none', position: 'relative', cursor: 'pointer', transition: '0.2s'
+              }}
+            >
+              <div style={{
+                width: 20, height: 20, borderRadius: '50%', background: 'white', position: 'absolute', top: 2, left: alertaAtivo ? 22 : 2,
+                transition: '0.2s', boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+              }} />
+            </button>
+          </div>
+
+          {alertaAtivo && (
+            <div style={{ background: 'rgba(15, 23, 42, 0.6)', padding: 16, borderRadius: 16, border: '1px solid #1e293b', marginBottom: 24 }}>
+              <label style={{ fontSize: 12, fontWeight: 900, color: '#475569', textTransform: 'uppercase', marginBottom: 8, display: 'block' }}>Antecedência do Alerta</label>
+              <select
+                style={{
+                  width: '100%', background: '#0f172a', border: '1px solid #1e293b', color: '#fff',
+                  padding: '14px', borderRadius: 12, fontSize: 15, fontWeight: 700
+                }}
+                value={antecedenciaHoras}
+                onChange={e => setAntecedenciaHoras(e.target.value)}
+              >
+                <option value="1">1 hora antes</option>
+                <option value="2">2 horas antes</option>
+                <option value="4">4 horas antes</option>
+                <option value="8">8 horas antes</option>
+                <option value="12">12 horas antes</option>
+              </select>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Fixed Footer */}
@@ -335,7 +379,7 @@ export function ShiftEditScreen({ shift, onSave, onCancel }: ShiftEditScreenProp
               const regraFinal = regra === 'custom' 
                 ? (tipoPersonalizacao === 'dias' ? diasSelecionados.join(',') : `${horasTrabalho}x${horasDescanso}`) 
                 : regra;
-              onSave({ regra: regraFinal, horaInicio, horaFim, cor, dataInicio });
+              onSave({ regra: regraFinal, horaInicio, horaFim, cor, dataInicio, alertaAtivo, antecedenciaHoras });
             }}
             style={{ 
               flex: 1.5, padding: '18px', borderRadius: 16, background: 'linear-gradient(135deg, #3b82f6 0%, #2563EB 100%)', 

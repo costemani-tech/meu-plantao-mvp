@@ -45,6 +45,8 @@ interface EscalaAtiva {
   local_id?: string;
   local?: { nome: string; cor_calendario: string };
   plantoes?: { data_hora_inicio: string; data_hora_fim: string }[];
+  alerta_ativo?: boolean;
+  antecedencia_horas?: number;
 }
 
 
@@ -92,7 +94,7 @@ export default function EscalasPage() {
   const [dataEncerramento, setDataEncerramento] = useState('');
   const [deletando, setDeletando] = useState(false);
   const [modalAlertas, setModalAlertas] = useState<EscalaAtiva | null>(null);
-  const [alertasAtivo, setAlertasAtivo] = useState(false);
+  const [alertasAtivo, setAlertasAtivo] = useState(true); // Default to true if setting for the first time
   const [alertasHoras, setAlertasHoras] = useState('2');
   const [enviandoAlertas, setEnviandoAlertas] = useState(false);
   const [showForm, setShowForm] = useState(false);
@@ -126,7 +128,7 @@ export default function EscalasPage() {
     try {
       const { data, error } = await supabase
         .from('escalas')
-        .select('id, regra, tipo_jornada, modo_jornada, data_inicio, local_id, local:locais_trabalho(nome, cor_calendario)')
+        .select('id, regra, tipo_jornada, modo_jornada, data_inicio, local_id, alerta_ativo, antecedencia_horas, local:locais_trabalho(nome, cor_calendario)')
         .eq('usuario_id', user.id)
         .order('created_at', { ascending: false });
       if (error) console.error('fetchEscalas error:', error);
@@ -1143,7 +1145,13 @@ export default function EscalasPage() {
                                 <Edit2 size={16} /> Editar Plantões
                               </button>
                               <button 
-                                onClick={(event) => { event.stopPropagation(); setModalAlertas(e); setMenuEscalaId(null); }}
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  setAlertasAtivo(e.alerta_ativo ?? true);
+                                  setAlertasHoras(String(e.antecedencia_horas ?? 2));
+                                  setModalAlertas(e);
+                                  setMenuEscalaId(null);
+                                }}
                                 style={{ width: '100%', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 10, background: 'none', border: 'none', color: 'var(--text-primary)', cursor: 'pointer', fontSize: 13, textAlign: 'left', userSelect: 'none' }}
                                 className="hover-bg"
                               >
@@ -1181,21 +1189,42 @@ export default function EscalasPage() {
               Receba notificações push no seu celular antes de cada plantão desta escala ({modalAlertas.local?.nome}).
             </p>
 
-            <div style={{ background: 'var(--bg-secondary)', padding: 16, borderRadius: 16, border: '1px solid var(--border-subtle)', marginBottom: 24 }}>
-              <label className="form-label" style={{ fontSize: 13, marginBottom: 8, display: 'block' }}>Antecedência do Alerta</label>
-              <select 
-                className="form-select" 
-                value={alertasHoras} 
-                onChange={e => setAlertasHoras(e.target.value)}
-                style={{ width: '100%' }}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--bg-secondary)', padding: 16, borderRadius: 16, border: '1px solid var(--border-subtle)', marginBottom: 16 }}>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>Alertas Ativados</div>
+                <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Receber push notifications</div>
+              </div>
+              <button
+                onClick={() => setAlertasAtivo(!alertasAtivo)}
+                style={{
+                  width: 44, height: 24, borderRadius: 12, background: alertasAtivo ? 'var(--accent-teal)' : 'var(--border-subtle)',
+                  border: 'none', position: 'relative', cursor: 'pointer', transition: '0.2s'
+                }}
               >
-                <option value="1">1 hora antes</option>
-                <option value="2">2 horas antes</option>
-                <option value="4">4 horas antes</option>
-                <option value="8">8 horas antes</option>
-                <option value="12">12 horas antes</option>
-              </select>
+                <div style={{
+                  width: 20, height: 20, borderRadius: '50%', background: 'white', position: 'absolute', top: 2, left: alertasAtivo ? 22 : 2,
+                  transition: '0.2s', boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                }} />
+              </button>
             </div>
+
+            {alertasAtivo && (
+              <div style={{ background: 'var(--bg-secondary)', padding: 16, borderRadius: 16, border: '1px solid var(--border-subtle)', marginBottom: 24 }}>
+                <label className="form-label" style={{ fontSize: 13, marginBottom: 8, display: 'block' }}>Antecedência do Alerta</label>
+                <select
+                  className="form-select"
+                  value={alertasHoras}
+                  onChange={e => setAlertasHoras(e.target.value)}
+                  style={{ width: '100%' }}
+                >
+                  <option value="1">1 hora antes</option>
+                  <option value="2">2 horas antes</option>
+                  <option value="4">4 horas antes</option>
+                  <option value="8">8 horas antes</option>
+                  <option value="12">12 horas antes</option>
+                </select>
+              </div>
+            )}
 
             <div style={{ display: 'flex', gap: 12 }}>
               <button className="btn btn-secondary" style={{ flex: 1 }} onClick={() => setModalAlertas(null)}>Cancelar</button>
@@ -1204,15 +1233,32 @@ export default function EscalasPage() {
                 style={{ flex: 1, background: 'var(--accent-blue)' }}
                 onClick={async () => {
                    setEnviandoAlertas(true);
-                   // Simulação de salvamento/ativação (no futuro integrar com API de notificações)
-                   await new Promise(r => setTimeout(r, 800));
-                   showToast('Configurações de alerta atualizadas!', 'success');
-                   setModalAlertas(null);
-                   setEnviandoAlertas(false);
+                   try {
+                     const res = await fetch(`/api/escalas/${modalAlertas.id}/alertas`, {
+                       method: 'PATCH',
+                       headers: { 'Content-Type': 'application/json' },
+                       body: JSON.stringify({
+                         alerta_ativo: alertasAtivo,
+                         antecedencia_horas: Number(alertasHoras)
+                       })
+                     });
+
+                     if (res.ok) {
+                       showToast('Configurações de alerta atualizadas!', 'success');
+                       fetchEscalas(); // refresh the list to get new DB values
+                     } else {
+                       throw new Error('Falha na API');
+                     }
+                   } catch (err) {
+                     showToast('Erro ao salvar alertas. Tente novamente.', 'error');
+                   } finally {
+                     setModalAlertas(null);
+                     setEnviandoAlertas(false);
+                   }
                 }}
                 disabled={enviandoAlertas}
               >
-                {enviandoAlertas ? 'Salvando...' : 'Ativar Alertas'}
+                {enviandoAlertas ? 'Salvando...' : 'Salvar Alterações'}
               </button>
             </div>
           </div>

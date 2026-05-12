@@ -142,7 +142,17 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             
             if (userId) {
               // 1. Vincula Identidade (Essencial para alertas direcionados)
-              await OneSignal.login(userId);
+              try {
+                if (typeof OneSignal.login === 'function') {
+                  await OneSignal.login(userId);
+                  console.log("OneSignal vinculado com sucesso ao usuário:", userId);
+                } else if (typeof OneSignal.setExternalUserId === 'function') {
+                  await OneSignal.setExternalUserId(userId);
+                  console.log("OneSignal vinculado via fallback ao usuário:", userId);
+                }
+              } catch (loginErr) {
+                console.error("Falha ao vincular usuário no OneSignal:", loginErr);
+              }
               
               // 2. Dispara Prompt de Permissão se ainda não houver decisão
               // Usamos o Slidedown para uma experiência mais premium e menos intrusiva que o nativo direto

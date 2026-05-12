@@ -9,7 +9,7 @@ export async function POST(request: Request) {
     }
 
     const restKey = process.env.ONESIGNAL_REST_KEY || 'SUA_REST_API_KEY';
-    const appId = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID || 'SUA_APP_ID';
+    const appId = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID || 'b6bb955e-2f5a-4ef8-a832-6ee160ca18b0';
     
     const pushHeader = {
       "Content-Type": "application/json; charset=utf-8",
