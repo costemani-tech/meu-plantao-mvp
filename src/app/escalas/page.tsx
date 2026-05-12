@@ -96,6 +96,7 @@ export default function EscalasPage() {
   const [alertasHoras, setAlertasHoras] = useState('2');
   const [enviandoAlertas, setEnviandoAlertas] = useState(false);
   const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [isPro, setIsPro] = useState<boolean | null>(null);
 
   useEffect(() => {
