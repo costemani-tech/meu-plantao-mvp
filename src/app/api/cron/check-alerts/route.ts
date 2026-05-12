@@ -1,6 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   // Vercel Cron security: validate the authorization header
   const authHeader = request.headers.get('authorization');
@@ -35,8 +37,8 @@ export async function GET(request: NextRequest) {
     .or('alert_sent.is.null,alert_sent.eq.false');
 
   if (error) {
-    console.error('[cron/check-alerts] Supabase query error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error('[cron/check-alerts] Supabase query error');
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 
   if (!plantoes || plantoes.length === 0) {
