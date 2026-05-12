@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
   // Use Service Role Key — never exposed to the client
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-  const ONESIGNAL_APP_ID = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID!;
+  const ONESIGNAL_APP_ID = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID || 'b6bb955e-2f5a-4ef8-a832-6ee160ca18b0';
   const ONESIGNAL_REST_KEY = process.env.ONESIGNAL_REST_KEY!;
 
   const now = new Date();

@@ -44,7 +44,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               window.OneSignalDeferred = window.OneSignalDeferred || [];
               OneSignalDeferred.push(async function(OneSignal) {
                 await OneSignal.init({
-                  appId: "${process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID || 'SUA_CHAVE_ONESIGNAL'}",
+                  appId: "${process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID || 'b6bb955e-2f5a-4ef8-a832-6ee160ca18b0'}",
                   notifyButton: { enable: false },
                   allowLocalhostAsSecureOrigin: true,
                   serviceWorkerPath: 'OneSignalSDKWorker.js',
