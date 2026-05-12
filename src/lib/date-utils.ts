@@ -64,23 +64,25 @@ export function formatDaysArray(days: number[] | string): string {
   const sortedDays = [...days].sort((a, b) => a - b);
   const dayNames = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
   
-  const str = sortedDays.join(',');
+  const validDays = sortedDays.filter(d => !isNaN(d) && d >= 0 && d <= 6);
+  if (validDays.length === 0) return '';
+  const str = validDays.join(',');
   if (str === '1,2,3,4,5') return 'Seg a Sex';
   if (str === '1,2,3,4,5,6') return 'Seg a Sáb';
   if (str === '0,1,2,3,4,5,6') return 'Todos os dias';
   if (str === '0,6') return 'Finais de Semana';
   
   let isSequence = true;
-  for (let i = 1; i < sortedDays.length; i++) {
-    if (sortedDays[i] !== sortedDays[i-1] + 1) {
+  for (let i = 1; i < validDays.length; i++) {
+    if (validDays[i] !== validDays[i-1] + 1) {
       isSequence = false;
       break;
     }
   }
   
-  if (isSequence && sortedDays.length > 2) {
-    return `${dayNames[sortedDays[0]]} a ${dayNames[sortedDays[sortedDays.length - 1]]}`;
+  if (isSequence && validDays.length > 2) {
+    return `${dayNames[validDays[0]]} a ${dayNames[validDays[validDays.length - 1]]}`;
   }
   
-  return sortedDays.map(d => dayNames[d]).join(', ');
+  return validDays.map(d => dayNames[d]).join(', ');
 }
