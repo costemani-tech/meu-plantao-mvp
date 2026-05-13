@@ -5,7 +5,7 @@ import { supabase, LocalTrabalho, isUserPro, isSubscriptionActive } from '../../
 import { gerarProximosPlantoes, SlotPlantao } from '../../lib/scale-generator';
 import { useRouter } from 'next/navigation';
 import EmptyState from '../../components/EmptyState';
-import { ClipboardList, Bell, Trash2, AlertTriangle, X, ChevronRight, Calendar, Clock, Edit2, Plus, Star } from 'lucide-react';
+import { ClipboardList, Bell, Trash2, AlertTriangle, X, ChevronRight, Calendar, Clock, Edit2, Plus, Star, Lock } from 'lucide-react';
 import { formatDaysArray, formatBRTTime, formatRelativeShiftDate } from '../../lib/date-utils';
 
 const CORES_PRESET = [
@@ -1137,18 +1137,36 @@ export default function EscalasPage() {
                               zIndex: 100, minWidth: 180, overflow: 'hidden', animation: 'fadeInDown 0.2s ease'
                             }}>
                               <button 
-                                onClick={(event) => { event.stopPropagation(); handleEditar(e); setMenuEscalaId(null); }}
-                                style={{ width: '100%', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 10, background: 'none', border: 'none', color: 'var(--text-primary)', cursor: 'pointer', fontSize: 13, textAlign: 'left', userSelect: 'none' }}
-                                className="hover-bg"
+                                onClick={(event) => { 
+                                  event.stopPropagation(); 
+                                  if (!isPro) {
+                                    if (typeof window !== 'undefined') window.dispatchEvent(new Event('open-upgrade-modal'));
+                                    return;
+                                  }
+                                  handleEditar(e); 
+                                  setMenuEscalaId(null); 
+                                }}
+                                style={{ width: '100%', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 10, background: 'none', border: 'none', color: isPro ? 'var(--text-primary)' : 'var(--text-muted)', cursor: isPro ? 'pointer' : 'not-allowed', fontSize: 13, textAlign: 'left', userSelect: 'none', opacity: isPro ? 1 : 0.6 }}
+                                className={isPro ? "hover-bg" : ""}
                               >
                                 <Edit2 size={16} /> Editar Plantões
+                                {!isPro && <Lock size={12} style={{ marginLeft: 'auto' }} />}
                               </button>
                               <button 
-                                onClick={(event) => { event.stopPropagation(); setModalAlertas(e); setMenuEscalaId(null); }}
-                                style={{ width: '100%', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 10, background: 'none', border: 'none', color: 'var(--text-primary)', cursor: 'pointer', fontSize: 13, textAlign: 'left', userSelect: 'none' }}
-                                className="hover-bg"
+                                onClick={(event) => { 
+                                  event.stopPropagation(); 
+                                  if (!isPro) {
+                                    if (typeof window !== 'undefined') window.dispatchEvent(new Event('open-upgrade-modal'));
+                                    return;
+                                  }
+                                  setModalAlertas(e); 
+                                  setMenuEscalaId(null); 
+                                }}
+                                style={{ width: '100%', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 10, background: 'none', border: 'none', color: isPro ? 'var(--text-primary)' : 'var(--text-muted)', cursor: isPro ? 'pointer' : 'not-allowed', fontSize: 13, textAlign: 'left', userSelect: 'none', opacity: isPro ? 1 : 0.6 }}
+                                className={isPro ? "hover-bg" : ""}
                               >
                                 <Bell size={16} /> Configurar Alertas
+                                {!isPro && <Lock size={12} style={{ marginLeft: 'auto' }} />}
                               </button>
                               <button 
                                 onClick={(event) => { event.stopPropagation(); setModalEncerrar({ id: e.id, nome: e.local?.nome || 'Escala' }); setMenuEscalaId(null); }}

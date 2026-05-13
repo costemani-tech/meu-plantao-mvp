@@ -216,10 +216,12 @@ export default function LocaisPage() {
                 <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.8)', lineHeight: '1.6', margin: 0 }}>
                   Para adicionar mais hospitais e gerenciar seus ganhos sem limites, assine o <strong>Plano PRO</strong>.
                 </p>
-                  <a 
-                    href="https://wa.me/5521991847945?text=Ol%C3%A1%21%20Estou%20gostando%20muito%20do%20Meu%20Plant%C3%A3o%20e%20cheguei%20no%20limite%20do%20plano%20free.%20Quero%20assinar%20o%20Plano%20PRO%20para%20liberar%20os%20recursos.%20Como%20fa%C3%A7o%20para%20ativar%3F"
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  <button 
+                    onClick={() => {
+                      if (typeof window !== 'undefined') {
+                        window.dispatchEvent(new Event('open-upgrade-modal'));
+                      }
+                    }}
                     className="btn btn-primary"
                     style={{ 
                       background: '#2563EB', 
@@ -232,7 +234,7 @@ export default function LocaisPage() {
                     }}
                   >
                     <Rocket size={18} className="mr-2" /> Assinar Plano PRO
-                  </a>
+                  </button>
               </div>
             ) : (
               <>
@@ -340,42 +342,40 @@ export default function LocaisPage() {
             ) : (
               <div className="shift-list">
                 {locais.map(l => (
-                  <div key={l.id} className="shift-item" style={{ alignItems: 'center', cursor: 'pointer' }} onClick={() => setLocalEmEdicao(l)}>
-                    <div className="shift-color-bar" style={{ backgroundColor: l.cor_calendario }} />
-                    <div className="shift-info" style={{ flex: 1 }}>
-                      <div className="shift-local" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <div key={l.id} className="card-premium hover-card" style={{ display: "flex", alignItems: "center", padding: '16px', borderRadius: "18px", marginBottom: 12, gap: '16px', position: 'relative', overflow: 'hidden', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.05)' }} onClick={() => setLocalEmEdicao(l)}>
+                    {/* Glow lateral baseado na cor do local */}
+                    <div style={{
+                      position: 'absolute', left: 0, top: 0, bottom: 0, width: '4px',
+                      background: l.cor_calendario || 'var(--accent-blue)',
+                      boxShadow: `0 0 12px ${l.cor_calendario || 'var(--accent-blue)'}`
+                    }} />
+
+                    {/* Info */}
+                    <div style={{ display: 'flex', flexDirection: 'column', flex: 1, paddingLeft: '8px' }}>
+                      <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
                         {l.nome}
-                        {l.is_home_care && <span style={{ fontSize: 11, background: 'rgba(34,211,181,0.1)', color: 'var(--accent-teal)', padding: '2px 6px', borderRadius: 4 }}><span style={{ display: "flex", alignItems: "center", gap: 4 }}><Home size={12} /> Home Care</span></span>}
+                        {l.is_home_care && <span style={{ fontSize: 11, background: 'rgba(34,211,181,0.1)', color: 'var(--accent-teal)', padding: '2px 8px', borderRadius: 12, fontWeight: 700 }}><span style={{ display: "flex", alignItems: "center", gap: 4 }}><Home size={12} /> Home Care</span></span>}
                       </div>
+                      
                       {l.endereco && !l.is_home_care && (
-                        <div className="shift-time" style={{ marginTop: 4, display: 'flex', alignItems: 'center', gap: 4 }}>
-                          <MapPin size={14} /> <span style={{ opacity: 0.8 }}>{l.endereco}</span>
-                          <a 
-                            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(l.endereco)}`} 
-                            target="_blank" 
-                            rel="noreferrer"
-                            style={{ color: 'var(--accent-blue)', textDecoration: 'none', marginLeft: 4, fontWeight: 500 }}
-                            onClick={e => e.stopPropagation()}
-                          >
-                            Ver no Mapa ↗
-                          </a>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--text-secondary)' }}>
+                          <MapPin size={14} /> 
+                          <span style={{ opacity: 0.8, textOverflow: 'ellipsis', whiteSpace: 'nowrap', overflow: 'hidden', maxWidth: '200px' }}>{l.endereco}</span>
                         </div>
                       )}
                     </div>
-                    <div
-                      style={{
-                        width: 14, height: 14, borderRadius: '50%',
-                        background: l.cor_calendario, flexShrink: 0, marginRight: 12
-                      }}
-                    />
-                    <button
-                      className="btn btn-danger"
-                      style={{ padding: '6px 12px', fontSize: 12 }}
-                      onClick={(e) => { e.stopPropagation(); excluirLocal(l.id, l.nome); }}
-                      title="Excluir"
-                    >
-                      <Trash2 size={16} />
-                    </button>
+
+                    {/* Ações */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <button
+                        className="btn btn-secondary"
+                        style={{ padding: '8px', background: 'rgba(255,255,255,0.03)', borderRadius: '50%', color: 'var(--text-muted)' }}
+                        onClick={(e) => { e.stopPropagation(); excluirLocal(l.id, l.nome); }}
+                        title="Excluir"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>

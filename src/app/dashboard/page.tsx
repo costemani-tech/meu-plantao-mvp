@@ -312,19 +312,6 @@ export default async function DashboardPage() {
             Visão geral da sua escala e ganhos de {new Date().toLocaleDateString("pt-BR", { month: "long" })}.
           </p>
         </div>
-        
-        <div style={{ display: 'flex', gap: '12px' }}>
-          <Link href="/escalas" style={{ textDecoration: 'none' }}>
-            <button className="btn btn-secondary hover-card" style={{ padding: '10px 16px', fontSize: '14px', height: '42px', minHeight: 'auto', background: 'rgba(255,255,255,0.03)' }}>
-              Adicionar Escala
-            </button>
-          </Link>
-          <Link href="/plantao-extra" style={{ textDecoration: 'none' }}>
-            <button className="btn btn-primary hover-card" style={{ padding: '10px 16px', fontSize: '14px', height: '42px', minHeight: 'auto', gap: '6px' }}>
-              <Plus size={16} /> Novo Plantão
-            </button>
-          </Link>
-        </div>
       </div>
 
       {/* CARD PRINCIPAL (Assíncrono) */}
