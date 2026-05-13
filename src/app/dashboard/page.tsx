@@ -105,34 +105,53 @@ async function StatsSection({ userId, isPro, greeting }: { userId: string, isPro
   }
 
   return (
-    <div className="card" style={{ marginBottom: 24, position: "relative", overflow: "hidden" }}>
-      <div style={{ position: 'absolute', top: 0, right: 0, width: '100px', height: '100px', background: 'radial-gradient(circle, var(--accent-blue-light) 0%, transparent 70%)', opacity: 0.5, zIndex: 0 }} />
+    <div className="card-premium" style={{ marginBottom: 32, position: "relative", overflow: "hidden" }}>
+      {/* Background abstract */}
+      <div style={{ position: 'absolute', top: '-50px', right: '-50px', width: '200px', height: '200px', background: 'radial-gradient(circle, rgba(34, 211, 238, 0.15) 0%, transparent 70%)', opacity: 0.8, zIndex: 0 }} />
+      <div style={{ position: 'absolute', bottom: '-50px', left: '10%', width: '150px', height: '150px', background: 'radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, transparent 70%)', opacity: 0.8, zIndex: 0 }} />
       
       <div style={{ position: 'relative', zIndex: 1 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-muted)', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 12 }}>
-          <TrendingUp size={14} color="var(--accent-blue)" />
-          Resumo do Mês
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--accent-cyan)', fontSize: 13, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+            <TrendingUp size={16} />
+            Resumo do Mês
+          </div>
+          <div style={{ background: 'rgba(34, 211, 238, 0.1)', color: 'var(--accent-cyan)', padding: '4px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <TrendingUp size={12} />
+            Em alta
+          </div>
         </div>
         
-        <div style={{ fontSize: 32, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 20 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>{totalMes || 0} <span style={{ fontSize: 18, color: "var(--text-secondary)", fontWeight: 600 }}>plantões este mês</span></div>
+        <div style={{ display: "flex", alignItems: "baseline", gap: 16, marginBottom: 16 }}>
+          <div style={{ fontSize: 64, lineHeight: 1, fontWeight: 900, color: '#FFFFFF', letterSpacing: '-0.05em' }}>
+            {totalMes || 0}
+          </div>
+          <div style={{ fontSize: 16, color: "var(--text-secondary)", fontWeight: 600 }}>plantões este mês</div>
         </div>
 
-        <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: 36, marginBottom: 20 }}>
+        {/* Barra de progresso visual */}
+        <div style={{ width: '100%', height: '4px', background: 'rgba(255,255,255,0.05)', borderRadius: '2px', marginBottom: 32, overflow: 'hidden' }}>
+          <div style={{ width: '65%', height: '100%', background: 'linear-gradient(90deg, var(--accent-blue), var(--accent-cyan))', borderRadius: '2px' }} />
+        </div>
+
+        <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: 24, marginBottom: 16 }}>
           <EarningsPrivacyWrapper total={totalGanhos} isPro={isPro} />
         </div>
 
         <Link href="/locais" style={{ textDecoration: 'none' }}>
           <div style={{ 
             display: 'flex', alignItems: 'center', justifyContent: 'space-between', 
-            borderTop: '1px solid var(--border-subtle)', paddingTop: 20,
-            cursor: 'pointer', transition: 'opacity 0.2s'
-          }} className="hover-opacity">
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700, fontSize: 14, color: 'var(--text-primary)' }}>
-              <span style={{ fontSize: 16 }}><Plus size={16} color="var(--accent-blue)" /></span>
+            background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '16px',
+            border: '1px solid rgba(255,255,255,0.03)',
+            cursor: 'pointer', transition: 'all 0.2s'
+          }} className="hover-card">
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontWeight: 700, fontSize: 14, color: 'var(--text-primary)' }}>
+              <div style={{ background: 'rgba(59, 130, 246, 0.1)', padding: '8px', borderRadius: '10px' }}>
+                <Plus size={16} color="var(--accent-blue)" />
+              </div>
               {locaisAtivos || 0} locais ativos
             </div>
-            <div style={{ color: 'var(--accent-blue)', display: 'flex', alignItems: 'center' }}>
+            <div style={{ color: 'var(--text-muted)', display: 'flex', alignItems: 'center' }}>
               <ChevronRight size={18} />
             </div>
           </div>
@@ -259,16 +278,58 @@ export default async function DashboardPage() {
   const hasLocations = (locaisCount || 0) > 0;
 
   return (
-    <div className="page-container" style={{ paddingBottom: '120px' }}>
+    <div className="page-container" style={{ paddingBottom: '120px', position: 'relative' }}>
       
-      {/* HEADER (Instantâneo) */}
-      <div className="page-header">
-        <h1>{greeting.text}</h1>
-        <p>Acompanhe sua escala e ganhos para o mês de {new Date().toLocaleDateString("pt-BR", { month: "long" })}.</p>
+      {/* Background Premium Glow */}
+      <div style={{
+        position: 'absolute',
+        top: '-10%',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        width: '100%',
+        maxWidth: '800px',
+        height: '400px',
+        background: 'radial-gradient(ellipse at top, rgba(59, 130, 246, 0.15) 0%, transparent 70%)',
+        pointerEvents: 'none',
+        zIndex: 0
+      }} />
+
+      {/* HEADER PREMIUM */}
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'flex-start',
+        marginBottom: '40px',
+        position: 'relative',
+        zIndex: 1,
+        paddingTop: '20px'
+      }} className="mobile-col">
+        <div>
+          <h1 style={{ fontSize: '32px', fontWeight: 900, letterSpacing: '-0.03em', marginBottom: '8px', color: '#FFFFFF' }}>
+            {greeting.text}
+          </h1>
+          <p style={{ fontSize: '15px', color: 'var(--text-secondary)', fontWeight: 500, margin: 0 }}>
+            Visão geral da sua escala e ganhos de {new Date().toLocaleDateString("pt-BR", { month: "long" })}.
+          </p>
+        </div>
+        
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <Link href="/escalas" style={{ textDecoration: 'none' }}>
+            <button className="btn btn-secondary hover-card" style={{ padding: '10px 16px', fontSize: '14px', height: '42px', minHeight: 'auto', background: 'rgba(255,255,255,0.03)' }}>
+              Adicionar Escala
+            </button>
+          </Link>
+          <Link href="/plantao-extra" style={{ textDecoration: 'none' }}>
+            <button className="btn btn-primary hover-card" style={{ padding: '10px 16px', fontSize: '14px', height: '42px', minHeight: 'auto', gap: '6px' }}>
+              <Plus size={16} /> Novo Plantão
+            </button>
+          </Link>
+        </div>
       </div>
 
       {/* CARD PRINCIPAL (Assíncrono) */}
-      <Suspense fallback={<StatsSkeleton />}>
+      <div style={{ position: 'relative', zIndex: 1 }}>
+        <Suspense fallback={<StatsSkeleton />}>
         <StatsSection userId={user.id} isPro={isPro} greeting={greeting} />
       </Suspense>
 
@@ -284,6 +345,7 @@ export default async function DashboardPage() {
 
       {/* INTERATIVIDADE DO CLIENTE (FAB + Paywall) */}
       <DashboardInteractive isPro={isPro} hasLocations={hasLocations} />
+      </div>
     </div>
   );
 }

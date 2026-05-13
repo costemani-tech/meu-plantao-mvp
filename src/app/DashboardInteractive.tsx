@@ -307,25 +307,35 @@ export function UpcomingShiftsClient({ proximos, isPro, userName, totalGanhos }:
                 onClick={() => router.push('/calendario')} // Redireciona para o calendário (onde o modal de edição existe)
                 style={{ textDecoration: 'none', cursor: 'pointer' }}
               >
-                <div className="shift-item card" style={{ display: "flex", alignItems: "center", padding: 0, borderRadius: "18px", marginBottom: 0, border: "1px solid var(--border-subtle)" }}>
-                  <div className="shift-color-bar" style={{ 
-                    backgroundColor: localObj?.cor_calendario || 'var(--accent-blue)', 
-                    width: '6px', 
-                    height: "64px", borderRadius: "18px 0 0 18px" 
+                <div className="card-premium hover-card" style={{ display: "flex", alignItems: "center", padding: '12px 16px', borderRadius: "18px", marginBottom: 0, gap: '16px', position: 'relative', overflow: 'hidden' }}>
+                  {/* Glow lateral baseado na cor do local */}
+                  <div style={{
+                    position: 'absolute', left: 0, top: 0, bottom: 0, width: '4px',
+                    background: localObj?.cor_calendario || 'var(--accent-blue)',
+                    boxShadow: `0 0 12px ${localObj?.cor_calendario || 'var(--accent-blue)'}`
                   }} />
-                  <div className="shift-info" style={{ padding: '16px', flex: 1 }}>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 4 }}>
+
+                  {/* Esquerda: Info */}
+                  <div style={{ display: 'flex', flexDirection: 'column', flex: 1, paddingLeft: '8px' }}>
+                    <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
                       {localObj?.nome || 'Local de Trabalho'}
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--text-secondary)' }}>
-                      <CalendarIcon size={13} />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: 'var(--text-secondary)', fontWeight: 500 }}>
+                      <Clock size={14} color="var(--accent-blue)" />
                       <span style={{ textTransform: 'capitalize' }}>
                         {formatRelativeShiftDate(p.data_hora_inicio)}
                       </span>
                     </div>
                   </div>
-                  <div style={{ padding: '0 16px', display: 'flex', alignItems: 'center' }}>
-                    <ChevronRight size={18} color="var(--text-muted)" />
+
+                  {/* Direita: Ações */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div style={{ background: 'rgba(255,255,255,0.03)', padding: '8px', borderRadius: '50%', display: 'flex', border: '1px solid rgba(255,255,255,0.05)' }}>
+                      <MoreVertical size={16} color="var(--text-muted)" />
+                    </div>
+                    <div style={{ color: 'var(--accent-blue)', display: 'flex', alignItems: 'center' }}>
+                      <ChevronRight size={20} />
+                    </div>
                   </div>
                 </div>
               </div>

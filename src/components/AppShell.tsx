@@ -311,16 +311,16 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       )}
 
-      <aside className="sidebar" style={{ background: '#0F172A', borderRight: '1px solid rgba(255,255,255,0.05)' }}>
-        <div className="sidebar-logo" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+      <aside className="sidebar-premium">
+        <div className="sidebar-logo" style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: '32px' }}>
           <Image src="/icons/icon-192x192.png" alt="Meu Plantão" width={38} height={38} style={{ borderRadius: '8px' }} />
           <div className="sidebar-logo-text" style={{ fontSize: '1.25rem', fontWeight: 800 }}>
-            Meu <span style={{ color: '#2563EB' }}>Plantão</span>
+            Meu <span style={{ color: '#3B82F6' }}>Plantão</span>
           </div>
         </div>
         <nav className="nav-section" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
           <div className="nav-label">Menu</div>
-          <div className="nav-links" style={{ display: 'flex', flexDirection: 'column', gap: 4, width: '100%' }}>
+          <div className="nav-links" style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
             {navItems.map((item) => {
               const Icon = item.icon;
               return (
