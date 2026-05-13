@@ -1,9 +1,10 @@
 'use client';
-import { Plus, Trash2, Home, MapPin, Edit3, Star, HandMetal, Lock, Rocket, Timer, Hospital, Sparkles } from 'lucide-react';
+import { Plus, Trash2, Home, MapPin, Edit3, Star, HandMetal, Lock, Rocket, Timer, Hospital, Sparkles, Loader2 } from 'lucide-react';
 
 import { useEffect, useState, useCallback } from 'react';
 import { supabase, LocalTrabalho, isUserPro, isSubscriptionActive } from '../../lib/supabase';
 import PremiumLockCard from '../../components/PremiumLockCard';
+import { handleDirectCheckout } from '../../lib/checkout';
 
 const CORES_PRESET = [
   '#4f8ef7', '#7c6af7', '#22d3b5', '#f97316',
@@ -21,6 +22,7 @@ export default function LocaisPage() {
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<Toast | null>(null);
   const [showProModal, setShowProModal] = useState(false);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [localEmEdicao, setLocalEmEdicao] = useState<LocalTrabalho | null>(null);
 
   const [loading, setLoading] = useState(true);
@@ -61,7 +63,6 @@ export default function LocaisPage() {
 
     if (isPro === null) { showToast('Aguarde, verificando seu plano...', 'error'); return; }
     if (!isPro && limiteLocaisAtingido) {
-      showToast('Limite de 2 locais atingido. Assine o plano Pro para hospitais ilimitados.', 'error');
       setShowProModal(true);
       return;
     }
@@ -307,7 +308,7 @@ export default function LocaisPage() {
             ) : (
               <div className="shift-list">
                 {locais.map(l => (
-                  <div key={l.id} className="card-premium hover-card" style={{ display: "flex", alignItems: "center", padding: '16px', borderRadius: "18px", marginBottom: 12, gap: '16px', position: 'relative', overflow: 'hidden', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.05)' }} onClick={() => setLocalEmEdicao(l)}>
+                  <div key={l.id} className="card-premium hover-card" style={{ display: "flex", alignItems: "center", padding: '12px 16px', borderRadius: "14px", marginBottom: 8, gap: '12px', position: 'relative', overflow: 'hidden', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.05)' }} onClick={() => setLocalEmEdicao(l)}>
                     {/* Glow lateral baseado na cor do local */}
                     <div style={{
                       position: 'absolute', left: 0, top: 0, bottom: 0, width: '4px',
@@ -396,18 +397,47 @@ export default function LocaisPage() {
       )}
 
       {showProModal && (
-        <div className="premium-modal-overlay" onClick={() => setShowProModal(false)}>
-          <div className="premium-modal-card" onClick={e => e.stopPropagation()}>
-            <div style={{ color: '#2563EB', marginBottom: 20, display: 'flex', justifyContent: 'center' }}>
-              <Sparkles size={48} />
-            </div>
-            <h2 style={{ fontSize: 20, fontWeight: 800, marginBottom: 8, color: 'var(--text-primary)' }}>Upgrade para o Pro</h2>
-            <p style={{ fontSize: 14, color: '#94A3B8', marginBottom: 24, lineHeight: 1.5 }}>
-              Você atingiu o limite de 2 locais do plano gratuito. Assine o Pro para gerenciar hospitais ilimitados!
-            </p>
-            <div style={{ display: 'flex', gap: 12 }}>
-              <button className="btn btn-secondary" style={{ flex: 1, justifyContent: 'center' }} onClick={() => setShowProModal(false)}>Voltar</button>
-              <button className="btn btn-primary" style={{ flex: 1, justifyContent: 'center', background: '#2563EB', border: 'none' }} onClick={() => setShowProModal(false)}>Assinar Pro</button>
+        <div className="premium-modal-overlay" onClick={() => !checkoutLoading && setShowProModal(false)}>
+          <div className="premium-modal-card" onClick={e => e.stopPropagation()} style={{ padding: 0, overflow: 'hidden', background: '#081224', border: '1px solid rgba(80,120,255,0.15)' }}>
+            <div style={{ position: 'relative', padding: '32px 24px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <div style={{ position: 'absolute', top: '-50%', left: '-50%', width: '200%', height: '200%', background: 'radial-gradient(circle at top, rgba(59,130,246,0.15), transparent 40%)', pointerEvents: 'none' }} />
+              
+              <div style={{ background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.2)', color: '#3B82F6', fontSize: '11px', fontWeight: 800, padding: '6px 12px', borderRadius: '100px', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '20px', zIndex: 1 }}>
+                <Lock size={14} /> LIMITE ATINGIDO
+              </div>
+              
+              <h2 style={{ fontSize: 20, fontWeight: 800, marginBottom: 12, color: '#fff', zIndex: 1 }}>Desbloqueie Locais Ilimitados</h2>
+              <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.7)', marginBottom: 24, lineHeight: 1.5, zIndex: 1 }}>
+                Você atingiu o limite de 2 locais do plano gratuito. Faça o upgrade para o PRO e tenha o controle total da sua agenda.
+              </p>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%', zIndex: 1 }}>
+                <button 
+                  className="btn btn-primary" 
+                  style={{ width: '100%', justifyContent: 'center', background: '#3B82F6', border: 'none', padding: '14px', borderRadius: '100px', fontWeight: 800, opacity: checkoutLoading ? 0.7 : 1 }} 
+                  onClick={async () => {
+                    setCheckoutLoading(true);
+                    try {
+                      const url = await handleDirectCheckout();
+                      window.location.href = url;
+                    } catch(err: any) {
+                      setCheckoutLoading(false);
+                      showToast(err.message, 'error');
+                    }
+                  }}
+                  disabled={checkoutLoading}
+                >
+                  {checkoutLoading ? <><Loader2 size={18} className="animate-spin mr-2" /> Processando...</> : 'Desbloquear Plano PRO'}
+                </button>
+                <button 
+                  className="btn btn-secondary" 
+                  style={{ width: '100%', justifyContent: 'center', border: 'none', background: 'transparent', color: 'rgba(255,255,255,0.5)' }} 
+                  onClick={() => setShowProModal(false)}
+                  disabled={checkoutLoading}
+                >
+                  Voltar
+                </button>
+              </div>
             </div>
           </div>
         </div>

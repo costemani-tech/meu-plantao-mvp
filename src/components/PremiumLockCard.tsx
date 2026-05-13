@@ -1,5 +1,7 @@
-import React from 'react';
-import { Diamond } from 'lucide-react';
+import React, { useState } from 'react';
+import { Diamond, Loader2 } from 'lucide-react';
+import { handleDirectCheckout } from '../lib/checkout';
+import { toast } from 'sonner';
 
 interface PremiumLockCardProps {
   title: string;
@@ -14,6 +16,20 @@ export default function PremiumLockCard({
   badgeText = "PLANO GRATUITO",
   icon = <Diamond size={14} />
 }: PremiumLockCardProps) {
+  const [loading, setLoading] = useState(false);
+
+  const handleCheckoutClick = async () => {
+    setLoading(true);
+    try {
+      const url = await handleDirectCheckout();
+      window.location.href = url;
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || 'Erro ao redirecionar para o pagamento.');
+      setLoading(false);
+    }
+  };
+
   return (
     <div style={{
       background: '#081224',
@@ -59,9 +75,8 @@ export default function PremiumLockCard({
       </div>
 
       <button
-        onClick={() => {
-          if (typeof window !== 'undefined') window.dispatchEvent(new Event('open-upgrade-modal'));
-        }}
+        onClick={handleCheckoutClick}
+        disabled={loading}
         className="btn btn-primary plc-button"
         style={{
           background: '#3B82F6',
@@ -72,10 +87,16 @@ export default function PremiumLockCard({
           borderRadius: '100px',
           boxShadow: '0 8px 20px rgba(59,130,246,0.2)',
           zIndex: 1,
-          height: 'fit-content'
+          height: 'fit-content',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          justifyContent: 'center',
+          opacity: loading ? 0.7 : 1,
+          cursor: loading ? 'not-allowed' : 'pointer'
         }}
       >
-        Desbloquear Plano PRO
+        {loading ? <><Loader2 size={16} className="animate-spin" /> Processando...</> : 'Desbloquear Plano PRO'}
       </button>
     </div>
   );
