@@ -3,7 +3,8 @@
 import { useEffect, useState, useCallback } from 'react';
 import { supabase, LocalTrabalho, isUserPro, isSubscriptionActive } from '../../lib/supabase';
 import { toast } from 'sonner';
-import { PlusCircle } from 'lucide-react';
+import { PlusCircle, Lock } from 'lucide-react';
+import PremiumLockCard from '../../components/PremiumLockCard';
 
 export default function PlantaoExtraPage() {
   const [locais, setLocais] = useState<LocalTrabalho[]>([]);
@@ -179,14 +180,21 @@ export default function PlantaoExtraPage() {
       </div>
       <div className="mobile-stack" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 500px)', justifyContent: 'start' }}>
         <div className="card">
-
-          <div className="form-group">
-            <label className="form-label">Local de Trabalho</label>
-            <select className="form-select" value={localId} onChange={e => setLocalId(e.target.value)}>
-              <option value="">Onde foi o plantão?</option>
-              {locais.map(l => <option key={l.id} value={l.id}>{l.nome}</option>)}
-            </select>
-          </div>
+          {(!isPro && limiteExtrasAtingido) ? (
+            <PremiumLockCard 
+              title="Limite de plantões extras atingido" 
+              description="Você já utilizou os 4 plantões extras gratuitos deste mês. Assine o Plano PRO para registros ilimitados." 
+              icon={<Lock size={14} />}
+            />
+          ) : (
+            <>
+              <div className="form-group">
+                <label className="form-label">Local de Trabalho</label>
+                <select className="form-select" value={localId} onChange={e => setLocalId(e.target.value)}>
+                  <option value="">Onde foi o plantão?</option>
+                  {locais.map(l => <option key={l.id} value={l.id}>{l.nome}</option>)}
+                </select>
+              </div>
 
           <div className="form-group" style={{ marginTop: 20 }}>
             <label className="form-label">Data do Plantão</label>
@@ -262,27 +270,12 @@ export default function PlantaoExtraPage() {
               />
             </div>
           ) : (
-            <div className="form-group" style={{ marginTop: 20 }}>
-              <label className="form-label">Valor do Plantão (R$)</label>
-              <div 
-                onClick={() => window.dispatchEvent(new CustomEvent('open-upgrade-modal'))}
-                style={{ 
-                  background: 'var(--bg-primary)', 
-                  padding: '16px', 
-                  borderRadius: '12px', 
-                  border: '1px solid var(--border-subtle)',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s'
-                }}
-                className="hover-card"
-              >
-                <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
-                  🔒 Disponível no Plano Pro
-                </div>
-                <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
-                  📊 Veja seus ganhos extras automaticamente
-                </div>
-              </div>
+            <div style={{ marginTop: 20 }}>
+              <PremiumLockCard 
+                title="Gestão Financeira" 
+                description="O plano gratuito não calcula ganhos por plantão. Assine o PRO para controle completo." 
+                icon={<Lock size={14} />}
+              />
             </div>
           )}
 
@@ -300,6 +293,8 @@ export default function PlantaoExtraPage() {
           >
             {saving ? ' Salvando...' : ' Salvar Plantão'}
           </button>
+            </>
+          )}
         </div>
       </div>
 

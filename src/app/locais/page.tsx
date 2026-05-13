@@ -3,6 +3,7 @@ import { Plus, Trash2, Home, MapPin, Edit3, Star, HandMetal, Lock, Rocket, Timer
 
 import { useEffect, useState, useCallback } from 'react';
 import { supabase, LocalTrabalho, isUserPro, isSubscriptionActive } from '../../lib/supabase';
+import PremiumLockCard from '../../components/PremiumLockCard';
 
 const CORES_PRESET = [
   '#4f8ef7', '#7c6af7', '#22d3b5', '#f97316',
@@ -196,46 +197,10 @@ export default function LocaisPage() {
           <div className="card" style={{ height: 'fit-content', position: 'relative', overflow: 'hidden' }}>
             {/* bloco de add local original */}
             {(!isPro && limiteLocaisAtingido) ? (
-              <div style={{ 
-                padding: '24px', 
-                textAlign: 'center', 
-                background: 'linear-gradient(135deg, #1a202c 0%, #2d3748 100%)',
-                borderRadius: 'var(--radius-md)',
-                border: '1px solid rgba(245, 158, 11, 0.3)',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: '16px'
-              }}>
-                <div style={{ fontSize: '40px', color: '#2563EB' }}>
-                  <Lock size={40} />
-                </div>
-                <h2 style={{ fontSize: '16px', fontWeight: 800, color: '#fff', margin: 0 }}>
-                  Limite do Plano Gratuito atingido (2 locais)
-                </h2>
-                <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.8)', lineHeight: '1.6', margin: 0 }}>
-                  Para adicionar mais hospitais e gerenciar seus ganhos sem limites, assine o <strong>Plano PRO</strong>.
-                </p>
-                  <button 
-                    onClick={() => {
-                      if (typeof window !== 'undefined') {
-                        window.dispatchEvent(new Event('open-upgrade-modal'));
-                      }
-                    }}
-                    className="btn btn-primary"
-                    style={{ 
-                      background: '#2563EB', 
-                      border: 'none', 
-                      color: '#fff', 
-                      width: '100%', 
-                      justifyContent: 'center',
-                      padding: '12px',
-                      fontWeight: 700
-                    }}
-                  >
-                    <Rocket size={18} className="mr-2" /> Assinar Plano PRO
-                  </button>
-              </div>
+              <PremiumLockCard 
+                title="Limite de locais atingido" 
+                description="Você já está utilizando os 2 locais disponíveis no plano gratuito." 
+              />
             ) : (
               <>
                 <h2 style={{ fontWeight: 700, marginBottom: 20, fontSize: 16 }}>Novo Local</h2>

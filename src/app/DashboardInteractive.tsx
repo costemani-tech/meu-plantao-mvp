@@ -135,15 +135,7 @@ export function EarningsPrivacyWrapper({ total, isPro }: { total: number, isPro:
 export function DashboardInteractive({ isPro, hasLocations }: { isPro: boolean, hasLocations: boolean }) {
   const router = useRouter();
 
-  // Auto-open Paywall para usuários Free com delay para suavidade
-  useEffect(() => {
-    if (!isPro) {
-      const timer = setTimeout(() => {
-        window.dispatchEvent(new CustomEvent('open-upgrade-modal'));
-      }, 800);
-      return () => clearTimeout(timer);
-    }
-  }, [isPro]);
+  // Abertura automática do modal removida conforme solicitado
 
   const handleFabClick = () => {
     if (!hasLocations) {

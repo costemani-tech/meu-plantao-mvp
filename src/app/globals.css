@@ -593,3 +593,42 @@ h1, h2, h3, h4 {
   from { opacity: 0; transform: translateY(20px) scale(0.95); }
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
+
+/* Premium Lock Card */
+.premium-lock-card {
+  flex-direction: column !important;
+  text-align: center !important;
+  align-items: center !important;
+  transition: all 0.2s ease !important;
+}
+
+.premium-lock-card .plc-content {
+  align-items: center !important;
+  text-align: center !important;
+}
+
+.premium-lock-card .plc-button {
+  width: 100% !important;
+}
+
+@media (min-width: 768px) {
+  .premium-lock-card {
+    flex-direction: row !important;
+    text-align: left !important;
+    align-items: center !important;
+    padding: 24px 32px !important;
+  }
+  .premium-lock-card .plc-content {
+    align-items: flex-start !important;
+    text-align: left !important;
+  }
+  .premium-lock-card .plc-button {
+    width: auto !important;
+    white-space: nowrap;
+  }
+}
+
+.premium-lock-card:hover {
+  background: #0B1730 !important;
+  border-color: rgba(80,120,255,0.3) !important;
+}
