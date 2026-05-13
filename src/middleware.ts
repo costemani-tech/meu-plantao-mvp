@@ -2,6 +2,15 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
+  // Redirecionar 'www' para o naked domain (canonical)
+  const host = request.headers.get('host') || '';
+  if (host.startsWith('www.')) {
+    const nakedDomain = host.replace('www.', '');
+    const url = request.nextUrl.clone();
+    url.host = nakedDomain;
+    return NextResponse.redirect(url, 308);
+  }
+
   let supabaseResponse = NextResponse.next({
     request,
   })

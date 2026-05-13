@@ -1,25 +1,71 @@
 import { NextResponse } from 'next/server';
 import { MercadoPagoConfig, Payment } from 'mercadopago';
 import { createClient } from '@supabase/supabase-js';
+import crypto from 'crypto';
+
+export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
   try {
-    let dataId;
-    let type;
+    const webhookSecret = process.env.MERCADOPAGO_WEBHOOK_SECRET;
+
+    if (!webhookSecret) {
+      console.error('[MercadoPago Webhook] MERCADOPAGO_WEBHOOK_SECRET não configurado.');
+      return NextResponse.json({ error: 'Erro de configuração do servidor' }, { status: 500 });
+    }
+
+    const xSignature = req.headers.get('x-signature');
+    const xRequestId = req.headers.get('x-request-id');
+    const url = new URL(req.url);
+    const dataIdParams = url.searchParams.get('data.id') || url.searchParams.get('id');
+
+    if (!xSignature || !xRequestId || !dataIdParams) {
+      return NextResponse.json({ error: 'Assinatura, Request ID ou ID inválidos' }, { status: 400 });
+    }
+
+    // x-signature: ts=...,v1=...
+    const signatureParts = xSignature.split(',');
+    let ts = '';
+    let hash = '';
+
+    for (const part of signatureParts) {
+      if (part.startsWith('ts=')) ts = part.substring(3);
+      if (part.startsWith('v1=')) hash = part.substring(3);
+    }
+
+    if (!ts || !hash) {
+      return NextResponse.json({ error: 'Assinatura mal formatada' }, { status: 400 });
+    }
+
+    const manifest = `id:${dataIdParams};request-id:${xRequestId};ts:${ts};`;
+    const hmac = crypto.createHmac('sha256', webhookSecret);
+    hmac.update(manifest);
+    const generatedHash = hmac.digest('hex');
+
+    try {
+      if (
+        hash.length !== generatedHash.length ||
+        !crypto.timingSafeEqual(Buffer.from(hash), Buffer.from(generatedHash))
+      ) {
+        console.error('[MercadoPago Webhook] Assinatura inválida');
+        return NextResponse.json({ error: 'Assinatura inválida' }, { status: 401 });
+      }
+    } catch (err) {
+      console.error('[MercadoPago Webhook] Erro na comparação da assinatura');
+      return NextResponse.json({ error: 'Assinatura inválida' }, { status: 401 });
+    }
+
+    let dataId = dataIdParams;
+    let type = url.searchParams.get('type') || url.searchParams.get('topic');
 
     // Tentar ler do body (Webhook normal)
     try {
       const body = await req.json();
-      dataId = body?.data?.id;
-      type = body?.type;
+      if (body?.data?.id) dataId = body.data.id;
+      if (body?.type) type = body.type;
     } catch {
       // Body não é JSON válido ou está vazio
     }
-
-    // Se não veio no body, tentar ler das query params (IPN)
-    const url = new URL(req.url);
-    if (!dataId) dataId = url.searchParams.get('data.id') || url.searchParams.get('id');
-    if (!type) type = url.searchParams.get('type') || url.searchParams.get('topic');
 
     if (!dataId) {
       return NextResponse.json({ received: true });
@@ -79,6 +125,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ received: true });
   } catch (error) {
     console.error('[MercadoPago Webhook] Erro interno:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    return NextResponse.json({ error: 'Erro interno do servidor' }, { status: 500 });
   }
 }
