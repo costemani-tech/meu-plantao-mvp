@@ -386,12 +386,7 @@ h1, h2, h3, h4 {
   z-index: 100;
   width: 100%;
 }
-  -webkit-backdrop-filter: blur(10px);
-  z-index: 100;
-  width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-}
+
 
 @media (max-width: 768px) {
   .top-actions-bar {
