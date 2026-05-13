@@ -395,7 +395,7 @@ h1, h2, h3, h4 {
 }
 
 @media (max-width: 768px) {
-  .sidebar { display: none !important; }
+  .sidebar, .sidebar-premium { display: none !important; }
   .main-content { padding-bottom: 100px; }
   
   .mobile-stack {
@@ -403,7 +403,7 @@ h1, h2, h3, h4 {
     gap: 16px !important;
   }
 
-  .card {
+  .card, .card-premium {
     padding: 16px !important;
   }
 
@@ -411,6 +411,14 @@ h1, h2, h3, h4 {
     flex-direction: column !important;
     align-items: flex-start !important;
     gap: 16px !important;
+  }
+
+  .kpi-number {
+    font-size: 48px !important;
+  }
+
+  .header-title {
+    font-size: 24px !important;
   }
 }
 

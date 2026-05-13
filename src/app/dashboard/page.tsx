@@ -123,7 +123,7 @@ async function StatsSection({ userId, isPro, greeting }: { userId: string, isPro
         </div>
         
         <div style={{ display: "flex", alignItems: "baseline", gap: 16, marginBottom: 16 }}>
-          <div style={{ fontSize: 64, lineHeight: 1, fontWeight: 900, color: '#FFFFFF', letterSpacing: '-0.05em' }}>
+          <div className="kpi-number" style={{ fontSize: 64, lineHeight: 1, fontWeight: 900, color: '#FFFFFF', letterSpacing: '-0.05em' }}>
             {totalMes || 0}
           </div>
           <div style={{ fontSize: 16, color: "var(--text-secondary)", fontWeight: 600 }}>plantões este mês</div>
@@ -305,7 +305,7 @@ export default async function DashboardPage() {
         paddingTop: '20px'
       }} className="mobile-col">
         <div>
-          <h1 style={{ fontSize: '32px', fontWeight: 900, letterSpacing: '-0.03em', marginBottom: '8px', color: '#FFFFFF' }}>
+          <h1 className="header-title" style={{ fontSize: '32px', fontWeight: 900, letterSpacing: '-0.03em', marginBottom: '8px', color: '#FFFFFF' }}>
             {greeting.text}
           </h1>
           <p style={{ fontSize: '15px', color: 'var(--text-secondary)', fontWeight: 500, margin: 0 }}>
