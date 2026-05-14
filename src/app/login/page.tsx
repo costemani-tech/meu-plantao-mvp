@@ -43,8 +43,8 @@ export default function LoginPage() {
 
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!otpCode || otpCode.length < 6) {
-      showToast('Digite o código de 6 dígitos.', 'error');
+    if (!otpCode) {
+      showToast('Digite o código recebido no seu e-mail.', 'error');
       return;
     }
 
@@ -256,12 +256,11 @@ export default function LoginPage() {
               </p>
               <input 
                 type="text" 
-                placeholder="000000"
+                placeholder="Código"
                 value={otpCode}
-                onChange={e => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                onChange={e => setOtpCode(e.target.value.trim())}
                 required
                 autoFocus
-                inputMode="numeric"
                 style={{
                   width: '100%',
                   height: '72px',
@@ -271,7 +270,7 @@ export default function LoginPage() {
                   textAlign: 'center',
                   color: 'white',
                   fontSize: '28px',
-                  letterSpacing: '10px',
+                  letterSpacing: '4px',
                   fontWeight: '800',
                   outline: 'none'
                 }}
