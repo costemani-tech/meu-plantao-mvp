@@ -259,7 +259,7 @@ export default function PlantaoExtraPage() {
                 placeholder="Ex: R$ 1.200,00"
                 value={valorGanho}
                 onChange={e => {
-                  let v = e.target.value.replace(/\D/g, '');
+                  const v = e.target.value.replace(/\D/g, '');
                   if (!v) { setValorGanho(''); return; }
                   const value = parseInt(v) / 100;
                   const formatter = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });

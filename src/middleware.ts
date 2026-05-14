@@ -2,6 +2,14 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
+  const url = request.nextUrl.clone();
+
+  // Enforce Canonical Domain (redirect www to non-www)
+  if (url.hostname.startsWith('www.')) {
+    url.hostname = url.hostname.replace('www.', '');
+    return NextResponse.redirect(url, 308);
+  }
+
   let supabaseResponse = NextResponse.next({
     request,
   })
