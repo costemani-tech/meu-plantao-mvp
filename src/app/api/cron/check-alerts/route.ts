@@ -1,10 +1,18 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
+  const cronSecret = process.env.CRON_SECRET;
+  if (!cronSecret) {
+    console.error('[cron/check-alerts] CRON_SECRET is not configured');
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  }
+
   // Vercel Cron security: validate the authorization header
   const authHeader = request.headers.get('authorization');
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (authHeader !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -18,17 +26,22 @@ export async function GET(request: NextRequest) {
   // Use Service Role Key — never exposed to the client
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-  const ONESIGNAL_APP_ID = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID!;
-  const ONESIGNAL_REST_KEY = process.env.ONESIGNAL_REST_KEY!;
+  const ONESIGNAL_APP_ID = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID;
+  const ONESIGNAL_REST_KEY = process.env.ONESIGNAL_REST_KEY;
+
+  if (!ONESIGNAL_APP_ID || !ONESIGNAL_REST_KEY) {
+    return NextResponse.json({ error: 'Missing OneSignal credentials' }, { status: 500 });
+  }
 
   const now = new Date();
   const windowStart = now.toISOString();
-  const windowEnd = new Date(now.getTime() + 2 * 60 * 60 * 1000).toISOString(); // now + 2h
+  // Fetch a wider window to accommodate custom alert times (e.g. up to 24h)
+  const windowEnd = new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString(); // now + 24h
 
-  // 1. Fetch upcoming shifts within the next 2 hours where alert_sent is false/null
+  // 1. Fetch upcoming shifts within the next 24 hours where alert_sent is false/null
   const { data: plantoes, error } = await supabase
     .from('plantoes')
-    .select('id, usuario_id, data_hora_inicio, local:locais_trabalho(nome)')
+    .select('id, usuario_id, data_hora_inicio, alerta_ativo, antecedencia_horas, local:locais_trabalho(nome)')
     .gte('data_hora_inicio', windowStart)
     .lte('data_hora_inicio', windowEnd)
     .neq('status', 'Cancelado')
@@ -36,7 +49,7 @@ export async function GET(request: NextRequest) {
 
   if (error) {
     console.error('[cron/check-alerts] Supabase query error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 
   if (!plantoes || plantoes.length === 0) {
@@ -45,8 +58,24 @@ export async function GET(request: NextRequest) {
 
   let successCount = 0;
   const errors: string[] = [];
+  let processedCount = 0;
 
   for (const plantao of plantoes) {
+    // In-memory filter for custom alert timings
+    const isAlertaAtivo = plantao.alerta_ativo !== false; // defaults to true
+    if (!isAlertaAtivo) continue;
+
+    const antecedenciaHoras = typeof plantao.antecedencia_horas === 'number' ? plantao.antecedencia_horas : 2;
+    const shiftStartTime = new Date(plantao.data_hora_inicio).getTime();
+    const alertTriggerTime = shiftStartTime - (antecedenciaHoras * 60 * 60 * 1000);
+
+    // Only alert if the current time is past the trigger time
+    if (now.getTime() < alertTriggerTime) {
+      continue;
+    }
+
+    processedCount++;
+
     const localNome = (plantao.local as any)?.nome ?? 'seu local';
     const horaEntrada = new Date(plantao.data_hora_inicio).toLocaleTimeString('pt-BR', {
       hour: '2-digit',
