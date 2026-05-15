@@ -336,16 +336,14 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               );
             })}
             
-            {isPro && (
-              <Link 
-                href="/meu-plano"
-                className={`nav-item ${pathname === '/meu-plano' ? 'active' : ''}`}
-                style={{ width: '100%', textDecoration: 'none' }}
-              >
-                <CreditCard className="nav-icon" size={20} />
-                Meu Plano
-              </Link>
-            )}
+            <Link 
+              href="/meu-plano"
+              className={`nav-item ${pathname === '/meu-plano' ? 'active' : ''}`}
+              style={{ width: '100%', textDecoration: 'none' }}
+            >
+              <CreditCard className="nav-icon" size={20} />
+              Meu Plano
+            </Link>
 
             {/* Desktop spacer to push buttons to bottom */}
             <div className="desktop-spacer" style={{ flex: 1 }} />
@@ -584,16 +582,14 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             );
           })}
           
-          {isPro && (
-            <Link
-              href="/meu-plano"
-              className={`mobile-nav-item ${pathname === '/meu-plano' ? 'active' : ''}`}
-              title="Meu Plano"
-            >
-              <CreditCard className="nav-icon" size={24} strokeWidth={pathname === '/meu-plano' ? 2.5 : 2} />
-              <span>Plano</span>
-            </Link>
-          )}
+          <Link
+            href="/meu-plano"
+            className={`mobile-nav-item ${pathname === '/meu-plano' ? 'active' : ''}`}
+            title="Meu Plano"
+          >
+            <CreditCard className="nav-icon" size={24} strokeWidth={pathname === '/meu-plano' ? 2.5 : 2} />
+            <span>Plano</span>
+          </Link>
 
           {/* Logout Mobile */}
           <button
