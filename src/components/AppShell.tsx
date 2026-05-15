@@ -280,6 +280,20 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     localStorage.setItem('plantao-theme', 'dark');
   }, []);
 
+  useEffect(() => {
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        if (pathname === '/' || pathname === '/login') {
+          router.push('/dashboard');
+        }
+      }
+    });
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, [pathname, router]);
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     router.push('/login');

@@ -34,6 +34,14 @@ export async function middleware(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname
 
+  // Interceptar redirecionamentos do Supabase OAuth/Magic Link para a raiz
+  // Se a URL contiver 'code' e estiver apontando para a raiz ou login, redirecione para a rota de callback
+  if ((pathname === '/' || pathname === '/login') && request.nextUrl.searchParams.has('code')) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/auth/callback'
+    return NextResponse.redirect(url)
+  }
+
   // Rotas que não exigem login
   const isPublicRoute =
     pathname === '/' ||
