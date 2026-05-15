@@ -1,8 +1,6 @@
-import { Suspense } from 'react';
 import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
 import { redirect } from 'next/navigation';
-import { Sparkles } from 'lucide-react';
 import MeuPlanoClient from './MeuPlanoClient';
 import { isUserPro } from '../../lib/supabase';
 
@@ -29,57 +27,46 @@ export default async function MeuPlanoPage() {
     .eq('id', user.id)
     .single();
 
-  // Se não for PRO e não tiver end_date futuro, não faz sentido ver essa tela,
-  // mas para não dar block duro, deixamos ele ver que o plano é FREE.
-  
+  // Buscar count de locais ativos do usuário
+  const { count: locaisCount } = await supabase
+    .from('locais_trabalho')
+    .select('*', { count: 'exact', head: true })
+    .eq('usuario_id', user.id)
+    .eq('ativo', true);
+
   const isWhitelist = isUserPro(user.email);
-  const planType = profile?.plan_type || 'FREE';
-  const subStatus = profile?.status || 'active';
   const endDate = profile?.end_date;
   const launchOffer = profile?.launch_offer || false;
   const autoRenew = profile?.auto_renew || false;
+  const subStatus = profile?.status || 'active';
 
-  let isActive = false;
+  let isPro = false;
   if (endDate) {
     const end = new Date(endDate).getTime();
     const now = new Date().getTime();
-    isActive = end > now;
+    isPro = end > now;
   } else if (isWhitelist || profile?.is_pro === true) {
-    isActive = true;
+    isPro = true;
   }
 
-  // Define o nome de exibição do plano
-  let planName: React.ReactNode = 'Plano Gratuito';
-  if (isActive) {
-    if (launchOffer) {
-      planName = (
-        <span className="flex items-center gap-2">
-          <Sparkles size={18} className="text-yellow-400" /> Plano PRO — Oferta de Lançamento
-        </span>
-      );
-    } else {
-      planName = (
-        <span className="flex items-center gap-2">
-          <Sparkles size={18} className="text-blue-400" /> Plano PRO
-        </span>
-      );
-    }
+  // Calcular dias restantes se PRO
+  let diasRestantes: number | null = null;
+  if (isPro && endDate) {
+    const end = new Date(endDate).getTime();
+    const now = new Date().getTime();
+    diasRestantes = Math.ceil((end - now) / (1000 * 60 * 60 * 24));
   }
 
   return (
-    <div style={{ padding: '0 16px 120px 16px', maxWidth: '600px', margin: '0 auto' }}>
-      <div className="page-header" style={{ paddingTop: 16 }}>
-        <h1>Meu Plano</h1>
-        <p>Gerencie sua assinatura e configurações de pagamento.</p>
-      </div>
-
-      <MeuPlanoClient
-        planName={planName}
-        isActive={isActive}
-        subStatus={subStatus}
-        endDate={endDate}
-        autoRenew={autoRenew}
-      />
-    </div>
+    <MeuPlanoClient
+      isPro={isPro}
+      subStatus={subStatus}
+      endDate={endDate || null}
+      autoRenew={autoRenew}
+      launchOffer={launchOffer}
+      locaisUsados={locaisCount ?? 0}
+      locaisMax={2}
+      diasRestantes={diasRestantes}
+    />
   );
 }
