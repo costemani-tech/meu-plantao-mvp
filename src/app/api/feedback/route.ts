@@ -3,10 +3,11 @@ import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
 import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'furiazul@gmail.com';
-
 export async function POST(req: Request) {
+  // Instanciar dentro da função — evita falha no build quando a env var não está disponível
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'furiazul@gmail.com';
+
   try {
     const cookieStore = await cookies();
     const supabase = createServerClient(
