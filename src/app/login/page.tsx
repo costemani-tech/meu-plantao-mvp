@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { supabase } from '../../lib/supabase';
 import { Mail, ArrowRight, Loader2 } from 'lucide-react';
@@ -16,6 +16,17 @@ export default function LoginPage() {
     setToast({ msg, type });
     setTimeout(() => setToast(null), 4000);
   };
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('error') === 'pkce_pwa') {
+        showToast('Abra o app e digite o código de 6 dígitos ao invés de clicar no link.', 'error');
+        // Clean up URL
+        window.history.replaceState({}, document.title, '/login');
+      }
+    }
+  }, []);
 
   const handleSendCode = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,7 +55,7 @@ export default function LoginPage() {
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!otpCode || otpCode.length < 6) {
-      showToast('Digite o código de 6 dígitos.', 'error');
+      showToast('Digite o código numérico válido.', 'error');
       return;
     }
 
@@ -256,9 +267,9 @@ export default function LoginPage() {
               </p>
               <input 
                 type="text" 
-                placeholder="000000"
+                placeholder="Código (ex: 123456)"
                 value={otpCode}
-                onChange={e => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                onChange={e => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 10))}
                 required
                 autoFocus
                 inputMode="numeric"
@@ -270,8 +281,8 @@ export default function LoginPage() {
                   borderRadius: '36px',
                   textAlign: 'center',
                   color: 'white',
-                  fontSize: '28px',
-                  letterSpacing: '10px',
+                  fontSize: '24px',
+                  letterSpacing: '6px',
                   fontWeight: '800',
                   outline: 'none'
                 }}

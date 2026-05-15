@@ -40,9 +40,9 @@ export async function GET(request: Request) {
       // ERRO PKCE / VERIFIER: Isso acontece muito em PWAs quando o login começa num Browser e termina em outro
       // Tentamos redirecionar para a home para ver se o cookie de sessão "pegou" mesmo com erro de verifier
       // ou mostramos uma mensagem instrutiva.
-      if (error.message.includes('code verifier')) {
-        console.error("PKCE Error detected. Redirecting to dashboard to check session...");
-        return NextResponse.redirect(`${origin}/dashboard?auth_error=pkce_mismatch`);
+      if (error.message.includes('code verifier') || error.message.includes('PKCE')) {
+        console.error("PKCE Error detected. Redirecting to login to instruct user...");
+        return NextResponse.redirect(`${origin}/login?error=pkce_pwa`);
       }
       return new Response(`ERRO DE AUTENTICAÇÃO: ${error.message}`, { status: 400 });
     }

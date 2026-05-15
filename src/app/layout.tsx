@@ -6,6 +6,10 @@ export const metadata: Metadata = {
   title: 'Meu Plantão — Controle de Escalas Médicas',
   description: 'Gerencie suas escalas de plantão de forma inteligente',
   manifest: '/manifest.json?v=4',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+  },
 };
 
 export const viewport = {
@@ -23,8 +27,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <meta charSet="utf-8" />
         <meta name="theme-color" content="#1a1e2d" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
         <link rel="icon" type="image/x-icon" href="/icons/favicon.ico" />
 

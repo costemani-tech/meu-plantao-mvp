@@ -217,7 +217,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         }
 
         // Whitelist + Banco de Dados (agora usando end_date primariamente)
-        const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+        const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle();
         const proStatus = isUserPro(user.email) || isSubscriptionActive(profile);
         setIsPro(proStatus);
 

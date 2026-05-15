@@ -42,7 +42,7 @@ export default function CalendarioPage() {
     const checkPro = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
-      const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+      const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle();
       setIsPro(isUserPro(user.email) || isSubscriptionActive(profile));
 
       const getShortName = (fullName: string) => {

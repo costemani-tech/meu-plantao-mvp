@@ -28,7 +28,7 @@ export default function PlantaoExtraPage() {
     const checkPro = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { setIsPro(false); return; }
-      const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+      const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle();
       const userIsPro = isUserPro(user.email) || isSubscriptionActive(profile);
       setIsPro(userIsPro);
 
