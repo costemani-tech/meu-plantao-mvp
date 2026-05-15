@@ -2,8 +2,27 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { Crown, Gift, Lock, Check, ChevronDown, ChevronRight, RefreshCw, MessageCircle, X, Shield, Zap, BarChart3, MapPin, FileText } from 'lucide-react';
+import { supabase } from '../../lib/supabase';
+import { Crown, Gift, Lock, Check, ChevronDown, ChevronRight, RefreshCw, MessageCircle, X, Shield, Zap, BarChart3, MapPin, FileText, Loader2 } from 'lucide-react';
 import './meu-plano.css';
+
+async function handleCheckout() {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { toast.error('Você precisa estar logado.'); return; }
+
+    const res = await fetch('/api/mercadopago/checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: user.id, userEmail: user.email }),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.init_point) throw new Error(data.error || 'Erro ao gerar checkout');
+    window.location.href = data.init_point;
+  } catch (e: any) {
+    toast.error(e.message || 'Erro ao iniciar pagamento. Tente novamente.');
+  }
+}
 
 interface Props {
   isPro: boolean;
@@ -146,6 +165,13 @@ function CancelModal({ onClose, onConfirm, loading, formattedEndDate }: { onClos
 function FreePlanView({ locaisUsados, locaisMax }: { locaisUsados: number; locaisMax: number }) {
   const pct = Math.min(100, Math.round((locaisUsados / locaisMax) * 100));
   const [showFeedback, setShowFeedback] = useState(false);
+  const [checkingOut, setCheckingOut] = useState(false);
+
+  const onUpgrade = async () => {
+    setCheckingOut(true);
+    await handleCheckout();
+    setCheckingOut(false);
+  };
   return (
     <div className="mp-page">
       {showFeedback && <FeedbackModal onClose={() => setShowFeedback(false)} />}
@@ -199,8 +225,8 @@ function FreePlanView({ locaisUsados, locaisMax }: { locaisUsados: number; locai
         <div className="mp-features-list" style={{ marginBottom: 20 }}>
           {PRO_FEATURES.map(({ icon: Icon, label }) => <div key={label} className="mp-feature-row"><Check size={16} className="mp-feat-check" /><span>{label}</span></div>)}
         </div>
-        <button className="mp-upgrade-btn" onClick={() => window.dispatchEvent(new CustomEvent('open-upgrade-modal'))}>
-          👑 Fazer Upgrade para PRO
+        <button className="mp-upgrade-btn" onClick={onUpgrade} disabled={checkingOut}>
+          {checkingOut ? <><Loader2 size={18} className="mp-spin" /> Redirecionando...</> : '👑 Fazer Upgrade para PRO'}
         </button>
         <div className="mp-trust-signals">
           <span>✔ Pagamento seguro via Mercado Pago</span>
@@ -225,7 +251,14 @@ function ProPlanView({ subStatus, endDate, autoRenew, diasRestantes }: { subStat
   const [showCancel, setShowCancel] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [checkingOut, setCheckingOut] = useState(false);
   const [localStatus, setLocalStatus] = useState(subStatus);
+
+  const onRenovar = async () => {
+    setCheckingOut(true);
+    await handleCheckout();
+    setCheckingOut(false);
+  };
 
   const formattedEndDate = endDate
     ? new Date(endDate).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })
@@ -310,10 +343,10 @@ function ProPlanView({ subStatus, endDate, autoRenew, diasRestantes }: { subStat
         <p className="mp-manage-sub">Você tem total controle sobre sua assinatura.</p>
 
         <div className="mp-action-list">
-          <button className="mp-action-row" onClick={() => window.dispatchEvent(new CustomEvent('open-upgrade-modal'))}>
-            <div className="mp-action-icon"><RefreshCw size={18} /></div>
+          <button className="mp-action-row" onClick={onRenovar} disabled={checkingOut}>
+            <div className="mp-action-icon">{checkingOut ? <Loader2 size={18} className="mp-spin" /> : <RefreshCw size={18} />}</div>
             <div className="mp-action-text">
-              <span className="mp-action-title">Renovar antecipadamente</span>
+              <span className="mp-action-title">{checkingOut ? 'Redirecionando...' : 'Renovar antecipadamente'}</span>
               <span className="mp-action-sub">Adicionar mais 6 meses ao seu plano</span>
             </div>
             <ChevronRight size={16} className="mp-action-arrow" />
