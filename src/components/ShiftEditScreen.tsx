@@ -63,7 +63,7 @@ export function ShiftEditScreen({ shift, onSave, onCancel }: ShiftEditScreenProp
   useEffect(() => {
     const calculatePreview = () => {
       const dates = [];
-      let current = new Date(`${dataInicio}T${horaInicio}:00`);
+      const current = new Date(`${dataInicio}T${horaInicio}:00`);
       const regraEfetiva = regra === 'custom' 
         ? (tipoPersonalizacao === 'dias' ? diasSelecionados.join(',') : `${horasTrabalho}x${horasDescanso}`) 
         : regra;
