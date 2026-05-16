@@ -280,6 +280,36 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     localStorage.setItem('plantao-theme', 'dark');
   }, []);
 
+  // Redirecionamento forçado no client-side para evitar loops de login
+  // Isso pega os casos onde o login ocorre via hash da URL ou quando a sessão é recuperada localmente
+  // e o middleware do servidor ainda não pôde agir.
+  useEffect(() => {
+    const checkRedirect = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        const path = window.location.pathname;
+        if (path === '/' || path.startsWith('/login')) {
+          window.location.href = '/dashboard';
+        }
+      }
+    };
+    
+    checkRedirect(); // Verifica o estado atual assim que o componente monta
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session) {
+        const path = window.location.pathname;
+        if (path === '/' || path.startsWith('/login')) {
+          window.location.href = '/dashboard';
+        }
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     router.push('/login');
