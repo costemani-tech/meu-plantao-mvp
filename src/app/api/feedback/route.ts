@@ -6,7 +6,8 @@ import { Resend } from 'resend';
 export async function POST(req: Request) {
   try {
     // Instanciar dentro do try — se a env var falhar, retorna JSON de erro em vez de crashar
-    const resend = new Resend(process.env.RESEND_API_KEY);
+    // Usa .trim() para garantir que nenhuma quebra de linha invisível quebre a key
+    const resend = new Resend(process.env.RESEND_API_KEY?.trim());
     const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'furiazul@gmail.com';
 
     const cookieStore = await cookies();
