@@ -53,9 +53,12 @@ export async function POST(req: Request) {
     };
     const emoji = categoriaEmoji[categoria] || '📬';
 
-    const { error: emailError } = await resend.emails.send({
+    console.log('[Feedback] Enviando e-mail via Resend para:', ADMIN_EMAIL, '| userEmail:', userEmail);
+    console.log('[Feedback] RESEND_API_KEY presente:', !!process.env.RESEND_API_KEY, '| primeiros chars:', process.env.RESEND_API_KEY?.substring(0, 8));
+
+    const emailResult = await resend.emails.send({
       from: 'Meu Plantão <onboarding@resend.dev>',
-      to: ADMIN_EMAIL,
+      to: [ADMIN_EMAIL],
       replyTo: userEmail,
       subject: `${emoji} [${categoria}] Novo feedback — Meu Plantão`,
       html: `
@@ -76,14 +79,12 @@ export async function POST(req: Request) {
                 <td style="padding: 10px 0; color: #F8FAFC; font-size: 14px;">${userEmail}</td>
               </tr>
             </table>
-
             <div style="background: #081224; border: 1px solid rgba(80,120,255,0.15); border-radius: 12px; padding: 18px 20px; margin-bottom: 24px;">
               <p style="margin: 0; font-size: 14px; color: #CBD5E1; line-height: 1.7; white-space: pre-wrap;">${mensagem.trim()}</p>
             </div>
-
             <div style="background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.2); border-radius: 10px; padding: 14px 18px;">
               <p style="margin: 0; font-size: 13px; color: #60A5FA;">
-                💬 Para responder diretamente a este usuário, clique em <strong>Responder</strong> no seu e-mail. A resposta vai direto para <strong>${userEmail}</strong>.
+                💬 Para responder, clique em <strong>Responder</strong>. A resposta vai direto para <strong>${userEmail}</strong>.
               </p>
             </div>
           </div>
@@ -94,13 +95,14 @@ export async function POST(req: Request) {
       `,
     });
 
-    if (emailError) {
-      console.error('[Feedback] Erro ao enviar e-mail via Resend:', emailError);
-      // Retorna sucesso mesmo se o e-mail falhar — o feedback já foi salvo no Supabase
-      return NextResponse.json({ success: true, emailSent: false });
+    console.log('[Feedback] Resultado Resend:', JSON.stringify(emailResult));
+
+    if (emailResult.error) {
+      console.error('[Feedback] Erro Resend:', emailResult.error);
+      return NextResponse.json({ success: true, emailSent: false, emailError: emailResult.error });
     }
 
-    return NextResponse.json({ success: true, emailSent: true });
+    return NextResponse.json({ success: true, emailSent: true, emailId: emailResult.data?.id });
 
   } catch (error: any) {
     console.error('[Feedback API] Erro interno:', error);
