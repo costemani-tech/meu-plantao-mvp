@@ -317,10 +317,10 @@ export default function LocaisPage() {
                     }} />
 
                     {/* Info */}
-                    <div style={{ display: 'flex', flexDirection: 'column', flex: 1, paddingLeft: '8px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', flex: 1, paddingLeft: '8px', minWidth: 0 }}>
                       <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
-                        {l.nome}
-                        {l.is_home_care && <span style={{ fontSize: 11, background: 'rgba(34,211,181,0.1)', color: 'var(--accent-teal)', padding: '2px 8px', borderRadius: 12, fontWeight: 700 }}><span style={{ display: "flex", alignItems: "center", gap: 4 }}><Home size={12} /> Home Care</span></span>}
+                        <span className="truncate" style={{ maxWidth: '200px' }}>{l.nome}</span>
+                        {l.is_home_care && <span style={{ fontSize: 11, background: 'rgba(34,211,181,0.1)', color: 'var(--accent-teal)', padding: '2px 8px', borderRadius: 12, fontWeight: 700, flexShrink: 0 }}><span style={{ display: "flex", alignItems: "center", gap: 4 }}><Home size={12} /> Home Care</span></span>}
                       </div>
                       
                       {l.endereco && !l.is_home_care && (

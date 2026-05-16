@@ -91,9 +91,9 @@ export default function RepassesPage() {
                     {isMeu && <span style={{ background: 'var(--bg-primary)', padding: '2px 8px', borderRadius: 12, fontSize: 10, fontWeight: 700 }}>MEU PLANTÃO</span>}
                   </div>
                   
-                  <h3 style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <MapPin size={18} color="var(--accent-red)" />
-                    {r.local_nome}
+                  <h3 style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+                    <MapPin size={18} color="var(--accent-red)" style={{ flexShrink: 0 }} />
+                    <span className="truncate" style={{ maxWidth: '250px' }}>{r.local_nome}</span>
                   </h3>
                   
                   <div style={{ display: 'flex', gap: 16, marginTop: 12, color: 'var(--text-secondary)', fontSize: 14 }}>

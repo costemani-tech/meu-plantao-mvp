@@ -1110,10 +1110,10 @@ export default function EscalasPage() {
                       onClick={() => setMenuEscalaId(menuEscalaId === e.id ? null : e.id)}
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                          <div style={{ width: 14, height: 14, borderRadius: '50%', background: e.local?.cor_calendario ?? '#4f8ef7' }} />
-                          <div>
-                            <div style={{ fontWeight: 800, fontSize: 15, color: 'var(--text-primary)' }}>{e.local?.nome ?? 'Local desconhecido'}</div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0, flex: 1 }}>
+                          <div style={{ width: 14, height: 14, borderRadius: '50%', background: e.local?.cor_calendario ?? '#4f8ef7', flexShrink: 0 }} />
+                          <div style={{ minWidth: 0, overflow: 'hidden' }}>
+                            <div className="truncate" style={{ fontWeight: 800, fontSize: 15, color: 'var(--text-primary)', maxWidth: '200px' }}>{e.local?.nome ?? 'Local desconhecido'}</div>
                             <div style={{ fontSize: 13, color: 'var(--text-secondary)', fontWeight: 600 }}>
                               {formatDaysArray(e.regra)} • {e.plantoes && e.plantoes.length > 0 ? `Próximo: ${new Date(e.plantoes[0].data_hora_inicio).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })} às ${formatBRTTime(e.plantoes[0].data_hora_inicio)}` : 'Sem plantões futuros'}
                             </div>
