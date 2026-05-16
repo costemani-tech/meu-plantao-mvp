@@ -34,6 +34,14 @@ export async function middleware(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname
 
+  // Intercepta callback do Supabase que cai na raiz com 'code' e exibe tela de loading instantânea (SSR bypass)
+  const code = request.nextUrl.searchParams.get('code')
+  if (code && pathname === '/') {
+    const url = request.nextUrl.clone()
+    url.pathname = '/auth/processing'
+    return NextResponse.rewrite(url)
+  }
+
   // Rotas que não exigem login
   const isPublicRoute =
     pathname === '/' ||

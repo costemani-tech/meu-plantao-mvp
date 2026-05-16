@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { supabase, isUserPro, isSubscriptionActive } from '../lib/supabase';
 import { useEffect, useState } from 'react';
-import { LayoutDashboard, CalendarDays, Settings2, PlusCircle, LogOut, Bell, X, AlertTriangle, Star, CreditCard, Loader2 } from 'lucide-react';
+import { LayoutDashboard, CalendarDays, Settings2, PlusCircle, LogOut, Bell, X, AlertTriangle, Star, CreditCard } from 'lucide-react';
 import PremiumModal from './PremiumModal';
 
 const navItems = [
@@ -21,13 +21,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   const [unreadCount, setUnreadCount] = useState(0);
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>('default');
-  
-  const [isAuthenticating, setIsAuthenticating] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return window.location.search.includes('code=');
-    }
-    return false;
-  });
 
   useEffect(() => {
     if (typeof window !== 'undefined' && 'Notification' in window) {
@@ -287,30 +280,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     localStorage.setItem('plantao-theme', 'dark');
   }, []);
 
-  // Redirecionamento forçado no client-side para evitar loops de login
-  // Isso pega os casos onde o login ocorre via hash da URL ou quando a sessão é recuperada localmente
-  // e o middleware do servidor ainda não pôde agir.
+  // Redirecionamento de sessão existente no client-side
   useEffect(() => {
-    const handleClientSideAuth = async () => {
-      // 1. Verificar se a URL possui um 'code' (OAuth ou PKCE flow caindo direto no cliente)
-      const urlParams = new URLSearchParams(window.location.search);
-      const code = urlParams.get('code');
-      
-      if (code) {
-        setIsAuthenticating(true); // Garante que a tela de loading apareça
-        // Trocar o código pela sessão no lado do cliente (usa localStorage para o verifier, o que evita o bug de cookie drop)
-        const { error } = await supabase.auth.exchangeCodeForSession(code);
-        if (!error) {
-          // Limpa a URL e redireciona
-          window.history.replaceState({}, document.title, '/dashboard');
-          window.location.href = '/dashboard';
-          return;
-        } else {
-          setIsAuthenticating(false);
-        }
-      }
-
-      // 2. Fallback normal: Verificar sessão já existente
+    const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
         const path = window.location.pathname;
@@ -320,7 +292,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       }
     };
     
-    handleClientSideAuth();
+    checkSession();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (session) {
@@ -342,43 +314,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     router.refresh();
   };
 
-  if (isAuthenticating) {
-    return (
-      <div style={{
-        position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
-        zIndex: 9999, background: '#050816', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-        overflow: 'hidden'
-      }}>
-        <video 
-          src="/icons/capa.mp4" 
-          poster="/icons/capa.jpeg"
-          autoPlay 
-          muted 
-          loop 
-          playsInline 
-          style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute' }} 
-        />
-        <div style={{ 
-          zIndex: 10000, 
-          display: 'flex', 
-          flexDirection: 'column', 
-          alignItems: 'center', 
-          gap: '16px',
-          background: 'rgba(5, 8, 22, 0.6)',
-          backdropFilter: 'blur(8px)',
-          padding: '24px 40px',
-          borderRadius: '24px',
-          border: '1px solid rgba(255,255,255,0.1)',
-          color: 'white'
-        }}>
-          <Loader2 className="animate-spin" size={40} color="var(--accent-blue)" />
-          <p style={{ fontSize: '1.2rem', fontWeight: 700, margin: 0, color: 'white' }}>Autenticando...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (pathname === '/login' || pathname === '/') {
+  // Skip render in special routes (including our new processing page)
+  if (pathname === '/login' || pathname === '/' || pathname === '/auth/processing') {
     return <>{children}</>;
   }
 
