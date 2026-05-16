@@ -1,7 +1,13 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
+  if (!process.env.CRON_SECRET) {
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  }
+
   // Vercel Cron security: validate the authorization header
   const authHeader = request.headers.get('authorization');
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
@@ -47,7 +53,7 @@ export async function GET(request: NextRequest) {
   const errors: string[] = [];
 
   for (const plantao of plantoes) {
-    const localNome = (plantao.local as any)?.nome ?? 'seu local';
+    const localNome = (plantao.local as { nome?: string })?.nome ?? 'seu local';
     const horaEntrada = new Date(plantao.data_hora_inicio).toLocaleTimeString('pt-BR', {
       hour: '2-digit',
       minute: '2-digit',
@@ -95,8 +101,9 @@ export async function GET(request: NextRequest) {
       } else {
         successCount++;
       }
-    } catch (err: any) {
-      errors.push(`plantao ${plantao.id}: ${err.message}`);
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      errors.push(`plantao ${plantao.id}: ${errorMessage}`);
     }
   }
 

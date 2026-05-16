@@ -2,6 +2,23 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
+  const host = request.headers.get('host')
+  const url = request.nextUrl.clone()
+
+  // Redireciona www para naked domain para manter um único canonical domain
+  if (host && host.startsWith('www.')) {
+    const nakedDomain = host.replace('www.', '')
+    url.host = nakedDomain
+    url.port = '' // Limpa porta se não for local, ou mantém no mesmo env
+    return NextResponse.redirect(url, 308)
+  }
+
+  // Previne loop de autenticação do Supabase na landing ou login com 'code'
+  if ((url.pathname === '/' || url.pathname.startsWith('/login')) && url.searchParams.has('code')) {
+    url.pathname = '/auth/callback'
+    return NextResponse.redirect(url)
+  }
+
   let supabaseResponse = NextResponse.next({
     request,
   })
