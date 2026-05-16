@@ -80,10 +80,28 @@ function FeedbackModal({ onClose }: { onClose: () => void }) {
     if (mensagem.trim().length < 5) { toast.error('Escreva uma mensagem antes de enviar.'); return; }
     setSending(true);
     try {
-      await fetch('/api/feedback', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ categoria, mensagem }) });
+      const res = await fetch('/api/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ categoria, mensagem }),
+        credentials: 'include',
+      });
+      const data = await res.json();
+      console.log('[Feedback Modal] Resposta API:', res.status, JSON.stringify(data));
+      if (!res.ok) {
+        toast.error(`Erro ao enviar: ${data.error || res.status}`);
+        return;
+      }
+      if (data.emailSent === false) {
+        console.warn('[Feedback Modal] E-mail não enviado pelo Resend:', data.emailError);
+      }
       setSent(true);
-    } catch { toast.error('Erro ao enviar. Tente novamente.'); }
-    finally { setSending(false); }
+    } catch (e) {
+      console.error('[Feedback Modal] Erro fetch:', e);
+      toast.error('Erro ao enviar. Tente novamente.');
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
