@@ -284,7 +284,23 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   // Isso pega os casos onde o login ocorre via hash da URL ou quando a sessão é recuperada localmente
   // e o middleware do servidor ainda não pôde agir.
   useEffect(() => {
-    const checkRedirect = async () => {
+    const handleClientSideAuth = async () => {
+      // 1. Verificar se a URL possui um 'code' (OAuth ou PKCE flow caindo direto no cliente)
+      const urlParams = new URLSearchParams(window.location.search);
+      const code = urlParams.get('code');
+      
+      if (code) {
+        // Trocar o código pela sessão no lado do cliente (usa localStorage para o verifier, o que evita o bug de cookie drop)
+        const { error } = await supabase.auth.exchangeCodeForSession(code);
+        if (!error) {
+          // Limpa a URL e redireciona
+          window.history.replaceState({}, document.title, '/dashboard');
+          window.location.href = '/dashboard';
+          return;
+        }
+      }
+
+      // 2. Fallback normal: Verificar sessão já existente
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
         const path = window.location.pathname;
@@ -294,7 +310,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       }
     };
     
-    checkRedirect(); // Verifica o estado atual assim que o componente monta
+    handleClientSideAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (session) {
