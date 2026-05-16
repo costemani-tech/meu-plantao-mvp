@@ -4,11 +4,11 @@ import { createServerClient } from '@supabase/ssr';
 import { Resend } from 'resend';
 
 export async function POST(req: Request) {
-  // Instanciar dentro da função — evita falha no build quando a env var não está disponível
-  const resend = new Resend(process.env.RESEND_API_KEY);
-  const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'furiazul@gmail.com';
-
   try {
+    // Instanciar dentro do try — se a env var falhar, retorna JSON de erro em vez de crashar
+    const resend = new Resend(process.env.RESEND_API_KEY);
+    const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'furiazul@gmail.com';
+
     const cookieStore = await cookies();
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
