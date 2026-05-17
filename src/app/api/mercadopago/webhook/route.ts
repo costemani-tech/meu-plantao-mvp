@@ -1,15 +1,30 @@
 import { NextResponse } from 'next/server';
 import { MercadoPagoConfig, Payment } from 'mercadopago';
 import { createClient } from '@supabase/supabase-js';
+import crypto from 'crypto';
 
 export async function POST(req: Request) {
   try {
+    const webhookSecret = process.env.MERCADOPAGO_WEBHOOK_SECRET;
+    if (!webhookSecret) {
+      return NextResponse.json({ error: 'Erro interno do servidor' }, { status: 500 });
+    }
+
+    const xSignature = req.headers.get('x-signature');
+    const xRequestId = req.headers.get('x-request-id');
+
+    if (!xSignature || !xRequestId) {
+      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+    }
+
+    const rawBody = await req.text();
+
     let dataId;
     let type;
 
     // Tentar ler do body (Webhook normal)
     try {
-      const body = await req.json();
+      const body = JSON.parse(rawBody);
       dataId = body?.data?.id;
       type = body?.type;
     } catch {
@@ -23,6 +38,35 @@ export async function POST(req: Request) {
 
     if (!dataId) {
       return NextResponse.json({ received: true });
+    }
+
+    // Parse the x-signature header to get ts and v1
+    const signatureParts = xSignature.split(',');
+    let ts = '';
+    let v1 = '';
+
+    for (const part of signatureParts) {
+      const [key, value] = part.split('=');
+      if (key === 'ts') ts = value;
+      if (key === 'v1') v1 = value;
+    }
+
+    if (!ts || !v1) {
+      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+    }
+
+    const manifest = `id:${dataId};request-id:${xRequestId};ts:${ts};`;
+
+    const hmac = crypto.createHmac('sha256', webhookSecret);
+    hmac.update(manifest);
+    const generatedSignature = hmac.digest('hex');
+
+    try {
+      if (!crypto.timingSafeEqual(Buffer.from(generatedSignature), Buffer.from(v1))) {
+        return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+      }
+    } catch (e) {
+      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
     }
 
     const client = new MercadoPagoConfig({
