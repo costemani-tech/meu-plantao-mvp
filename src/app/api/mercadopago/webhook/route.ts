@@ -1,20 +1,66 @@
 import { NextResponse } from 'next/server';
 import { MercadoPagoConfig, Payment } from 'mercadopago';
 import { createClient } from '@supabase/supabase-js';
+import crypto from 'crypto';
+
+export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
   try {
-    let dataId;
-    let type;
-
-    // Tentar ler do body (Webhook normal)
-    try {
-      const body = await req.json();
-      dataId = body?.data?.id;
-      type = body?.type;
-    } catch {
-      // Body não é JSON válido ou está vazio
+    const webhookSecret = process.env.MERCADOPAGO_WEBHOOK_SECRET;
+    if (!webhookSecret) {
+      console.error('Missing MERCADOPAGO_WEBHOOK_SECRET environment variable.');
+      return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     }
+
+    const xSignature = req.headers.get('x-signature');
+    const xRequestId = req.headers.get('x-request-id');
+
+    if (!xSignature || !xRequestId) {
+      return NextResponse.json({ error: 'Missing webhook headers' }, { status: 400 });
+    }
+
+    let rawBody = '';
+    let body: any = {};
+    try {
+      rawBody = await req.text();
+      body = JSON.parse(rawBody);
+    } catch {
+      return NextResponse.json({ error: 'Invalid body' }, { status: 400 });
+    }
+
+    // Validação da assinatura HMAC-SHA256
+    const parts = xSignature.split(',');
+    let ts;
+    let hash;
+    parts.forEach(part => {
+      const [key, value] = part.split('=');
+      if (key && value) {
+        const trimmedKey = key.trim();
+        if (trimmedKey === 'ts') ts = value.trim();
+        if (trimmedKey === 'v1') hash = value.trim();
+      }
+    });
+
+    if (!ts || !hash) {
+      return NextResponse.json({ error: 'Invalid signature format' }, { status: 400 });
+    }
+
+    const manifest = `id:${body.data?.id};request-id:${xRequestId};ts:${ts};`;
+    const hmac = crypto.createHmac('sha256', webhookSecret);
+    hmac.update(manifest);
+    const expectedHash = hmac.digest('hex');
+
+    try {
+      if (!crypto.timingSafeEqual(Buffer.from(hash), Buffer.from(expectedHash))) {
+        return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
+      }
+    } catch (e) {
+       return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
+    }
+
+    let dataId = body?.data?.id;
+    let type = body?.type;
 
     // Se não veio no body, tentar ler das query params (IPN)
     const url = new URL(req.url);
