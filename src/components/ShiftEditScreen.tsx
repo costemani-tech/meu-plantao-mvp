@@ -38,32 +38,31 @@ const DAYS_OF_WEEK = [
 ];
 
 export function ShiftEditScreen({ shift, onSave, onCancel }: ShiftEditScreenProps) {
+  const initialRegra = shift.escala?.regra || '12x36';
+
+  const [regra, setRegra] = useState(() => {
+    const isStandard = ['12x36', '24x72', '5x2', '6x1'].includes(initialRegra);
+    return isStandard ? initialRegra : 'custom';
+  });
+
   const [cor, setCor] = useState(shift.local?.cor_calendario || '#3b82f6');
-  const [regra, setRegra] = useState(shift.escala?.regra || '12x36');
   const [dataInicio, setDataInicio] = useState(shift.data_hora_inicio.substring(0, 10));
   const [horaInicio, setHoraInicio] = useState(new Date(shift.data_hora_inicio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }));
   const [horaFim, setHoraFim] = useState(new Date(shift.data_hora_fim).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }));
   
-  const isCustomRule = regra === 'custom' || regra.includes(',') || (regra.includes('x') && !['12x36', '24x72'].includes(regra));
-  const initialTipo = (regra.includes('x') && !['12x36', '24x72'].includes(regra)) ? 'horas' : 'dias';
+  const initialTipo = (initialRegra.includes('x') && !['12x36', '24x72'].includes(initialRegra)) ? 'horas' : 'dias';
   
   const [tipoPersonalizacao, setTipoPersonalizacao] = useState<'dias' | 'horas'>(initialTipo);
-  const [diasSelecionados, setDiasSelecionados] = useState<number[]>(regra.includes(',') ? regra.split(',').map(Number) : [1, 2, 3, 4, 5]);
-  const [horasTrabalho, setHorasTrabalho] = useState(regra.includes('x') ? regra.split('x')[0] : '12');
-  const [horasDescanso, setHorasDescanso] = useState(regra.includes('x') ? regra.split('x')[1] : '36');
+  const [diasSelecionados, setDiasSelecionados] = useState<number[]>(initialRegra.includes(',') ? initialRegra.split(',').map(Number) : [1, 2, 3, 4, 5]);
+  const [horasTrabalho, setHorasTrabalho] = useState(initialRegra.includes('x') ? initialRegra.split('x')[0] : '12');
+  const [horasDescanso, setHorasDescanso] = useState(initialRegra.includes('x') ? initialRegra.split('x')[1] : '36');
 
   const [previewDates, setPreviewDates] = useState<any[]>([]);
 
   useEffect(() => {
-    if (regra === 'custom' || isCustomRule) {
-      if (regra !== 'custom') setRegra('custom');
-    }
-  }, [regra, isCustomRule]);
-
-  useEffect(() => {
     const calculatePreview = () => {
       const dates = [];
-      let current = new Date(`${dataInicio}T${horaInicio}:00`);
+      const current = new Date(`${dataInicio}T${horaInicio}:00`);
       const regraEfetiva = regra === 'custom' 
         ? (tipoPersonalizacao === 'dias' ? diasSelecionados.join(',') : `${horasTrabalho}x${horasDescanso}`) 
         : regra;

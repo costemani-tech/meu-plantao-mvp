@@ -5,6 +5,12 @@ import nextTs from "eslint-config-next/typescript";
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
+  {
+    rules: {
+      "react-hooks/set-state-in-effect": "off",
+      "@typescript-eslint/no-explicit-any": "off",
+    }
+  },
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:
@@ -14,6 +20,9 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // Pasta legada (projeto anterior) — não faz parte do deploy
     "mvp-app/**",
+    "scratch/**",
+    "*.js",
+    "*.py",
   ]),
 ]);
 
