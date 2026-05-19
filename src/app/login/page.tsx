@@ -21,7 +21,9 @@ export default function LoginPage() {
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search);
       if (urlParams.get('error') === 'pkce_pwa') {
-        showToast('Abra o app e digite o código de 6 dígitos ao invés de clicar no link.', 'error');
+        setTimeout(() => {
+          showToast('Abra o app e digite o código de 6 dígitos ao invés de clicar no link.', 'error');
+        }, 0);
         // Clean up URL
         window.history.replaceState({}, document.title, '/login');
       }

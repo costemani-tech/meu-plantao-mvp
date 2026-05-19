@@ -56,7 +56,9 @@ export function ShiftEditScreen({ shift, onSave, onCancel }: ShiftEditScreenProp
 
   useEffect(() => {
     if (regra === 'custom' || isCustomRule) {
-      if (regra !== 'custom') setRegra('custom');
+      if (regra !== 'custom') {
+        setTimeout(() => setRegra('custom'), 0);
+      }
     }
   }, [regra, isCustomRule]);
 

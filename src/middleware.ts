@@ -2,6 +2,15 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
+  // Redirecionar subdomínio 'www' para o naked domain (Requisito OneSignal)
+  const host = request.headers.get('host') || '';
+  if (host.startsWith('www.')) {
+    const newHost = host.replace('www.', '');
+    const url = request.nextUrl.clone();
+    url.host = newHost;
+    return NextResponse.redirect(url, 308);
+  }
+
   let supabaseResponse = NextResponse.next({
     request,
   })
@@ -48,6 +57,7 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith('/login') ||
     pathname.startsWith('/demo') ||
     pathname.startsWith('/api/cron') ||
+    pathname.startsWith('/api/mercadopago') ||
     pathname.startsWith('/api/webhooks') ||
     pathname.startsWith('/_next') ||
     pathname.startsWith('/auth/callback') ||
