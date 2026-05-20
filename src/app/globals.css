@@ -655,7 +655,7 @@ h1, h2, h3, h4 {
 .desktop-loader-card {
   width: fit-content;
   height: fit-content;
-  padding: 40px 56px;
+  padding: 32px 40px;
   border-radius: 36px;
   display: flex;
   justify-content: center;
@@ -668,27 +668,28 @@ h1, h2, h3, h4 {
 /* Glow suave no vídeo (não no card) */
 .desktop-loader-video-wrapper {
   filter: drop-shadow(0 0 80px rgba(59, 130, 246, 0.25));
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-/* Vídeo protagonista — contido, proporcional, nunca cortado */
+/* Vídeo: limitar pela ALTURA do viewport (é retrato 9:16) */
 .desktop-loader-video {
-  width: min(42vw, 520px);
-  min-width: 360px;
-  max-width: 520px;
-  height: auto;
+  max-height: 75vh;
+  width: auto;
+  max-width: 480px;
   object-fit: contain;
   display: block;
   border-radius: 20px;
 }
 
-/* Tablet: reduz levemente para não ocupar demais */
+/* Tablet (768–1023px): reduz um pouco */
 @media (max-width: 1023px) and (min-width: 769px) {
   .desktop-loader-video {
-    min-width: 280px;
-    width: min(50vw, 420px);
-    max-width: 420px;
+    max-height: 65vh;
+    max-width: 360px;
   }
   .desktop-loader-card {
-    padding: 32px 44px;
+    padding: 24px 32px;
   }
 }
