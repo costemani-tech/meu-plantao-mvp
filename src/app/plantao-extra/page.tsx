@@ -275,6 +275,7 @@ export default function PlantaoExtraPage() {
                 title="Gestão Financeira" 
                 description="O plano gratuito não calcula ganhos por plantão. Assine o PRO para controle completo." 
                 icon={<Lock size={14} />}
+                trackingEvent="hit_paywall_extra"
               />
             </div>
           )}

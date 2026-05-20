@@ -8,18 +8,28 @@ interface PremiumLockCardProps {
   description: string;
   badgeText?: string;
   icon?: React.ReactNode;
+  trackingEvent?: string;
 }
 
 export default function PremiumLockCard({
   title,
   description,
   badgeText = "PLANO GRATUITO",
-  icon = <Diamond size={14} />
+  icon = <Diamond size={14} />,
+  trackingEvent
 }: PremiumLockCardProps) {
   const [loading, setLoading] = useState(false);
 
   const handleCheckoutClick = async () => {
     setLoading(true);
+    if (trackingEvent) {
+      try {
+        const { track } = await import('@vercel/analytics/react');
+        track(trackingEvent);
+      } catch (err) {
+        console.error('Analytics tracking error:', err);
+      }
+    }
     try {
       const url = await handleDirectCheckout();
       window.location.href = url;
