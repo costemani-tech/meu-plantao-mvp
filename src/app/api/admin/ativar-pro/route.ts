@@ -1,14 +1,18 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-const ADMIN_TOKEN = 'ADMIN_SECRET_2026';
-
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const email = searchParams.get('email');
   const token = searchParams.get('token');
 
-  if (token !== ADMIN_TOKEN) {
+  const adminToken = process.env.ADMIN_SECRET;
+
+  if (!adminToken) {
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  }
+
+  if (token !== adminToken) {
     return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
   }
 
@@ -20,7 +24,7 @@ export async function GET(request: Request) {
   // Como é uma API admin, idealmente usaria SUPABASE_SERVICE_ROLE_KEY
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+    process.env.SUPABASE_SERVICE_ROLE_KEY || ''
   );
 
   const { data, error } = await supabase
