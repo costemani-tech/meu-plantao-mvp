@@ -632,3 +632,19 @@ h1, h2, h3, h4 {
   background: #0B1730 !important;
   border-color: rgba(80,120,255,0.3) !important;
 }
+
+/* Splash Video Loader responsive scaling */
+.splash-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: all 0.3s ease;
+}
+
+@media (min-width: 768px) {
+  .splash-video {
+    object-fit: contain;
+    max-height: 480px;
+  }
+}
+

@@ -335,7 +335,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             muted 
             loop 
             playsInline 
-            style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+            className="splash-video"
           />
         </div>
       )}

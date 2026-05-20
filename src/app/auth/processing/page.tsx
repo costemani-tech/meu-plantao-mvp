@@ -39,7 +39,8 @@ export default function ProcessingPage() {
         muted 
         loop 
         playsInline 
-        style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute' }} 
+        className="splash-video"
+        style={{ position: 'absolute' }}
       />
       <div style={{ 
         zIndex: 10000, 
