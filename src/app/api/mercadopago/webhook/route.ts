@@ -1,15 +1,31 @@
 import { NextResponse } from 'next/server';
 import { MercadoPagoConfig, Payment } from 'mercadopago';
 import { createClient } from '@supabase/supabase-js';
+import crypto from 'crypto';
 
 export async function POST(req: Request) {
   try {
+    const webhookSecret = process.env.MERCADOPAGO_WEBHOOK_SECRET;
+    if (!webhookSecret) {
+      return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    }
+
+    const xSignature = req.headers.get('x-signature');
+    const xRequestId = req.headers.get('x-request-id');
+
+    if (!xSignature || !xRequestId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     let dataId;
     let type;
 
+    // We must read the raw body for signature validation
+    const rawBody = await req.text();
+
     // Tentar ler do body (Webhook normal)
     try {
-      const body = await req.json();
+      const body = JSON.parse(rawBody);
       dataId = body?.data?.id;
       type = body?.type;
     } catch {
@@ -20,6 +36,38 @@ export async function POST(req: Request) {
     const url = new URL(req.url);
     if (!dataId) dataId = url.searchParams.get('data.id') || url.searchParams.get('id');
     if (!type) type = url.searchParams.get('type') || url.searchParams.get('topic');
+
+    // Parse x-signature parts
+    // x-signature format: ts=123,v1=abc
+    const parts = xSignature.split(',');
+    let ts = '';
+    let v1 = '';
+
+    parts.forEach(part => {
+      const [key, value] = part.split('=');
+      if (key === 'ts') ts = value;
+      if (key === 'v1') v1 = value;
+    });
+
+    if (!ts || !v1) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Calculate signature
+    // Mercado Pago webhook manifest uses data.id (the ID of the resource) as the "id" value.
+    const manifest = `id:${dataId};request-id:${xRequestId};ts:${ts};`;
+    const hmac = crypto.createHmac('sha256', webhookSecret);
+    hmac.update(manifest);
+    hmac.update(rawBody);
+    const expectedSignature = hmac.digest('hex');
+
+    const expectedBuffer = Buffer.from(expectedSignature);
+    const receivedBuffer = Buffer.from(v1);
+
+    // Compare signature safely
+    if (expectedBuffer.length !== receivedBuffer.length || !crypto.timingSafeEqual(expectedBuffer, receivedBuffer)) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
     if (!dataId) {
       return NextResponse.json({ received: true });
