@@ -36,6 +36,14 @@ export default function ResponsiveSplash() {
               loop
               playsInline
               className="desktop-loader-video"
+              style={{
+                maxHeight: '75vh',
+                width: 'auto',
+                maxWidth: '480px',
+                objectFit: 'contain',
+                display: 'block',
+                borderRadius: '20px',
+              }}
             />
           </div>
         </div>
