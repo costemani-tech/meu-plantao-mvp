@@ -325,7 +325,7 @@ export default function CalendarioPage() {
                         </div>
                         {!isExitOnly && (
                           <div style={{ display: 'flex', gap: 10 }}>
-                             <button onClick={() => { if (!isPro) { setShowUpgradeModal(true); return; } setShiftParaEditar(p); }} style={{ background: 'rgba(30, 41, 59, 0.6)', border: 'none', color: '#fff', padding: 10, borderRadius: 10, cursor: 'pointer' }}><Edit2 size={18} /></button>
+                             <button onClick={() => { if (!isPro) { window.dispatchEvent(new CustomEvent('open-upgrade-modal')); return; } setShiftParaEditar(p); }} style={{ background: 'rgba(30, 41, 59, 0.6)', border: 'none', color: '#fff', padding: 10, borderRadius: 10, cursor: 'pointer' }}><Edit2 size={18} /></button>
                              <button onClick={() => setModalExclusao(p)} style={{ background: 'rgba(239, 68, 68, 0.15)', border: 'none', color: '#ef4444', padding: 10, borderRadius: 10, cursor: 'pointer' }}><Trash2 size={18} /></button>
                           </div>
                         )}

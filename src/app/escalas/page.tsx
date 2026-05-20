@@ -563,6 +563,18 @@ export default function EscalasPage() {
               });
             } catch { /* silently ignore notification errors */ }
           }
+
+          if (pushNotifications.length > 0) {
+            try {
+              await fetch('/api/onesignal', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ notifications: pushNotifications })
+              });
+            } catch (err) {
+              console.error('Erro ao agendar push notifications no OneSignal:', err);
+            }
+          }
         }
       }
 

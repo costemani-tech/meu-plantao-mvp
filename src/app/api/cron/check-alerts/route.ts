@@ -2,11 +2,21 @@ import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
-  // Vercel Cron security: validate the authorization header
+  // Validação de segurança flexível (Header ou Query Parameter)
   const authHeader = request.headers.get('authorization');
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const secretParam = request.nextUrl.searchParams.get('secret');
+  const expectedSecret = process.env.CRON_SECRET;
+
+  if (expectedSecret && process.env.NODE_ENV !== 'development') {
+    const isAuthorized = 
+      authHeader === `Bearer ${expectedSecret}` || 
+      secretParam === expectedSecret;
+      
+    if (!isAuthorized) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
   }
+
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
