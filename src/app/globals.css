@@ -634,62 +634,78 @@ h1, h2, h3, h4 {
 }
 
 /* ─────────────────────────────────────────────────────────────
-   Desktop Splash — SaaS Premium (MP4 já contém logo + textos)
-   Mobile: permanece intacto via Tailwind md:hidden / md:flex
+   Splash Screen — Mobile-first, CSS-only responsiveness
+   Mobile: vídeo fullscreen com object-fit cover (inalterado)
+   Desktop (≥769px): vídeo centralizado em card premium
    ───────────────────────────────────────────────────────────── */
 
-/* Fundo tela toda */
-.desktop-loader {
-  min-height: 100vh;
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background:
-    radial-gradient(circle at center, rgba(37, 99, 235, 0.16), transparent 65%),
-    #01091F;
+/* Base: overlay fixa cobrindo tudo */
+.splash-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
   overflow: hidden;
+  background: #050816;
 }
 
-/* Card acompanha o vídeo — sem áreas vazias */
-.desktop-loader-card {
-  width: fit-content;
-  height: fit-content;
-  padding: 32px 40px;
-  border-radius: 36px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: rgba(5, 12, 30, 0.60);
-  border: 1px solid rgba(59, 130, 246, 0.10);
-  backdrop-filter: blur(14px);
+/* Mobile: container ocupa tudo */
+.splash-video-container {
+  width: 100%;
+  height: 100%;
 }
 
-/* Glow suave no vídeo (não no card) */
-.desktop-loader-video-wrapper {
-  filter: drop-shadow(0 0 80px rgba(59, 130, 246, 0.25));
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* Vídeo: limitar pela ALTURA do viewport (é retrato 9:16) */
-.desktop-loader-video {
-  max-height: 75vh;
-  width: auto;
-  max-width: 480px;
-  object-fit: contain;
+/* Mobile: vídeo preenche a tela inteira */
+.splash-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
   display: block;
-  border-radius: 20px;
 }
 
-/* Tablet (768–1023px): reduz um pouco */
-@media (max-width: 1023px) and (min-width: 769px) {
-  .desktop-loader-video {
-    max-height: 65vh;
-    max-width: 360px;
+/* ─── Desktop: tudo muda a partir de 769px ─── */
+@media (min-width: 769px) {
+  .splash-overlay {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background:
+      radial-gradient(circle at center, rgba(37, 99, 235, 0.16), transparent 65%),
+      #01091F;
   }
-  .desktop-loader-card {
+
+  .splash-video-container {
+    width: fit-content;
+    height: fit-content;
+    padding: 32px 40px;
+    border-radius: 36px;
+    background: rgba(5, 12, 30, 0.60);
+    border: 1px solid rgba(59, 130, 246, 0.10);
+    backdrop-filter: blur(14px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    filter: drop-shadow(0 0 80px rgba(59, 130, 246, 0.25));
+  }
+
+  .splash-video {
+    width: auto;
+    height: 70vh;
+    max-height: 70vh;
+    max-width: 400px;
+    object-fit: contain;
+    border-radius: 20px;
+  }
+}
+
+/* ─── Tablet (769px–1023px): um pouco menor ─── */
+@media (min-width: 769px) and (max-width: 1023px) {
+  .splash-video {
+    height: 60vh;
+    max-height: 60vh;
+    max-width: 320px;
+  }
+
+  .splash-video-container {
     padding: 24px 32px;
   }
 }
