@@ -633,124 +633,62 @@ h1, h2, h3, h4 {
   border-color: rgba(80,120,255,0.3) !important;
 }
 
-/* Premium Responsive Desktop Splash Layout (SaaS Card Style with Video) */
-.desktop-splash {
+/* ─────────────────────────────────────────────────────────────
+   Desktop Splash — SaaS Premium (MP4 já contém logo + textos)
+   Mobile: permanece intacto via Tailwind md:hidden / md:flex
+   ───────────────────────────────────────────────────────────── */
+
+/* Fundo tela toda */
+.desktop-loader {
   min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 48px;
-  background: radial-gradient(circle at center, rgba(59, 130, 246, 0.10), #020617 65%);
-  background-color: #020617;
-  overflow: hidden;
-  position: fixed;
-  inset: 0;
-  width: 100vw;
-  height: 100vh;
-  z-index: 9999;
-}
-
-.desktop-splash-card {
   width: 100%;
-  max-width: 640px;
-  padding: 56px;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 24px;
-  border-radius: 32px;
-  background: linear-gradient(180deg, rgba(7, 15, 35, 0.88), rgba(5, 10, 24, 0.95));
-  border: 1px solid rgba(80, 120, 255, 0.12);
-  backdrop-filter: blur(18px);
-  box-shadow: 0 0 80px rgba(0, 120, 255, 0.10);
-  text-align: center;
-}
-
-.loader-video {
-  width: 320px;
-  max-width: 42vw;
-  max-height: 420px;
-  aspect-ratio: 9/16;
-  object-fit: contain;
-  border-radius: 28px;
-  overflow: hidden;
-  filter: drop-shadow(0 0 60px rgba(34, 211, 238, 0.20));
-}
-
-.desktop-splash-title {
-  font-size: 56px;
-  font-weight: 800;
-  color: #FFFFFF;
-  line-height: 1.1;
-  margin: 0;
-}
-
-.desktop-splash-title span {
-  color: #3B82F6;
-}
-
-.desktop-splash-subtitle {
-  font-size: 20px;
-  color: rgba(255, 255, 255, 0.72);
-  max-width: 400px;
-  text-align: center;
-  line-height: 1.5;
-  margin: 0;
-}
-
-.splash-loader-dots {
-  display: flex;
-  gap: 12px;
-  margin-top: 8px;
   justify-content: center;
+  background:
+    radial-gradient(circle at center, rgba(37, 99, 235, 0.16), transparent 65%),
+    #01091F;
+  overflow: hidden;
 }
 
-.splash-loader-dots span {
-  width: 12px;
-  height: 12px;
-  background-color: #3B82F6;
-  border-radius: 50%;
-  opacity: 0.4;
-  animation: dot-pulse 1.5s infinite ease-in-out;
+/* Card acompanha o vídeo — sem áreas vazias */
+.desktop-loader-card {
+  width: fit-content;
+  height: fit-content;
+  padding: 40px 56px;
+  border-radius: 36px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: rgba(5, 12, 30, 0.60);
+  border: 1px solid rgba(59, 130, 246, 0.10);
+  backdrop-filter: blur(14px);
 }
 
-.splash-loader-dots span:nth-child(2) {
-  animation-delay: 0.3s;
+/* Glow suave no vídeo (não no card) */
+.desktop-loader-video-wrapper {
+  filter: drop-shadow(0 0 80px rgba(59, 130, 246, 0.25));
 }
 
-.splash-loader-dots span:nth-child(3) {
-  animation-delay: 0.6s;
+/* Vídeo protagonista — contido, proporcional, nunca cortado */
+.desktop-loader-video {
+  width: min(42vw, 520px);
+  min-width: 360px;
+  max-width: 520px;
+  height: auto;
+  object-fit: contain;
+  display: block;
+  border-radius: 20px;
 }
 
-@keyframes dot-pulse {
-  0%, 100% {
-    opacity: 0.4;
-    transform: scale(0.85);
+/* Tablet: reduz levemente para não ocupar demais */
+@media (max-width: 1023px) and (min-width: 769px) {
+  .desktop-loader-video {
+    min-width: 280px;
+    width: min(50vw, 420px);
+    max-width: 420px;
   }
-  50% {
-    opacity: 1;
-    transform: scale(1.15);
-  }
-}
-
-/* Tablet adjustments (768px - 1023px) */
-@media (max-width: 1023px) and (min-width: 768px) {
-  .desktop-splash-card {
-    max-width: 520px;
-    padding: 40px;
-    gap: 20px;
-  }
-  .loader-video {
-    width: 240px;
-    max-height: 320px;
-  }
-  .desktop-splash-title {
-    font-size: 42px;
-  }
-  .desktop-splash-subtitle {
-    font-size: 18px;
-    max-width: 320px;
+  .desktop-loader-card {
+    padding: 32px 44px;
   }
 }
-
-

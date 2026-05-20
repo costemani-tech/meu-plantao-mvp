@@ -26,7 +26,5 @@ export default function ProcessingPage() {
     processAuth();
   }, []);
 
-  return (
-    <ResponsiveSplash subtitle={<>Autenticando e preparando<br />seu painel...</>} />
-  );
+  return <ResponsiveSplash />;
 }

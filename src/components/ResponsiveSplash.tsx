@@ -1,12 +1,6 @@
 import React from 'react';
 
-interface ResponsiveSplashProps {
-  subtitle?: React.ReactNode;
-}
-
-export default function ResponsiveSplash({ 
-  subtitle = <>Organize seus plantões.<br />Tenha tudo sob controle.</> 
-}: ResponsiveSplashProps) {
+export default function ResponsiveSplash() {
   return (
     <div style={{
       position: 'fixed',
@@ -15,47 +9,34 @@ export default function ResponsiveSplash({
       width: '100%',
       height: '100%',
       zIndex: 9999,
-      background: '#020617',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      overflow: 'hidden'
+      overflow: 'hidden',
     }}>
-      {/* Mobile Splash Layout */}
+      {/* ─── Mobile: vídeo ocupa tela toda, sem alteração ─── */}
       <div className="block md:hidden w-full h-full bg-[#050816]">
-        <video 
-          src="/icons/capa.mp4" 
+        <video
+          src="/icons/capa.mp4"
           poster="/icons/capa.jpeg"
-          autoPlay 
-          muted 
-          loop 
-          playsInline 
-          className="w-full h-full object-cover" 
+          autoPlay
+          muted
+          loop
+          playsInline
+          className="w-full h-full object-cover"
         />
       </div>
 
-      {/* Desktop/Tablet SaaS Premium Splash Layout */}
-      <div className="hidden md:flex desktop-splash">
-        <div className="desktop-splash-card">
-          <video 
-            src="/icons/capa.mp4" 
-            poster="/icons/capa.jpeg"
-            autoPlay 
-            muted 
-            loop 
-            playsInline 
-            className="loader-video" 
-          />
-          <h1 className="desktop-splash-title">
-            Meu <span>Plantão</span>
-          </h1>
-          <p className="desktop-splash-subtitle">
-            {subtitle}
-          </p>
-          <div className="splash-loader-dots">
-            <span></span>
-            <span></span>
-            <span></span>
+      {/* ─── Desktop/Tablet: SaaS Premium — só o vídeo, protagonista ─── */}
+      <div className="hidden md:flex desktop-loader">
+        <div className="desktop-loader-card">
+          <div className="desktop-loader-video-wrapper">
+            <video
+              src="/icons/capa.mp4"
+              poster="/icons/capa.jpeg"
+              autoPlay
+              muted
+              loop
+              playsInline
+              className="desktop-loader-video"
+            />
           </div>
         </div>
       </div>
