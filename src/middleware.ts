@@ -43,12 +43,13 @@ export async function middleware(request: NextRequest) {
   }
 
   // Rotas que não exigem login
-  const isPublicRoute =
+const isPublicRoute =
     pathname === '/' ||
     pathname.startsWith('/login') ||
     pathname.startsWith('/demo') ||
     pathname.startsWith('/api/cron') ||
     pathname.startsWith('/api/webhooks') ||
+    pathname.startsWith('/api/mercadopago') ||
     pathname.startsWith('/_next') ||
     pathname.startsWith('/auth/callback') ||
     pathname === '/manifest.json' ||
