@@ -128,7 +128,7 @@ export default function EscalasPage() {
     try {
       const { data, error } = await supabase
         .from('escalas')
-        .select('id, regra, tipo_jornada, modo_jornada, data_inicio, local_id, local:locais_trabalho(nome, cor_calendario)')
+        .select('id, regra, tipo_jornada, modo_jornada, data_inicio, local_id, alerta_antecedencia_horas, local:locais_trabalho(nome, cor_calendario)')
         .eq('usuario_id', user.id)
         .order('created_at', { ascending: false });
       if (error) console.error('fetchEscalas error:', error);
@@ -1174,6 +1174,7 @@ export default function EscalasPage() {
                                     return;
                                   }
                                   setModalAlertas(e); 
+                                  setAlertasHoras(String((e as any).alerta_antecedencia_horas || '2'));
                                   setMenuEscalaId(null); 
                                 }}
                                 style={{ width: '100%', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 10, background: 'none', border: 'none', color: isPro ? 'var(--text-primary)' : 'var(--text-muted)', cursor: isPro ? 'pointer' : 'not-allowed', fontSize: 13, textAlign: 'left', userSelect: 'none', opacity: isPro ? 1 : 0.6 }}
@@ -1237,11 +1238,26 @@ export default function EscalasPage() {
                 style={{ flex: 1, background: 'var(--accent-blue)' }}
                 onClick={async () => {
                    setEnviandoAlertas(true);
-                   // Simulação de salvamento/ativação (no futuro integrar com API de notificações)
-                   await new Promise(r => setTimeout(r, 800));
-                   showToast('Configurações de alerta atualizadas!', 'success');
-                   setModalAlertas(null);
-                   setEnviandoAlertas(false);
+                   try {
+                     const { error } = await supabase
+                       .from('escalas')
+                       .update({ alerta_antecedencia_horas: parseInt(alertasHoras, 10) })
+                       .eq('id', modalAlertas.id);
+
+                     if (error) throw error;
+                     
+                     // Atualiza o estado local para refletir a mudança
+                     setEscalasAtivas(prev => prev.map(e => 
+                       e.id === modalAlertas.id ? { ...e, alerta_antecedencia_horas: parseInt(alertasHoras, 10) } as any : e
+                     ));
+
+                     showToast('Configurações de alerta atualizadas!', 'success');
+                     setModalAlertas(null);
+                   } catch (err: any) {
+                     showToast('Erro ao salvar alertas: ' + err.message, 'error');
+                   } finally {
+                     setEnviandoAlertas(false);
+                   }
                 }}
                 disabled={enviandoAlertas}
               >

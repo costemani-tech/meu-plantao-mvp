@@ -33,12 +33,13 @@ export async function GET(request: NextRequest) {
 
   const now = new Date();
   const windowStart = now.toISOString();
-  const windowEnd = new Date(now.getTime() + 2 * 60 * 60 * 1000).toISOString(); // now + 2h
+  // Busca plantões nas próximas 48 horas para cobrir qualquer antecedência configurada
+  const windowEnd = new Date(now.getTime() + 48 * 60 * 60 * 1000).toISOString();
 
-  // 1. Fetch upcoming shifts within the next 2 hours where alert_sent is false/null
+  // 1. Fetch upcoming shifts where alert_sent is false/null
   const { data: plantoes, error } = await supabase
     .from('plantoes')
-    .select('id, usuario_id, data_hora_inicio, local:locais_trabalho(nome)')
+    .select('id, usuario_id, data_hora_inicio, local:locais_trabalho(nome), escala:escalas(alerta_antecedencia_horas)')
     .gte('data_hora_inicio', windowStart)
     .lte('data_hora_inicio', windowEnd)
     .neq('status', 'Cancelado')
@@ -57,6 +58,14 @@ export async function GET(request: NextRequest) {
   const errors: string[] = [];
 
   for (const plantao of plantoes) {
+    const antecedenciaHoras = (plantao.escala as any)?.alerta_antecedencia_horas ?? 2;
+    const timeToAlert = new Date(plantao.data_hora_inicio).getTime() - (antecedenciaHoras * 60 * 60 * 1000);
+
+    // Se o momento de disparar o alerta ainda não chegou (está no futuro), ignora neste ciclo
+    if (timeToAlert > now.getTime()) {
+      continue;
+    }
+
     const localNome = (plantao.local as any)?.nome ?? 'seu local';
     const horaEntrada = new Date(plantao.data_hora_inicio).toLocaleTimeString('pt-BR', {
       hour: '2-digit',
