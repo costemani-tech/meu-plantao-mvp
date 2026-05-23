@@ -1,25 +1,83 @@
 import { NextResponse } from 'next/server';
 import { MercadoPagoConfig, Payment } from 'mercadopago';
 import { createClient } from '@supabase/supabase-js';
+import crypto from 'crypto';
 
 export async function POST(req: Request) {
   try {
-    let dataId;
-    let type;
+    const webhookSecret = process.env.MERCADOPAGO_WEBHOOK_SECRET;
 
-    // Tentar ler do body (Webhook normal)
-    try {
-      const body = await req.json();
-      dataId = body?.data?.id;
-      type = body?.type;
-    } catch {
-      // Body não é JSON válido ou está vazio
+    if (!webhookSecret) {
+      console.error('[MercadoPago Webhook] Webhook secret not configured.');
+      return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     }
 
-    // Se não veio no body, tentar ler das query params (IPN)
+    const signature = req.headers.get('x-signature');
+    const requestId = req.headers.get('x-request-id');
+
+    if (!signature || !requestId) {
+      console.error('[MercadoPago Webhook] Missing x-signature or x-request-id headers.');
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // signature comes in format: "ts=1234567890,v1=hash123..."
+    const parts = signature.split(',');
+    let ts = '';
+    let hash = '';
+
+    for (const part of parts) {
+      const [key, value] = part.split('=');
+      if (key === 'ts') ts = value;
+      if (key === 'v1') hash = value;
+    }
+
+    if (!ts || !hash) {
+      console.error('[MercadoPago Webhook] Malformed signature header.');
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // We must read the raw body for HMAC hashing before doing any JSON parsing
+    const rawBody = await req.text();
+
+    // According to MercadoPago docs, if body is empty or it's IPN, manifest logic might vary slightly
+    // but the generic approach for standard MP Webhooks with x-signature is based on data.id
+
+    let dataIdParam = null;
+    let typeParam = null;
+
+    let bodyData: any = {};
+    if (rawBody) {
+        try {
+            bodyData = JSON.parse(rawBody);
+            dataIdParam = bodyData?.data?.id;
+            typeParam = bodyData?.type;
+        } catch (e) {
+            // body not valid JSON
+        }
+    }
+
     const url = new URL(req.url);
-    if (!dataId) dataId = url.searchParams.get('data.id') || url.searchParams.get('id');
-    if (!type) type = url.searchParams.get('type') || url.searchParams.get('topic');
+    if (!dataIdParam) dataIdParam = url.searchParams.get('data.id') || url.searchParams.get('id');
+    if (!typeParam) typeParam = url.searchParams.get('type') || url.searchParams.get('topic');
+
+    // Let's use the correct dataId for manifest computation
+    const manifestStr = `id:${dataIdParam};request-id:${requestId};ts:${ts};`;
+
+    const expectedHash = crypto
+      .createHmac('sha256', webhookSecret)
+      .update(manifestStr)
+      .digest('hex');
+
+    const expectedHashBuffer = Buffer.from(expectedHash);
+    const providedHashBuffer = Buffer.from(hash);
+
+    if (expectedHashBuffer.length !== providedHashBuffer.length || !crypto.timingSafeEqual(expectedHashBuffer, providedHashBuffer)) {
+      console.error('[MercadoPago Webhook] Invalid signature.');
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const dataId = dataIdParam;
+    const type = typeParam;
 
     if (!dataId) {
       return NextResponse.json({ received: true });
