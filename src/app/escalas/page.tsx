@@ -179,23 +179,45 @@ export default function EscalasPage() {
 
   // Preview das 5 primeiras datas em tempo real (permanece no frontend)
   useEffect(() => {
-    if (dataCompletaISO && regraFinal) {
-      const hr = parseInt(horasTrabalhoOutro, 10);
-      const hd = parseInt(horasDescansoOutro, 10);
-      if (regra === 'Outro' && (isNaN(hr) || isNaN(hd) || hr <= 0 || hd < 0)) {
+    try {
+      if (!dataCompletaISO || !regraFinal) {
         setPreview([]);
         return;
       }
+
+      const dateObj = new Date(dataCompletaISO);
+      if (isNaN(dateObj.getTime())) {
+        setPreview([]);
+        return;
+      }
+
+      if (regra === 'Outro') {
+        const hr = parseInt(horasTrabalhoOutro, 10);
+        const hd = parseInt(horasDescansoOutro, 10);
+        if (isNaN(hr) || isNaN(hd) || hr <= 0 || hd < 0) {
+          setPreview([]);
+          return;
+        }
+      }
+
       if (tipoJornada === 'Diarista') {
           const regCorr = regraDiarista === 'Outro'
             ? (diasTrabalhoOutro && diasDescansoOutro ? `${diasTrabalhoOutro}x${diasDescansoOutro}` : '')
             : regraDiarista;
-          if (!regCorr) { setPreview([]); return; }
-          setPreview(gerarProximosPlantoes(new Date(dataCompletaISO), regCorr, 'Diarista-Corridos', horaFim, 5));
+          if (!regCorr || regCorr === 'x' || regCorr.startsWith('x') || regCorr.endsWith('x')) {
+             setPreview([]);
+             return;
+          }
+          setPreview(gerarProximosPlantoes(dateObj, regCorr, 'Diarista-Corridos', horaFim, 5));
       } else {
-        setPreview(gerarProximosPlantoes(new Date(dataCompletaISO), regraFinal, tipoJornada, horaFim, 5));
+        if (regraFinal === 'x' || regraFinal.startsWith('x') || regraFinal.endsWith('x')) {
+          setPreview([]);
+          return;
+        }
+        setPreview(gerarProximosPlantoes(dateObj, regraFinal, tipoJornada, horaFim, 5));
       }
-    } else {
+    } catch (e) {
+      console.error("Erro ao gerar preview:", e);
       setPreview([]);
     }
   }, [dataCompletaISO, regraFinal, regra, horasTrabalhoOutro, horasDescansoOutro, tipoJornada, tipoDiarista, diasDiarista, regraDiarista, diasTrabalhoOutro, diasDescansoOutro, horaFim]);
