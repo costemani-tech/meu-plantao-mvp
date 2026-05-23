@@ -1,15 +1,62 @@
 import { NextResponse } from 'next/server';
 import { MercadoPagoConfig, Payment } from 'mercadopago';
 import { createClient } from '@supabase/supabase-js';
+import crypto from 'crypto';
 
 export async function POST(req: Request) {
   try {
+    const webhookSecret = process.env.MERCADOPAGO_WEBHOOK_SECRET;
+    if (!webhookSecret) {
+      console.error('[MercadoPago Webhook] Webhook secret not configured');
+      return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    }
+
+    const xSignature = req.headers.get('x-signature');
+    const xRequestId = req.headers.get('x-request-id');
+
+    if (!xSignature || !xRequestId) {
+      return NextResponse.json({ error: 'Missing signature headers' }, { status: 400 });
+    }
+
+    const rawBody = await req.text();
+
+    // Parse x-signature
+    const signatureParts = xSignature.split(',');
+    let ts;
+    let hash;
+
+    for (const part of signatureParts) {
+      const [key, value] = part.split('=');
+      if (key === 'ts') ts = value;
+      if (key === 'v1') hash = value;
+    }
+
+    if (!ts || !hash) {
+      return NextResponse.json({ error: 'Invalid signature format' }, { status: 400 });
+    }
+
+    // Validate signature
+    const manifest = `id:${xRequestId};request-parts:${ts};${rawBody}`;
+    const hmac = crypto.createHmac('sha256', webhookSecret);
+    hmac.update(manifest);
+    const computedHash = hmac.digest('hex');
+
+    try {
+      const isValid = crypto.timingSafeEqual(Buffer.from(computedHash), Buffer.from(hash));
+      if (!isValid) {
+        return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
+      }
+    } catch (e) {
+      // Buffer length mismatch or other error during comparison
+      return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
+    }
+
     let dataId;
     let type;
 
-    // Tentar ler do body (Webhook normal)
+    // Parse body after reading raw body
     try {
-      const body = await req.json();
+      const body = JSON.parse(rawBody);
       dataId = body?.data?.id;
       type = body?.type;
     } catch {
