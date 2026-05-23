@@ -39,3 +39,5 @@ export async function GET() {
     return NextResponse.json({ ofertaAtiva: false, proCount: 0, error: error.message }, { status: 500 });
   }
 }
+
+export const dynamic = 'force-dynamic';

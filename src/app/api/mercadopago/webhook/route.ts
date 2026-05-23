@@ -1,15 +1,53 @@
 import { NextResponse } from 'next/server';
 import { MercadoPagoConfig, Payment } from 'mercadopago';
+import * as crypto from 'crypto';
 import { createClient } from '@supabase/supabase-js';
 
 export async function POST(req: Request) {
   try {
+const secret = process.env.MERCADOPAGO_WEBHOOK_SECRET;
+    if (!secret) {
+      console.error('[MercadoPago Webhook] Missing MERCADOPAGO_WEBHOOK_SECRET');
+      return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    }
+
+    const xSignature = req.headers.get('x-signature');
+    const xRequestId = req.headers.get('x-request-id');
+
+    if (!xSignature || !xRequestId) {
+      console.error('[MercadoPago Webhook] Missing signature headers');
+      return NextResponse.json({ error: 'Bad Request' }, { status: 400 });
+    }
+
+    const signatureParts = xSignature.split(',');
+    let ts = '';
+    let hash = '';
+    for (const part of signatureParts) {
+      const [key, value] = part.split('=');
+      if (key === 'ts') ts = value;
+      if (key === 'v1') hash = value;
+    }
+
+    if (!ts || !hash) {
+      console.error('[MercadoPago Webhook] Invalid signature format');
+      return NextResponse.json({ error: 'Bad Request' }, { status: 400 });
+    }
+
+    const rawBody = await req.text();
+    const manifest = `id:${xRequestId};manifest-id:${ts};body:${rawBody}`;
+
+    const expectedHash = crypto.createHmac('sha256', secret).update(manifest).digest('hex');
+
+    if (expectedHash.length !== hash.length || !crypto.timingSafeEqual(Buffer.from(expectedHash), Buffer.from(hash))) {
+      console.error('[MercadoPago Webhook] Invalid signature');
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     let dataId;
     let type;
 
-    // Tentar ler do body (Webhook normal)
     try {
-      const body = await req.json();
+      const body = JSON.parse(rawBody);
       dataId = body?.data?.id;
       type = body?.type;
     } catch {
@@ -82,3 +120,5 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
+
+export const dynamic = 'force-dynamic';

@@ -64,3 +64,5 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Erro interno do servidor' }, { status: 500 });
   }
 }
+
+export const dynamic = 'force-dynamic';

@@ -5,9 +5,14 @@ export async function GET(request: NextRequest) {
   // Validação de segurança flexível (Header ou Query Parameter)
   const authHeader = request.headers.get('authorization');
   const secretParam = request.nextUrl.searchParams.get('secret');
-  const expectedSecret = process.env.CRON_SECRET;
+const expectedSecret = process.env.CRON_SECRET;
 
-  if (expectedSecret && process.env.NODE_ENV !== 'development') {
+  if (!expectedSecret) {
+    console.error('[cron/check-alerts] Missing CRON_SECRET environment variable.');
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  }
+
+  if (process.env.NODE_ENV !== 'development') {
     const isAuthorized = 
       authHeader === `Bearer ${expectedSecret}` || 
       secretParam === expectedSecret;
@@ -127,3 +132,5 @@ export async function GET(request: NextRequest) {
     errors,
   });
 }
+
+export const dynamic = 'force-dynamic';
