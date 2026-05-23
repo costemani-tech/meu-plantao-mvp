@@ -44,7 +44,7 @@ export async function GET(request: Request) {
         console.error("PKCE Error detected. Redirecting to login to instruct user...");
         return NextResponse.redirect(`${origin}/login?error=pkce_pwa`);
       }
-      return new Response(`ERRO DE AUTENTICAÇÃO: ${error.message}`, { status: 400 });
+      return new Response(`ERRO DE AUTENTICAÇÃO: Ocorreu um erro durante a autenticação.`, { status: 400 });
     }
   }
 

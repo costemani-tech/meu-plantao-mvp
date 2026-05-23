@@ -80,7 +80,7 @@ export default function LocaisPage() {
     });
     
     if (error) {
-      showToast('Erro ao salvar: ' + error.message, 'error');
+      showToast('Erro ao salvar. Tente novamente.', 'error');
     } else {
       showToast('✅ Local adicionado com sucesso!', 'success');
       setNome('');
@@ -112,7 +112,7 @@ export default function LocaisPage() {
     const { error } = await supabase.from('locais_trabalho').update({ ativo: false }).eq('usuario_id', user.id).eq('id', id);
     
     if (error) { 
-      showToast('Erro ao excluir: ' + error.message, 'error');
+      showToast('Erro ao excluir. Tente novamente.', 'error');
     } else { 
       showToast('Local e todos os plantões removidos', 'success'); 
       await fetchLocais(); 
@@ -134,7 +134,7 @@ export default function LocaisPage() {
     }).eq('usuario_id', user.id).eq('id', localEmEdicao.id);
 
     if (error) {
-      showToast('Erro ao atualizar: ' + error.message, 'error');
+      showToast('Erro ao atualizar. Tente novamente.', 'error');
     } else {
       showToast('✅ Local atualizado com sucesso!', 'success');
       setLocalEmEdicao(null);

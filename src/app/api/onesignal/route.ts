@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 
 export async function POST(request: Request) {
@@ -44,6 +45,6 @@ export async function POST(request: Request) {
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : 'Erro desconhecido';
     console.error('Erro na rota de envio OneSignal:', error);
-    return NextResponse.json({ success: false, error: msg }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Ocorreu um erro ao enviar notificações" }, { status: 500 });
   }
 }

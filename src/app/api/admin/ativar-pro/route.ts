@@ -1,14 +1,17 @@
+export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-
-const ADMIN_TOKEN = 'ADMIN_SECRET_2026';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const email = searchParams.get('email');
   const token = searchParams.get('token');
 
-  if (token !== ADMIN_TOKEN) {
+  if (!process.env.ADMIN_SECRET) {
+    return NextResponse.json({ error: "Ocorreu um erro no servidor" }, { status: 500 });
+  }
+
+  if (token !== process.env.ADMIN_SECRET) {
     return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
   }
 
@@ -29,7 +32,7 @@ export async function GET(request: Request) {
     .eq('email', email.toLowerCase());
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Ocorreu um erro no servidor" }, { status: 500 });
   }
 
   return NextResponse.json({ success: true, message: `Usuário ${email} agora é PRO.` });
