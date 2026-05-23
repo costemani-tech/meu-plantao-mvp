@@ -1,14 +1,21 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-const ADMIN_TOKEN = 'ADMIN_SECRET_2026';
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
+  const adminSecret = process.env.ADMIN_SECRET;
+
+  if (!adminSecret) {
+    console.error('[API Admin] ADMIN_SECRET not configured.');
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  }
+
   const { searchParams } = new URL(request.url);
   const email = searchParams.get('email');
   const token = searchParams.get('token');
 
-  if (token !== ADMIN_TOKEN) {
+  if (token !== adminSecret) {
     return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
   }
 
@@ -29,7 +36,8 @@ export async function GET(request: Request) {
     .eq('email', email.toLowerCase());
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error('[API Admin] Supabase error.');
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 
   return NextResponse.json({ success: true, message: `Usuário ${email} agora é PRO.` });
