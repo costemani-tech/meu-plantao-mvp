@@ -1,11 +1,58 @@
 import { NextResponse } from 'next/server';
 import { MercadoPagoConfig, Payment } from 'mercadopago';
 import { createClient } from '@supabase/supabase-js';
+import crypto from 'crypto';
+
+export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
   try {
     let dataId;
     let type;
+
+    // Validate signature if secret is provided
+    const secret = process.env.MERCADOPAGO_WEBHOOK_SECRET;
+
+    if (!secret) {
+      console.error('CRITICAL: MERCADOPAGO_WEBHOOK_SECRET is not set in environment variables.');
+      return NextResponse.json({ error: 'Configuração do servidor ausente' }, { status: 500 });
+    }
+
+    const xSignature = req.headers.get('x-signature');
+    const xRequestId = req.headers.get('x-request-id');
+
+    if (!xSignature || !xRequestId) {
+      return NextResponse.json({ error: 'Missing security headers' }, { status: 400 });
+    }
+
+    const urlParams = new URL(req.url).searchParams;
+    const dataID = urlParams.get('data.id') || '';
+
+    const parts = xSignature.split(',');
+    let ts = '';
+    let hash = '';
+
+    parts.forEach(part => {
+        const [key, value] = part.split('=');
+        if (key && value) {
+            const trimmedKey = key.trim();
+            const trimmedValue = value.trim();
+            if (trimmedKey === 'ts') {
+                ts = trimmedValue;
+            } else if (trimmedKey === 'v1') {
+                hash = trimmedValue;
+            }
+        }
+    });
+
+    const manifest = `id:${dataID};request-id:${xRequestId};ts:${ts};`;
+    const hmac = crypto.createHmac('sha256', secret);
+    hmac.update(manifest);
+    const sha = hmac.digest('hex');
+
+    if (sha !== hash) {
+      return NextResponse.json({ error: 'Invalid signature' }, { status: 403 });
+    }
 
     // Tentar ler do body (Webhook normal)
     try {

@@ -19,7 +19,7 @@ export async function GET() {
 
     if (error) {
       console.error('[OfertaStatus] Erro ao contar assinantes PRO:', error);
-      return NextResponse.json({ ofertaAtiva: false, proCount: 0, error: error.message }, { status: 500 });
+      return NextResponse.json({ ofertaAtiva: false, proCount: 0, error: 'Erro ao verificar o status da oferta' }, { status: 500 });
     }
 
     const proCount = count ?? 0;
@@ -36,6 +36,6 @@ export async function GET() {
     });
   } catch (error: any) {
     console.error('[OfertaStatus] Erro interno:', error);
-    return NextResponse.json({ ofertaAtiva: false, proCount: 0, error: error.message }, { status: 500 });
+    return NextResponse.json({ ofertaAtiva: false, proCount: 0, error: 'Erro interno ao verificar o status da oferta' }, { status: 500 });
   }
 }
