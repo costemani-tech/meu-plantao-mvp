@@ -41,7 +41,7 @@ export async function POST(req: Request) {
         mensagem: mensagem.trim(),
       })
       .then(({ error }) => {
-        if (error) console.warn('[Feedback] Supabase insert falhou (tabela pode não existir):', error.message);
+        if (error) console.warn('[Feedback] Supabase insert falhou (tabela pode não existir):', 'Ocorreu um erro interno.');
       });
 
     // 2. Enviar e-mail para o admin via Resend

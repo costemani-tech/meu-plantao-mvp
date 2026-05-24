@@ -7,7 +7,11 @@ export async function GET(request: NextRequest) {
   const secretParam = request.nextUrl.searchParams.get('secret');
   const expectedSecret = process.env.CRON_SECRET;
 
-  if (expectedSecret && process.env.NODE_ENV !== 'development') {
+  if (!expectedSecret) {
+    return NextResponse.json({ error: 'Configuração interna do servidor ausente.' }, { status: 500 });
+  }
+
+  if (process.env.NODE_ENV !== 'development') {
     const isAuthorized = 
       authHeader === `Bearer ${expectedSecret}` || 
       secretParam === expectedSecret;
@@ -22,7 +26,7 @@ export async function GET(request: NextRequest) {
   const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!supabaseUrl || !supabaseServiceKey) {
-    return NextResponse.json({ error: 'Missing Supabase credentials' }, { status: 500 });
+    return NextResponse.json({ error: 'Configuração interna do servidor ausente.' }, { status: 500 });
   }
 
   // Use Service Role Key — never exposed to the client
@@ -47,7 +51,7 @@ export async function GET(request: NextRequest) {
 
   if (error) {
     console.error('[cron/check-alerts] Supabase query error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: 'Erro ao buscar plantões.' }, { status: 500 });
   }
 
   if (!plantoes || plantoes.length === 0) {
@@ -99,7 +103,7 @@ export async function GET(request: NextRequest) {
 
       if (!res.ok) {
         const body = await res.text();
-        errors.push(`plantao ${plantao.id}: OneSignal ${res.status} – ${body}`);
+        errors.push(`plantao ${plantao.id}: OneSignal ${res.status}`);
         continue;
       }
 
@@ -110,12 +114,12 @@ export async function GET(request: NextRequest) {
         .eq('id', plantao.id);
 
       if (updateError) {
-        errors.push(`plantao ${plantao.id}: DB update failed – ${updateError.message}`);
+        errors.push(`plantao ${plantao.id}: DB update failed`);
       } else {
         successCount++;
       }
     } catch (err: any) {
-      errors.push(`plantao ${plantao.id}: ${err.message}`);
+      errors.push(`plantao ${plantao.id}: erro de rede`);
     }
   }
 
