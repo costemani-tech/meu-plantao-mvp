@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { supabase } from '../../lib/supabase';
 import { Crown, Gift, Lock, Check, ChevronDown, ChevronRight, RefreshCw, MessageCircle, X, Shield, Zap, BarChart3, MapPin, FileText, Loader2 } from 'lucide-react';
-import { track } from '@vercel/analytics/react';
+import posthog from 'posthog-js';
 import './meu-plano.css';
 
 async function handleCheckout() {
@@ -188,7 +188,7 @@ function FreePlanView({ locaisUsados, locaisMax }: { locaisUsados: number; locai
 
   const onUpgrade = async () => {
     setCheckingOut(true);
-    track('click_upgrade_pro');
+    posthog.capture('click_upgrade_pro');
     await handleCheckout();
     setCheckingOut(false);
   };
@@ -383,7 +383,7 @@ function ProPlanView({ subStatus, endDate, autoRenew, diasRestantes }: { subStat
 
           {!isCanceled && (
             <button className="mp-action-row mp-action-danger" onClick={() => {
-              track('open_cancel_modal');
+              posthog.capture('open_cancel_modal');
               setShowCancel(true);
             }}>
               <div className="mp-action-icon danger"><X size={18} /></div>

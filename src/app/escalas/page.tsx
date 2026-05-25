@@ -6,7 +6,7 @@ import { gerarProximosPlantoes, SlotPlantao } from '../../lib/scale-generator';
 import { useRouter } from 'next/navigation';
 import EmptyState from '../../components/EmptyState';
 import { ClipboardList, Bell, Trash2, AlertTriangle, X, ChevronRight, Calendar, Clock, Edit2, Plus, Star, Lock } from 'lucide-react';
-import { track } from '@vercel/analytics/react';
+import posthog from 'posthog-js';
 import { formatDaysArray, formatBRTTime, formatRelativeShiftDate } from '../../lib/date-utils';
 
 const CORES_PRESET = [
@@ -582,7 +582,7 @@ export default function EscalasPage() {
       window.dispatchEvent(new CustomEvent('plantoes-atualizados'));
       
       if (!editingId) {
-        track('create_escala_success');
+        posthog.capture('create_escala_success');
         setLocalId('');
         setDataInicioSo('');
         setRegra('12x36');

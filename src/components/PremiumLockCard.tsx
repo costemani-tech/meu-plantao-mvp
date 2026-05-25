@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Diamond, Loader2 } from 'lucide-react';
 import { handleDirectCheckout } from '../lib/checkout';
 import { toast } from 'sonner';
+import posthog from 'posthog-js';
 
 interface PremiumLockCardProps {
   title: string;
@@ -24,8 +25,7 @@ export default function PremiumLockCard({
     setLoading(true);
     if (trackingEvent) {
       try {
-        const { track } = await import('@vercel/analytics/react');
-        track(trackingEvent);
+        posthog.capture(trackingEvent);
       } catch (err) {
         console.error('Analytics tracking error:', err);
       }

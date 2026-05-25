@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import AppShell from '../components/AppShell';
-import { Analytics } from '@vercel/analytics/react';
+import { PostHogProvider } from './providers';
 
 export const metadata: Metadata = {
   title: 'Meu Plantão — Controle de Escalas Médicas',
@@ -59,9 +59,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body>
-        <AppShell>{children}</AppShell>
-        <Toaster position="top-center" richColors />
-        <Analytics />
+        <PostHogProvider>
+          <AppShell>{children}</AppShell>
+          <Toaster position="top-center" richColors />
+        </PostHogProvider>
       </body>
     </html>
   );
