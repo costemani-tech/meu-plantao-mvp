@@ -521,7 +521,6 @@ export default function EscalasPage() {
           const nomeLocal = localSelecionado?.nome || 'seu local de trabalho';
 
           const pushNotifications: any[] = [];
-          const dbNotificacoes: any[] = [];
           const antecedencia = parseInt(tempoAlerta, 10);
 
           arrayDePlantoes.forEach((plantao) => {
@@ -543,27 +542,9 @@ export default function EscalasPage() {
                 },
                 send_after: sendAfter.toISOString()
               });
-
-              dbNotificacoes.push({
-                usuario_id: user.id,
-                escala_id: escalaCriada.id,
-                data_hora_inicio: plantao.data_hora_inicio,
-                publicar_em: sendAfter.toISOString(),
-                titulo: `🏥 Plantão em ${antecedencia}h — ${nomeLocal}`,
-                mensagem: `Você tem plantão em ${nomeLocal} às ${horaStr}. Bom trabalho!`,
-                lida: false
-              });
             }
           });
           
-          if (dbNotificacoes.length > 0) {
-            try {
-              await supabase.from('notificacoes').upsert(dbNotificacoes, { 
-                onConflict: 'usuario_id,escala_id,data_hora_inicio' 
-              });
-            } catch { /* silently ignore notification errors */ }
-          }
-
           if (pushNotifications.length > 0) {
             try {
               await fetch('/api/onesignal', {

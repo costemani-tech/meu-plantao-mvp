@@ -164,11 +164,13 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         console.error('OneSignal initialization error:', e);
       }
       
+      const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
       const { count } = await supabase
         .from('notificacoes')
         .select('*', { count: 'exact', head: true })
         .eq('usuario_id', user.id)
         .eq('lida', false)
+        .gte('publicar_em', twentyFourHoursAgo)
         .lte('publicar_em', new Date().toISOString());
       setUnreadCount(count || 0);
     };

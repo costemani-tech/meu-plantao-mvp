@@ -21,10 +21,13 @@ export default function NotificacoesPage() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
     
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    
     const { data } = await supabase
       .from('notificacoes')
       .select('*')
       .eq('usuario_id', user.id)
+      .gte('publicar_em', twentyFourHoursAgo)
       .lte('publicar_em', new Date().toISOString())
       .order('created_at', { ascending: false });
       

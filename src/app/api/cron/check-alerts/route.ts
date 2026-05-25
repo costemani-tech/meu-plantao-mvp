@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
+import { isUserPro } from '@/lib/supabase';
 
 export async function GET(request: NextRequest) {
   // Validação de segurança flexível (Header ou Query Parameter)
@@ -39,7 +40,7 @@ export async function GET(request: NextRequest) {
   // 1. Fetch upcoming shifts where alert_sent is false/null
   const { data: plantoes, error } = await supabase
     .from('plantoes')
-    .select('id, usuario_id, data_hora_inicio, local:locais_trabalho(nome), escala:escalas(alerta_antecedencia_horas)')
+    .select('id, usuario_id, escala_id, data_hora_inicio, local:locais_trabalho(nome), escala:escalas(alerta_antecedencia_horas)')
     .gte('data_hora_inicio', windowStart)
     .lte('data_hora_inicio', windowEnd)
     .neq('status', 'Cancelado')
@@ -103,7 +104,7 @@ export async function GET(request: NextRequest) {
         continue;
       }
 
-      // 3. Mark alert as sent to prevent duplicates
+      // 3. Mark alert as sent to prevent duplicates and save in DB in real-time
       const { error: updateError } = await supabase
         .from('plantoes')
         .update({ alert_sent: true })
@@ -112,6 +113,22 @@ export async function GET(request: NextRequest) {
       if (updateError) {
         errors.push(`plantao ${plantao.id}: DB update failed – ${updateError.message}`);
       } else {
+        // Insert notification record in DB in real-time
+        const { error: notiError } = await supabase
+          .from('notificacoes')
+          .insert({
+            usuario_id: plantao.usuario_id,
+            escala_id: plantao.escala_id,
+            data_hora_inicio: plantao.data_hora_inicio,
+            publicar_em: now.toISOString(),
+            titulo: `🏥 Plantão em ${antecedenciaHoras}h — ${localNome}`,
+            mensagem: `Você tem plantão em ${localNome} às ${horaEntrada}. Bom trabalho!`,
+            lida: false
+          });
+
+        if (notiError) {
+          console.error(`[cron/check-alerts] Failed to insert notification in DB for plantao ${plantao.id}:`, notiError);
+        }
         successCount++;
       }
     } catch (err: any) {
@@ -120,6 +137,84 @@ export async function GET(request: NextRequest) {
   }
 
   console.log(`[cron/check-alerts] Processed ${plantoes.length} shifts. Sent: ${successCount}. Errors: ${errors.length}`);
+
+  // 4. Verification of plan expirations in the next 7 days (once a day per user)
+  try {
+    const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString();
+    
+    // Fetch profiles where subscription is PRO and end_date is in the next 7 days
+    const { data: expiringProfiles } = await supabase
+      .from('profiles')
+      .select('id, email, plan_type, end_date')
+      .eq('plan_type', 'PRO')
+      .gte('end_date', now.toISOString())
+      .lte('end_date', sevenDaysFromNow);
+
+    if (expiringProfiles && expiringProfiles.length > 0) {
+      for (const profile of expiringProfiles) {
+        // Skip whitelisted users who do not expire
+        if (isUserPro(profile.email)) continue;
+
+        // Check if we already sent a notification in the last 20 hours
+        const twentyHoursAgo = new Date(now.getTime() - 20 * 60 * 60 * 1000).toISOString();
+        const { data: existingNoti } = await supabase
+          .from('notificacoes')
+          .select('id')
+          .eq('usuario_id', profile.id)
+          .eq('titulo', 'Assinatura PRO expira em breve')
+          .gte('created_at', twentyHoursAgo)
+          .limit(1);
+
+        if (!existingNoti || existingNoti.length === 0) {
+          const diffTime = new Date(profile.end_date).getTime() - now.getTime();
+          const daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          
+          if (daysLeft >= 0 && daysLeft <= 7) {
+            const msgPt = daysLeft === 1
+              ? 'Sua assinatura PRO expira amanhã! Renove agora para não perder o acesso às suas escalas.'
+              : `Sua assinatura PRO expira em ${daysLeft} dias. Renove agora para não perder o acesso às suas escalas.`;
+
+            // Insert dynamic 24h notification
+            await supabase
+              .from('notificacoes')
+              .insert({
+                usuario_id: profile.id,
+                titulo: 'Assinatura PRO expira em breve',
+                mensagem: msgPt,
+                publicar_em: now.toISOString(),
+                lida: false
+              });
+
+            // Try sending push via OneSignal as well
+            if (ONESIGNAL_APP_ID && ONESIGNAL_REST_KEY) {
+              try {
+                await fetch('https://onesignal.com/api/v1/notifications', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Key ${ONESIGNAL_REST_KEY}`,
+                  },
+                  body: JSON.stringify({
+                    app_id: ONESIGNAL_APP_ID,
+                    include_aliases: { external_id: [profile.id] },
+                    target_channel: 'push',
+                    headings: { 'pt': 'Renovação do Plano PRO' },
+                    contents: { 'pt': msgPt },
+                    small_icon: 'ic_stat_onesignal_default',
+                    android_channel_id: 'plan-alerts',
+                  }),
+                });
+              } catch (pushErr) {
+                console.error(`[cron/check-alerts] Failed to send push for plan expiration to user ${profile.id}:`, pushErr);
+              }
+            }
+          }
+        }
+      }
+    }
+  } catch (err: any) {
+    console.error('[cron/check-alerts] Error checking plan expirations:', err);
+  }
 
   return NextResponse.json({
     processed: plantoes.length,

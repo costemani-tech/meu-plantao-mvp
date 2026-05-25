@@ -273,7 +273,6 @@ export async function POST(req: NextRequest) {
         const offsetMs = Number(antecedencia) * 60 * 60 * 1000;
         
         const pushNotifications = [];
-        const dbNotificacoes = [];
         const now = new Date();
 
         for (const s of slots) {
@@ -295,16 +294,6 @@ export async function POST(req: NextRequest) {
               contents: { "pt": `${nomeLocal}\nPrepare-se com antecedência. Bom plantão!` },
               send_after: publicarEm.toISOString()
             });
-
-            dbNotificacoes.push({
-              usuario_id,
-              escala_id: escala.id,
-              data_hora_inicio: s.inicio.toISOString(),
-              publicar_em: publicarEm.toISOString(), // Requer que a coluna exista
-              titulo: `🏥 Plantão em ${antecedencia}h — ${nomeLocal}`,
-              mensagem: `Você tem plantão em ${nomeLocal} às ${horaStr}. Bom trabalho!`,
-              lida: false
-            });
           }
         }
 
@@ -322,12 +311,6 @@ export async function POST(req: NextRequest) {
             }).then(r => r.json())
           );
           await Promise.all(pushPromises);
-        }
-
-        if (dbNotificacoes.length > 0) {
-          await supabaseAdmin.from('notificacoes').upsert(dbNotificacoes, {
-            onConflict: 'usuario_id,escala_id,data_hora_inicio'
-          });
         }
       } catch (err) {
         console.error('[API Escala POST] Erro ao agendar notificações:', err);
