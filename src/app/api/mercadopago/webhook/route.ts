@@ -1,15 +1,49 @@
+export const dynamic = "force-dynamic";
 import { NextResponse } from 'next/server';
 import { MercadoPagoConfig, Payment } from 'mercadopago';
 import { createClient } from '@supabase/supabase-js';
+import crypto from 'crypto';
 
 export async function POST(req: Request) {
   try {
+    const webhookSecret = process.env.MERCADOPAGO_WEBHOOK_SECRET;
+
+    if (!webhookSecret) {
+      console.error('[MercadoPago Webhook] MERCADOPAGO_WEBHOOK_SECRET is missing.');
+      return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    }
+
+    const xSignature = req.headers.get('x-signature');
+    const xRequestId = req.headers.get('x-request-id');
+
+    if (!xSignature || !xRequestId) {
+      return NextResponse.json({ error: 'Missing signature headers' }, { status: 400 });
+    }
+
+    const rawBody = await req.text();
+
+    const parts = xSignature.split(',');
+    let ts = '';
+    let hash = '';
+
+    for (const part of parts) {
+      const [key, value] = part.split('=');
+      if (key && value) {
+        if (key.trim() === 'ts') ts = value.trim();
+        if (key.trim() === 'v1') hash = value.trim();
+      }
+    }
+
+    if (!ts || !hash) {
+      return NextResponse.json({ error: 'Invalid signature format' }, { status: 400 });
+    }
+
     let dataId;
     let type;
 
     // Tentar ler do body (Webhook normal)
     try {
-      const body = await req.json();
+      const body = JSON.parse(rawBody);
       dataId = body?.data?.id;
       type = body?.type;
     } catch {
@@ -20,6 +54,16 @@ export async function POST(req: Request) {
     const url = new URL(req.url);
     if (!dataId) dataId = url.searchParams.get('data.id') || url.searchParams.get('id');
     if (!type) type = url.searchParams.get('type') || url.searchParams.get('topic');
+
+    const manifestDataId = dataId || '';
+    const manifest = `id:${manifestDataId};request-id:${xRequestId};ts:${ts};`;
+    const hmac = crypto.createHmac('sha256', webhookSecret);
+    hmac.update(manifest);
+    const expectedHash = hmac.digest('hex');
+
+    if (expectedHash.length !== hash.length || !crypto.timingSafeEqual(Buffer.from(expectedHash), Buffer.from(hash))) {
+      return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
+    }
 
     if (!dataId) {
       return NextResponse.json({ received: true });

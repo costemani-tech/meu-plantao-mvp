@@ -1,22 +1,22 @@
+export const dynamic = "force-dynamic";
 import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
-  // Validação de segurança flexível (Header ou Query Parameter)
+  // Validação de segurança rigorosa
   const authHeader = request.headers.get('authorization');
-  const secretParam = request.nextUrl.searchParams.get('secret');
   const expectedSecret = process.env.CRON_SECRET;
 
-  if (expectedSecret && process.env.NODE_ENV !== 'development') {
-    const isAuthorized = 
-      authHeader === `Bearer ${expectedSecret}` || 
-      secretParam === expectedSecret;
-      
-    if (!isAuthorized) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+  if (!expectedSecret) {
+    console.error('[cron/check-alerts] CRON_SECRET is missing.');
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 
+  const isAuthorized = authHeader === `Bearer ${expectedSecret}`;
+
+  if (!isAuthorized) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
 
   if (error) {
     console.error('[cron/check-alerts] Supabase query error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: 'Ocorreu um erro interno.' }, { status: 500 });
   }
 
   if (!plantoes || plantoes.length === 0) {
