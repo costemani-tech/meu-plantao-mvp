@@ -175,7 +175,7 @@ export function ShareAgendaModal({
             <h3 style={{ fontSize: 18, fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>Prévia da Escala</h3>
             <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Escolha o mês e compartilhe sua agenda</p>
           </div>
-          <button onClick={onClose} style={{ background: 'var(--bg-secondary)', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', width: 36, height: 36, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <button type="button" onClick={onClose} style={{ background: 'var(--bg-secondary)', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', width: 36, height: 36, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <X size={20} />
           </button>
         </div>
@@ -183,14 +183,14 @@ export function ShareAgendaModal({
         {/* SELETOR DE MÊS PREMIUM */}
         <div style={{ padding: '0 24px 20px 24px', display: 'flex', flexDirection: 'column', gap: 12 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--bg-secondary)', padding: '8px 12px', borderRadius: 16, border: '1px solid var(--border-subtle)' }}>
-             <button onClick={() => changeMonth(-1)} style={{ background: 'none', border: 'none', color: 'var(--accent-blue)', cursor: 'pointer', padding: 8 }}><ChevronLeft size={20} /></button>
+             <button type="button" onClick={() => changeMonth(-1)} style={{ background: 'none', border: 'none', color: 'var(--accent-blue)', cursor: 'pointer', padding: 8 }}><ChevronLeft size={20} /></button>
              <div style={{ fontWeight: 800, fontSize: 15, textTransform: 'capitalize', color: 'var(--text-primary)' }}>
                {currentDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
              </div>
-             <button onClick={() => changeMonth(1)} style={{ background: 'none', border: 'none', color: 'var(--accent-blue)', cursor: 'pointer', padding: 8 }}><ChevronRight size={20} /></button>
+             <button type="button" onClick={() => changeMonth(1)} style={{ background: 'none', border: 'none', color: 'var(--accent-blue)', cursor: 'pointer', padding: 8 }}><ChevronRight size={20} /></button>
           </div>
           <div style={{ display: 'flex', justifyContent: 'center', gap: 10 }}>
-             <button 
+             <button type="button"
                onClick={() => setCurrentDate(new Date())}
                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: 11, fontWeight: 700, cursor: 'pointer', textDecoration: 'underline' }}
              >
@@ -248,11 +248,11 @@ export function ShareAgendaModal({
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {isPro && (
-                <button onClick={handleShareImage} disabled={isGeneratingImage || loading} className="btn btn-primary" style={{ justifyContent: 'center', gap: 10, padding: '16px', borderRadius: 14, background: 'linear-gradient(to right, #1d4ed8, #3b82f6)', width: '100%' }}>
+                <button type="button" onClick={handleShareImage} disabled={isGeneratingImage || loading} className="btn btn-primary" style={{ justifyContent: 'center', gap: 10, padding: '16px', borderRadius: 14, background: 'linear-gradient(to right, #1d4ed8, #3b82f6)', width: '100%' }}>
                   <ImageIcon size={20} /> {isGeneratingImage ? 'Gerando...' : 'Compartilhar Imagem PRO'}
                 </button>
               )}
-              <button 
+              <button type="button"
                 onClick={handleExportPDF} 
                 disabled={shifts.length === 0 || loading}
                 className={isPro ? "btn btn-secondary" : "btn btn-primary"} 

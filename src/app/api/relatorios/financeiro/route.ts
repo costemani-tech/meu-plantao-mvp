@@ -3,6 +3,8 @@ import { createServerClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 
+export const dynamic = 'force-dynamic';
+
 // ─────────────────────────────────────────────────────────────────────────────
 // GET /api/relatorios/financeiro?mes=3&ano=2026
 // Retorna somatório financeiro de plantões extras do mês, agrupado por local.

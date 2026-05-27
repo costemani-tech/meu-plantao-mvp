@@ -123,8 +123,8 @@ export default function DashboardPage() {
             Veja em R$ e horas reais o tamanho do seu esforço.
           </p>
           <div style={{ display: 'flex', gap: 12 }}>
-            <button className="btn btn-secondary" style={{ flex: 1, justifyContent: 'center' }} onClick={() => router.push('/dashboard')}>Voltar à Home</button>
-            <button className="btn btn-primary" style={{ flex: 1, justifyContent: 'center', background: 'linear-gradient(to right, #f59e0b, #d97706)', border: 'none' }} onClick={() => router.push('/dashboard')}>Assinar Pro</button>
+            <button type="button" className="btn btn-secondary" style={{ flex: 1, justifyContent: 'center' }} onClick={() => router.push('/dashboard')}>Voltar à Home</button>
+            <button type="button" className="btn btn-primary" style={{ flex: 1, justifyContent: 'center', background: 'linear-gradient(to right, #f59e0b, #d97706)', border: 'none' }} onClick={() => router.push('/dashboard')}>Assinar Pro</button>
           </div>
         </div>
       </div>
@@ -136,7 +136,7 @@ export default function DashboardPage() {
       {/* HEADER DE NAVEGAÇÃO */}
       <div style={{ padding: '16px 24px', background: 'var(--bg-primary)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', zIndex: 10 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <button 
+          <button type="button"
             className="btn btn-secondary" 
             onClick={() => router.back()}
             style={{ borderRadius: '50%', width: 44, height: 44, padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
@@ -148,7 +148,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <button 
+        <button type="button"
           className="btn btn-primary" 
           onClick={exportPDF} 
           disabled={gerandoPdf}
@@ -160,13 +160,13 @@ export default function DashboardPage() {
 
       {/* CONTROLES DE MÊS */}
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 16, padding: '20px 0', background: 'var(--bg-primary)', borderBottom: '1px solid var(--border-subtle)' }}>
-        <button className="btn btn-secondary" onClick={() => { setMes(prev => prev === 0 ? 11 : prev - 1); setAno(prev => mes === 0 ? prev - 1 : prev); }} style={{ padding: 8 }}>
+        <button type="button" className="btn btn-secondary" onClick={() => { setMes(prev => prev === 0 ? 11 : prev - 1); setAno(prev => mes === 0 ? prev - 1 : prev); }} style={{ padding: 8 }}>
           <ChevronLeft />
         </button>
         <span style={{ fontSize: 16, fontWeight: 700, minWidth: 140, textAlign: 'center' }}>
           {MESES[mes]} {ano}
         </span>
-        <button className="btn btn-secondary" onClick={() => { setMes(prev => prev === 11 ? 0 : prev + 1); setAno(prev => mes === 11 ? prev + 1 : prev); }} style={{ padding: 8 }}>
+        <button type="button" className="btn btn-secondary" onClick={() => { setMes(prev => prev === 11 ? 0 : prev + 1); setAno(prev => mes === 11 ? prev + 1 : prev); }} style={{ padding: 8 }}>
           <ChevronRight />
         </button>
       </div>

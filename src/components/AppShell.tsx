@@ -364,7 +364,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             <div className="desktop-spacer" style={{ flex: 1 }} />
             
 
-            <button onClick={handleLogout} className="nav-item logout-btn" style={{ color: '#EF4444' }}>
+            <button type="button" onClick={handleLogout} className="nav-item logout-btn" style={{ color: '#EF4444' }}>
               <LogOut className="nav-icon" size={20} />
               Sair
             </button>
@@ -376,7 +376,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         {pathname !== '/login' && (
           <div className="top-actions-bar">
 
-            <button 
+            <button type="button"
               onClick={handleBellClick}
               style={{
                 background: 'var(--bg-secondary)', padding: 10, borderRadius: '50%',
@@ -464,7 +464,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                   Instale o app na tela inicial para receber alertas em tempo real.
                 </div>
               </div>
-              <button
+              <button type="button"
                 onClick={() => {
                   sessionStorage.setItem('pwa-banner-dismissed', '1');
                   setShowPwaBanner(false);
@@ -496,7 +496,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               </div>
             )}
 
-            <button
+            <button type="button"
               onClick={async () => {
                 if (pwaPlatform === 'ios') {
                   setShowIosGuide(!showIosGuide);
@@ -549,7 +549,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 Para voltar a visualizar seu Calendário e gerenciar escalas, você precisa ir até a aba de <strong>Locais</strong> e deletar os excedentes, ou assinar a versão Premium novamente.
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                <button 
+                <button type="button"
                   className="btn btn-primary" 
                   style={{ width: '100%', justifyContent: 'center', background: '#2563EB', boxShadow: '0 0 15px rgba(37, 99, 235, 0.25)', borderRadius: '1.5rem' }}
                   onClick={() => {
@@ -607,7 +607,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           </Link>
 
           {/* Logout Mobile */}
-          <button
+          <button type="button"
             onClick={handleLogout}
             className="mobile-nav-item logout-btn-mobile"
             title="Sair"

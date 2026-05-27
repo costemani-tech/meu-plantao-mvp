@@ -127,7 +127,7 @@ export default function DemoPage() {
           <nav className="nav-section">
             <div className="nav-label">Menu</div>
             {TABS.map(t => (
-              <button key={t.id} className={`nav-item ${tab === t.id ? 'active' : ''}`} onClick={() => { setTab(t.id); setDemoSaved(false); }}>
+              <button type="button" key={t.id} className={`nav-item ${tab === t.id ? 'active' : ''}`} onClick={() => { setTab(t.id); setDemoSaved(false); }}>
                 <span className="nav-icon">{t.icon}</span>{t.label}
               </button>
             ))}
@@ -206,9 +206,9 @@ export default function DemoPage() {
               <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div><h1>Calendário 📅</h1><p>Visão mensal dos seus plantões</p></div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <button className="btn btn-secondary" onClick={() => setMesAtual(m => m > 0 ? m - 1 : 11)}>←</button>
+                  <button type="button" className="btn btn-secondary" onClick={() => setMesAtual(m => m > 0 ? m - 1 : 11)}>←</button>
                   <span style={{ fontWeight: 700, fontSize: 16, minWidth: 160, textAlign: 'center' }}>{MESES[mesAtual]} {anoAtual}</span>
-                  <button className="btn btn-secondary" onClick={() => setMesAtual(m => m < 11 ? m + 1 : 0)}>→</button>
+                  <button type="button" className="btn btn-secondary" onClick={() => setMesAtual(m => m < 11 ? m + 1 : 0)}>→</button>
                 </div>
               </div>
               <div className="card">
@@ -241,7 +241,7 @@ export default function DemoPage() {
                 <div className="card">
                   <h2 style={{ fontWeight: 700, marginBottom: 20, fontSize: 16 }}>Nova Escala</h2>
                   <div className="form-group"><label className="form-label">Regra de Escala *</label><select className="form-select" value={regraDemo} onChange={e => { setRegraDemo(e.target.value); setDemoSaved(false); }}><option value="12x36">12x36</option><option value="24x48">24x48</option><option value="24x72">24x72</option></select></div>
-                  <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', marginTop: 8 }} onClick={() => setDemoSaved(true)}>🚀 Criar Escala</button>
+                  <button type="button" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', marginTop: 8 }} onClick={() => setDemoSaved(true)}>🚀 Criar Escala</button>
                   {demoSaved && <div style={{ marginTop: 16, padding: '14px 16px', background: 'rgba(34,197,94,0.08)', borderRadius: 'var(--radius-md)', fontSize: 13, color: 'var(--accent-green)', fontWeight: 700 }}>✅ Escala criada!</div>}
                 </div>
               </div>
@@ -257,7 +257,7 @@ export default function DemoPage() {
               </div>
               <div style={{ maxWidth: 540 }}>
                 <div className="card">
-                  <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }}
+                  <button type="button" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }}
                     onClick={() => {}}>
                     🔍 Verificar e Adicionar
                   </button>
@@ -276,7 +276,7 @@ export default function DemoPage() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.4fr', gap: 24 }}>
                 <div className="card" style={{ height: 'fit-content' }}>
                   <h2 style={{ fontWeight: 700, marginBottom: 20, fontSize: 16 }}>Novo Local (Demo)</h2>
-                  <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }} onClick={() => {}}>➕ Adicionar Local</button>
+                  <button type="button" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }} onClick={() => {}}>➕ Adicionar Local</button>
                 </div>
                 <div className="card">
                   <h2 style={{ fontWeight: 700, marginBottom: 16, fontSize: 16 }}>Locais Cadastrados ({LOCAIS_MOCK.length})</h2>

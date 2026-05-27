@@ -84,7 +84,7 @@ export default function PremiumLockCard({
         </p>
       </div>
 
-      <button
+      <button type="button"
         onClick={handleCheckoutClick}
         disabled={loading}
         className="btn btn-primary plc-button"

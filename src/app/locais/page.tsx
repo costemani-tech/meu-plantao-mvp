@@ -184,7 +184,7 @@ export default function LocaisPage() {
           <p style={{ fontSize: 16, color: 'var(--text-secondary)', maxWidth: 480, lineHeight: 1.6, marginBottom: 32 }}>
             Cadastre os hospitais, clínicas ou pacientes de home care para organizar os seus plantões.
           </p>
-          <button 
+          <button type="button"
             className="btn btn-primary" 
             style={{ padding: '14px 40px', fontSize: 16, borderRadius: 12 }}
             onClick={() => setForceShowForm(true)}
@@ -255,7 +255,7 @@ export default function LocaisPage() {
                   <label className="form-label">Cor no Calendário</label>
                   <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 4 }}>
                     {CORES_PRESET.map(c => (
-                      <button
+                      <button type="button"
                         key={c}
                         onClick={() => setCor(c)}
                         style={{
@@ -278,7 +278,7 @@ export default function LocaisPage() {
                   </div>
                 </div>
 
-                <button 
+                <button type="button"
                   className="btn btn-primary" 
                   style={{ width: '100%', justifyContent: 'center' }} 
                   onClick={adicionarLocal} 
@@ -333,7 +333,7 @@ export default function LocaisPage() {
 
                     {/* Ações */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                      <button
+                      <button type="button"
                         className="btn btn-secondary"
                         style={{ padding: '8px', background: 'rgba(255,255,255,0.03)', borderRadius: '50%', color: 'var(--text-muted)' }}
                         onClick={(e) => { e.stopPropagation(); excluirLocal(l.id, l.nome); }}
@@ -380,11 +380,11 @@ export default function LocaisPage() {
             )}
 
             <div style={{ display: 'flex', gap: 12, marginTop: 24 }}>
-              <button className="btn btn-secondary" style={{ flex: 1, justifyContent: 'center' }} onClick={() => setLocalEmEdicao(null)} disabled={saving}>Cancelar</button>
-              <button className="btn btn-primary" style={{ flex: 1, justifyContent: 'center', background: 'var(--accent-teal)' }} onClick={salvarEdicao} disabled={saving}>{saving ? '⏳ Salvando...' : 'Salvar'}</button>
+              <button type="button" className="btn btn-secondary" style={{ flex: 1, justifyContent: 'center' }} onClick={() => setLocalEmEdicao(null)} disabled={saving}>Cancelar</button>
+              <button type="button" className="btn btn-primary" style={{ flex: 1, justifyContent: 'center', background: 'var(--accent-teal)' }} onClick={salvarEdicao} disabled={saving}>{saving ? '⏳ Salvando...' : 'Salvar'}</button>
             </div>
             
-            <button 
+            <button type="button"
               className="btn btn-secondary" 
               style={{ width: '100%', justifyContent: 'center', marginTop: 12, color: '#ef4444', borderColor: 'rgba(239,68,68,0.3)' }} 
               onClick={() => excluirLocal(localEmEdicao.id, localEmEdicao.nome)}
@@ -412,7 +412,7 @@ export default function LocaisPage() {
               </p>
               
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%', zIndex: 1 }}>
-                <button 
+                <button type="button"
                   className="btn btn-primary" 
                   style={{ width: '100%', justifyContent: 'center', background: '#3B82F6', border: 'none', padding: '14px', borderRadius: '100px', fontWeight: 800, opacity: checkoutLoading ? 0.7 : 1 }} 
                   onClick={async () => {
@@ -429,7 +429,7 @@ export default function LocaisPage() {
                 >
                   {checkoutLoading ? <><Loader2 size={18} className="animate-spin mr-2" /> Processando...</> : 'Desbloquear Plano PRO'}
                 </button>
-                <button 
+                <button type="button"
                   className="btn btn-secondary" 
                   style={{ width: '100%', justifyContent: 'center', border: 'none', background: 'transparent', color: 'rgba(255,255,255,0.5)' }} 
                   onClick={() => setShowProModal(false)}

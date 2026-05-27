@@ -1,9 +1,55 @@
 import { NextResponse } from 'next/server';
 import { MercadoPagoConfig, Payment } from 'mercadopago';
 import { createClient } from '@supabase/supabase-js';
+import * as crypto from 'crypto';
+
+export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
   try {
+    const signatureHeader = req.headers.get('x-signature');
+    const requestIdHeader = req.headers.get('x-request-id');
+    const webhookSecret = process.env.MERCADOPAGO_WEBHOOK_SECRET;
+
+    if (!webhookSecret) {
+      console.error('[MercadoPago Webhook] Secret não configurado.');
+      return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    }
+
+    if (!signatureHeader || !requestIdHeader) {
+      console.error('[MercadoPago Webhook] Headers de assinatura ausentes.');
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const url = new URL(req.url);
+    const dataIdQuery = url.searchParams.get('data.id') || url.searchParams.get('id');
+
+    // Validação da assinatura HMAC
+    let isValidSignature = false;
+    const parts = signatureHeader.split(',');
+    let ts = '';
+    let hash = '';
+
+    parts.forEach(part => {
+      const [key, value] = part.split('=');
+      if (key === 'ts') ts = value;
+      if (key === 'v1') hash = value;
+    });
+
+    if (ts && hash && dataIdQuery) {
+      const manifest = `id:${dataIdQuery};request-id:${requestIdHeader};ts:${ts};`;
+      const expectedHash = crypto.createHmac('sha256', webhookSecret).update(manifest).digest('hex');
+
+      if (expectedHash.length === hash.length) {
+        isValidSignature = crypto.timingSafeEqual(Buffer.from(expectedHash), Buffer.from(hash));
+      }
+    }
+
+    if (!isValidSignature) {
+      console.error('[MercadoPago Webhook] Assinatura inválida.');
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     let dataId;
     let type;
 
@@ -17,7 +63,6 @@ export async function POST(req: Request) {
     }
 
     // Se não veio no body, tentar ler das query params (IPN)
-    const url = new URL(req.url);
     if (!dataId) dataId = url.searchParams.get('data.id') || url.searchParams.get('id');
     if (!type) type = url.searchParams.get('type') || url.searchParams.get('topic');
 

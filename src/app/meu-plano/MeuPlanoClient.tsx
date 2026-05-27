@@ -113,7 +113,7 @@ function FeedbackModal({ onClose }: { onClose: () => void }) {
             <div className="mp-success-icon"><Check size={28} /></div>
             <h3>Mensagem enviada!</h3>
             <p>Nossa equipe analisará seu feedback em breve. Obrigado!</p>
-            <button className="btn btn-primary mp-btn-full" onClick={onClose}>Fechar</button>
+            <button type="button" className="btn btn-primary mp-btn-full" onClick={onClose}>Fechar</button>
           </div>
         ) : (
           <>
@@ -123,18 +123,18 @@ function FeedbackModal({ onClose }: { onClose: () => void }) {
                 <h3>Feedback & Suporte</h3>
                 <p>Tem uma sugestão, problema ou dúvida?</p>
               </div>
-              <button className="mp-close-btn" onClick={onClose}><X size={20} /></button>
+              <button type="button" className="mp-close-btn" onClick={onClose}><X size={20} /></button>
             </div>
             <div className="mp-modal-body">
               <label className="mp-label">Categoria</label>
               <div className="mp-categoria-grid">
                 {['Sugestão', 'Problema', 'Dúvida', 'Crítica'].map(c => (
-                  <button key={c} className={`mp-cat-btn ${categoria === c ? 'active' : ''}`} onClick={() => setCategoria(c)}>{c}</button>
+                  <button type="button" key={c} className={`mp-cat-btn ${categoria === c ? 'active' : ''}`} onClick={() => setCategoria(c)}>{c}</button>
                 ))}
               </div>
               <label className="mp-label">Mensagem</label>
               <textarea className="mp-textarea" rows={4} placeholder="Descreva aqui..." value={mensagem} onChange={e => setMensagem(e.target.value)} />
-              <button className="btn btn-primary mp-btn-full" onClick={handleSend} disabled={sending}>
+              <button type="button" className="btn btn-primary mp-btn-full" onClick={handleSend} disabled={sending}>
                 {sending ? 'Enviando...' : '📨 Enviar mensagem'}
               </button>
             </div>
@@ -156,7 +156,7 @@ function CancelModal({ onClose, onConfirm, loading, formattedEndDate }: { onClos
             <h3>Confirmar downgrade</h3>
             <p>Você terá acesso PRO até {formattedEndDate}.</p>
           </div>
-          <button className="mp-close-btn" onClick={onClose} disabled={loading}><X size={20} /></button>
+          <button type="button" className="mp-close-btn" onClick={onClose} disabled={loading}><X size={20} /></button>
         </div>
         <div className="mp-modal-body">
           <div className="mp-pause-hint">
@@ -172,8 +172,8 @@ function CancelModal({ onClose, onConfirm, loading, formattedEndDate }: { onClos
           <label className="mp-label">O que faltou para você continuar?</label>
           <textarea className="mp-textarea" rows={3} placeholder="Seu feedback nos ajuda a melhorar..." value={motivo} onChange={e => setMotivo(e.target.value)} />
           <div className="mp-modal-actions">
-            <button className="btn btn-secondary" onClick={onClose} disabled={loading}>Voltar</button>
-            <button className="mp-cancel-confirm-btn" onClick={onConfirm} disabled={loading}>{loading ? 'Processando...' : 'Confirmar downgrade'}</button>
+            <button type="button" className="btn btn-secondary" onClick={onClose} disabled={loading}>Voltar</button>
+            <button type="button" className="mp-cancel-confirm-btn" onClick={onConfirm} disabled={loading}>{loading ? 'Processando...' : 'Confirmar downgrade'}</button>
           </div>
         </div>
       </div>
@@ -245,7 +245,7 @@ function FreePlanView({ locaisUsados, locaisMax }: { locaisUsados: number; locai
         <div className="mp-features-list" style={{ marginBottom: 20 }}>
           {PRO_FEATURES.map(({ icon: Icon, label }) => <div key={label} className="mp-feature-row"><Check size={16} className="mp-feat-check" /><span>{label}</span></div>)}
         </div>
-        <button className="mp-upgrade-btn" onClick={onUpgrade} disabled={checkingOut}>
+        <button type="button" className="mp-upgrade-btn" onClick={onUpgrade} disabled={checkingOut}>
           {checkingOut ? <><Loader2 size={18} className="mp-spin" /> Redirecionando...</> : '👑 Fazer Upgrade para PRO'}
         </button>
         <div className="mp-trust-signals">
@@ -258,7 +258,7 @@ function FreePlanView({ locaisUsados, locaisMax }: { locaisUsados: number; locai
       <FaqAccordion />
 
       <div className="mp-feedback-link">
-        <button onClick={() => setShowFeedback(true)} className="mp-text-btn">
+        <button type="button" onClick={() => setShowFeedback(true)} className="mp-text-btn">
           <MessageCircle size={14} /> Feedback & Suporte
         </button>
       </div>
@@ -363,7 +363,7 @@ function ProPlanView({ subStatus, endDate, autoRenew, diasRestantes }: { subStat
         <p className="mp-manage-sub">Você tem total controle sobre sua assinatura.</p>
 
         <div className="mp-action-list">
-          <button className="mp-action-row" onClick={onRenovar} disabled={checkingOut}>
+          <button type="button" className="mp-action-row" onClick={onRenovar} disabled={checkingOut}>
             <div className="mp-action-icon">{checkingOut ? <Loader2 size={18} className="mp-spin" /> : <RefreshCw size={18} />}</div>
             <div className="mp-action-text">
               <span className="mp-action-title">{checkingOut ? 'Redirecionando...' : 'Renovar antecipadamente'}</span>
@@ -372,7 +372,7 @@ function ProPlanView({ subStatus, endDate, autoRenew, diasRestantes }: { subStat
             <ChevronRight size={16} className="mp-action-arrow" />
           </button>
 
-          <button className="mp-action-row" onClick={() => setShowFeedback(true)}>
+          <button type="button" className="mp-action-row" onClick={() => setShowFeedback(true)}>
             <div className="mp-action-icon"><MessageCircle size={18} /></div>
             <div className="mp-action-text">
               <span className="mp-action-title">Falar com suporte</span>
@@ -382,7 +382,7 @@ function ProPlanView({ subStatus, endDate, autoRenew, diasRestantes }: { subStat
           </button>
 
           {!isCanceled && (
-            <button className="mp-action-row mp-action-danger" onClick={() => {
+            <button type="button" className="mp-action-row mp-action-danger" onClick={() => {
               posthog.capture('open_cancel_modal');
               setShowCancel(true);
             }}>
