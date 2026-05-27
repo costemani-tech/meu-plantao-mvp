@@ -65,7 +65,7 @@ export default function AgendaPublicaMock() {
       {/* Footer Branding */}
       <div style={{ marginTop: 60, textAlign: 'center' }}>
         <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 12 }}>Gerado por Meu Plantão App</p>
-        <button className="btn btn-secondary" onClick={() => router.push('/dashboard')} style={{ fontSize: 13, padding: '8px 16px', borderRadius: 20 }}>
+        <button type="button" className="btn btn-secondary" onClick={() => router.push('/dashboard')} style={{ fontSize: 13, padding: '8px 16px', borderRadius: 20 }}>
            Criar meu próprio calendário <ExternalLink size={14} style={{ marginLeft: 6 }} />
         </button>
       </div>

@@ -3,6 +3,8 @@ import { createServerClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 
+export const dynamic = 'force-dynamic';
+
 // ─────────────────────────────────────────────
 // DELETE /api/escalas/[id]
 // Modo 'completo':    deleta escala + todos os plantões (cascade)

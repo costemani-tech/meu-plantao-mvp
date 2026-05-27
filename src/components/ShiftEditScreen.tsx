@@ -117,7 +117,7 @@ export function ShiftEditScreen({ shift, onSave, onCancel }: ShiftEditScreenProp
           <h1 style={{ fontSize: 24, fontWeight: 900, marginBottom: 4 }}>Editar Plantão</h1>
           <p style={{ color: '#94a3b8', fontSize: 14 }}>Gerencie sua escala e preferências</p>
         </div>
-        <button onClick={onCancel} style={{ background: 'rgba(30, 41, 59, 0.4)', border: 'none', color: '#fff', padding: 10, borderRadius: '50%', cursor: 'pointer' }}>
+        <button type="button" onClick={onCancel} style={{ background: 'rgba(30, 41, 59, 0.4)', border: 'none', color: '#fff', padding: 10, borderRadius: '50%', cursor: 'pointer' }}>
           <X size={20} />
         </button>
       </div>
@@ -143,7 +143,7 @@ export function ShiftEditScreen({ shift, onSave, onCancel }: ShiftEditScreenProp
           <label style={{ fontSize: 12, fontWeight: 900, color: '#475569', textTransform: 'uppercase', marginBottom: 16, display: 'block' }}>Cor do Tema</label>
           <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
             {CORES.map(c => (
-              <button 
+              <button type="button"
                 key={c}
                 onClick={() => setCor(c)}
                 style={{ 
@@ -163,7 +163,7 @@ export function ShiftEditScreen({ shift, onSave, onCancel }: ShiftEditScreenProp
           <label style={{ fontSize: 12, fontWeight: 900, color: '#475569', textTransform: 'uppercase', marginBottom: 16, display: 'block' }}>Regra da Escala</label>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             {REGRAS.map(r => (
-              <button 
+              <button type="button"
                 key={r.id}
                 onClick={() => setRegra(r.id)}
                 style={{ 
@@ -199,7 +199,7 @@ export function ShiftEditScreen({ shift, onSave, onCancel }: ShiftEditScreenProp
           <div style={{ animation: 'fadeIn 0.3s ease', marginBottom: 32 }}>
             <label style={{ fontSize: 12, fontWeight: 900, color: '#475569', textTransform: 'uppercase', marginBottom: 16, display: 'block' }}>Tipo de Personalização</label>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 24 }}>
-               <button 
+               <button type="button"
                  onClick={() => setTipoPersonalizacao('dias')}
                  style={{ 
                    padding: '20px', borderRadius: 24, background: 'rgba(15, 23, 42, 0.6)', textAlign: 'left', cursor: 'pointer',
@@ -211,7 +211,7 @@ export function ShiftEditScreen({ shift, onSave, onCancel }: ShiftEditScreenProp
                  <div style={{ fontWeight: 800, fontSize: 15, color: '#fff', marginBottom: 4 }}>Por dias da semana</div>
                  <div style={{ fontSize: 11, color: '#64748b' }}>Defina quais dias você trabalha na semana.</div>
                </button>
-               <button 
+               <button type="button"
                  onClick={() => setTipoPersonalizacao('horas')}
                  style={{ 
                    padding: '20px', borderRadius: 24, background: 'rgba(15, 23, 42, 0.6)', textAlign: 'left', cursor: 'pointer',
@@ -230,7 +230,7 @@ export function ShiftEditScreen({ shift, onSave, onCancel }: ShiftEditScreenProp
                 <label style={{ fontSize: 12, fontWeight: 900, color: '#475569', textTransform: 'uppercase', marginBottom: 16, display: 'block' }}>Dias Trabalhados</label>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10 }}>
                   {DAYS_OF_WEEK.map(d => (
-                    <button 
+                    <button type="button"
                       key={d.id}
                       onClick={() => toggleDia(d.id)}
                       style={{ 
@@ -294,7 +294,7 @@ export function ShiftEditScreen({ shift, onSave, onCancel }: ShiftEditScreenProp
         <div style={{ marginBottom: 32 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
             <label style={{ fontSize: 12, fontWeight: 900, color: '#475569', textTransform: 'uppercase' }}>Próximos Plantões</label>
-            <button style={{ background: 'none', border: 'none', color: '#3b82f6', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Ver mais</button>
+            <button type="button" style={{ background: 'none', border: 'none', color: '#3b82f6', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Ver mais</button>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 8 }}>
             {previewDates.map((d, i) => (
@@ -323,13 +323,13 @@ export function ShiftEditScreen({ shift, onSave, onCancel }: ShiftEditScreenProp
           <span style={{ fontSize: 11, color: '#475569', fontWeight: 700 }}>A regra será aplicada nos próximos plantões.</span>
         </div>
         <div style={{ display: 'flex', gap: 14 }}>
-          <button 
+          <button type="button"
             onClick={onCancel}
             style={{ flex: 1, padding: '18px', borderRadius: 16, background: '#0f172a', border: '1px solid #1e293b', color: '#fff', fontWeight: 800, fontSize: 15, cursor: 'pointer' }}
           >
             Cancelar
           </button>
-          <button 
+          <button type="button"
             onClick={() => {
               const regraFinal = regra === 'custom' 
                 ? (tipoPersonalizacao === 'dias' ? diasSelecionados.join(',') : `${horasTrabalho}x${horasDescanso}`) 

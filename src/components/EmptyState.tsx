@@ -41,7 +41,7 @@ export default function EmptyState({
         {description}
       </p>
       {actionLabel && onAction && (
-        <button className="btn btn-primary" onClick={onAction}>
+        <button type="button" className="btn btn-primary" onClick={onAction}>
           {actionLabel}
         </button>
       )}

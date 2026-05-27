@@ -3,6 +3,8 @@ import { createServerClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 
+export const dynamic = 'force-dynamic';
+
 // Tipos
 type Regra = '12x36' | '24x48' | '24x72' | string;
 

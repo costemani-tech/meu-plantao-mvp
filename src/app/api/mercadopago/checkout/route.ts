@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { MercadoPagoConfig, Preference } from 'mercadopago';
 import { createClient } from '@supabase/supabase-js';
 
+export const dynamic = 'force-dynamic';
+
 // Parâmetros da Oferta de Lançamento (devem bater com /api/mercadopago/oferta-status)
 const OFERTA_MAX_ASSINANTES = 100;
 const OFERTA_DATA_LIMITE = new Date('2026-08-31T23:59:59-03:00');
@@ -68,7 +70,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ init_point: response.init_point });
   } catch (error: any) {
     console.error('MercadoPago Checkout Error:', error);
-    return NextResponse.json({ error: error.message || 'Erro interno do servidor' }, { status: 500 });
+    return NextResponse.json({ error: 'Erro interno do servidor' }, { status: 500 });
   }
 }
 

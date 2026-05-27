@@ -280,7 +280,7 @@ export default function PlantaoExtraPage() {
             </div>
           )}
 
-          <button
+          <button type="button"
             className="btn btn-primary"
             style={{ width: '100%', justifyContent: 'center', marginTop: 16, padding: '14px', background: 'var(--accent-blue)', opacity: (!isPro && limiteExtrasAtingido) ? 0.6 : 1 }}
             onClick={() => {
@@ -312,8 +312,8 @@ export default function PlantaoExtraPage() {
               Deseja confirmar a duplicidade mesmo assim?
             </p>
             <div style={{ display: 'flex', gap: 10 }}>
-              <button className="btn btn-secondary" style={{ flex: 1 }} onClick={() => { setConflitoPendente(null); setPayloadPendente(null); }}>Cancelar</button>
-              <button
+              <button type="button" className="btn btn-secondary" style={{ flex: 1 }} onClick={() => { setConflitoPendente(null); setPayloadPendente(null); }}>Cancelar</button>
+              <button type="button"
                 className="btn btn-primary"
                 style={{ flex: 1, background: '#f59e0b', borderColor: '#f59e0b' }}
                 onClick={() => salvarPlantaoExtra(true)}

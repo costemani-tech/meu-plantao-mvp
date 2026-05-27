@@ -48,7 +48,7 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith('/login') ||
     pathname.startsWith('/demo') ||
     pathname.startsWith('/api/cron') ||
-    pathname.startsWith('/api/webhooks') ||
+    pathname.startsWith('/api/mercadopago') ||
     pathname.startsWith('/_next') ||
     pathname.startsWith('/auth/callback') ||
     pathname === '/manifest.json' ||

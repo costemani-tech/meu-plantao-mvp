@@ -87,7 +87,7 @@ export default function PremiumModal() {
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <button 
+          <button type="button"
             className="btn btn-primary" 
             style={{ 
               width: '100%', justifyContent: 'center', 
@@ -102,7 +102,7 @@ export default function PremiumModal() {
             {loading ? 'Gerando Pagamento...' : '🚀 Desbloquear Oferta de Lançamento'}
           </button>
           
-          <button 
+          <button type="button"
             style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }} 
             onClick={() => setIsOpen(false)}
           >

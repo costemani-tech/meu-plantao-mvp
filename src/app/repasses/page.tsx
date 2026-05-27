@@ -109,7 +109,7 @@ export default function RepassesPage() {
                 </div>
                 
                 <div>
-                  <button 
+                  <button type="button"
                     onClick={() => handleAceitar(r.repasse_id, isMeu)}
                     disabled={isMeu}
                     className="btn" 
