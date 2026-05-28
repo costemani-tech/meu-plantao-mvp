@@ -1,17 +1,50 @@
 import { NextResponse } from 'next/server';
 import { MercadoPagoConfig, Payment } from 'mercadopago';
 import { createClient } from '@supabase/supabase-js';
+import crypto from 'crypto';
 
 export async function POST(req: Request) {
   try {
+    const webhookSecret = process.env.MERCADOPAGO_WEBHOOK_SECRET;
+    if (!webhookSecret) {
+      return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    }
+
+    const xSignature = req.headers.get('x-signature');
+    const xRequestId = req.headers.get('x-request-id');
+
+    if (!xSignature || !xRequestId) {
+      return NextResponse.json({ error: 'Missing signature headers' }, { status: 400 });
+    }
+
+    // Parse x-signature parts
+    const signatureParts = xSignature.split(',').reduce((acc: any, part: string) => {
+      const [key, value] = part.split('=');
+      if (key && value) {
+        acc[key.trim()] = value.trim();
+      }
+      return acc;
+    }, {});
+
+    const ts = signatureParts.ts;
+    const v1 = signatureParts.v1;
+
+    if (!ts || !v1) {
+      return NextResponse.json({ error: 'Invalid signature format' }, { status: 400 });
+    }
+
     let dataId;
     let type;
+    let bodyObj = null;
 
     // Tentar ler do body (Webhook normal)
     try {
-      const body = await req.json();
-      dataId = body?.data?.id;
-      type = body?.type;
+      const text = await req.text();
+      if (text) {
+        bodyObj = JSON.parse(text);
+        dataId = bodyObj?.data?.id;
+        type = bodyObj?.type;
+      }
     } catch {
       // Body não é JSON válido ou está vazio
     }
@@ -23,6 +56,14 @@ export async function POST(req: Request) {
 
     if (!dataId) {
       return NextResponse.json({ received: true });
+    }
+
+    // Validate Signature
+    const manifest = `id:${dataId};request-id:${xRequestId};ts:${ts};`;
+    const hmac = crypto.createHmac('sha256', webhookSecret).update(manifest).digest('hex');
+
+    if (hmac.length !== v1.length || !crypto.timingSafeEqual(Buffer.from(hmac), Buffer.from(v1))) {
+      return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
     }
 
     const client = new MercadoPagoConfig({
