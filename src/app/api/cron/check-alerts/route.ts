@@ -8,14 +8,17 @@ export async function GET(request: NextRequest) {
   const secretParam = request.nextUrl.searchParams.get('secret');
   const expectedSecret = process.env.CRON_SECRET;
 
-  if (expectedSecret && process.env.NODE_ENV !== 'development') {
-    const isAuthorized = 
-      authHeader === `Bearer ${expectedSecret}` || 
-      secretParam === expectedSecret;
-      
-    if (!isAuthorized) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+  if (!expectedSecret) {
+    console.error('[cron/check-alerts] CRON_SECRET is missing. Failing closed.');
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  }
+
+  const isAuthorized =
+    authHeader === `Bearer ${expectedSecret}` ||
+    secretParam === expectedSecret;
+
+  if (!isAuthorized && process.env.NODE_ENV !== 'development') {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
 
