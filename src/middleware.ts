@@ -34,6 +34,14 @@ export async function middleware(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname
 
+  const hostname = request.headers.get('host') || '';
+  if (hostname.startsWith('www.')) {
+    const nakedDomain = hostname.replace('www.', '');
+    const url = request.nextUrl.clone();
+    url.host = nakedDomain;
+    return NextResponse.redirect(url, 308);
+  }
+
   // Intercepta callback do Supabase que cai na raiz com 'code' e exibe tela de loading instantânea (SSR bypass)
   const code = request.nextUrl.searchParams.get('code')
   if (code && pathname === '/') {
@@ -49,6 +57,7 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith('/demo') ||
     pathname.startsWith('/api/cron') ||
     pathname.startsWith('/api/webhooks') ||
+    pathname.startsWith('/api/mercadopago') ||
     pathname.startsWith('/_next') ||
     pathname.startsWith('/auth/callback') ||
     pathname === '/manifest.json' ||

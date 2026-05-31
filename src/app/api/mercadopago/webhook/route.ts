@@ -1,29 +1,53 @@
 import { NextResponse } from 'next/server';
 import { MercadoPagoConfig, Payment } from 'mercadopago';
 import { createClient } from '@supabase/supabase-js';
+import crypto from 'crypto';
 
 export async function POST(req: Request) {
   try {
-    let dataId;
-    let type;
-
-    // Tentar ler do body (Webhook normal)
-    try {
-      const body = await req.json();
-      dataId = body?.data?.id;
-      type = body?.type;
-    } catch {
-      // Body não é JSON válido ou está vazio
+    const webhookSecret = process.env.MERCADOPAGO_WEBHOOK_SECRET;
+    if (!webhookSecret) {
+      console.error('[MercadoPago Webhook] Missing MERCADOPAGO_WEBHOOK_SECRET');
+      return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     }
 
-    // Se não veio no body, tentar ler das query params (IPN)
+    const xSignature = req.headers.get('x-signature');
+    const xRequestId = req.headers.get('x-request-id');
+
+    if (!xSignature || !xRequestId) {
+      return NextResponse.json({ error: 'Missing signature headers' }, { status: 400 });
+    }
+
+    const tsMatch = xSignature.match(/ts=([^,]+)/);
+    const v1Match = xSignature.match(/v1=([^,]+)/);
+
+    if (!tsMatch || !v1Match) {
+      return NextResponse.json({ error: 'Invalid signature format' }, { status: 400 });
+    }
+
+    const ts = tsMatch[1];
+    const hash = v1Match[1];
+
     const url = new URL(req.url);
-    if (!dataId) dataId = url.searchParams.get('data.id') || url.searchParams.get('id');
-    if (!type) type = url.searchParams.get('type') || url.searchParams.get('topic');
+    const dataId = url.searchParams.get('data.id') || url.searchParams.get('id');
 
     if (!dataId) {
-      return NextResponse.json({ received: true });
+       return NextResponse.json({ received: true });
     }
+
+    const manifest = `id:${dataId};request-id:${xRequestId};ts:${ts};`;
+
+    const expectedHash = crypto
+      .createHmac('sha256', webhookSecret)
+      .update(manifest)
+      .digest('hex');
+
+    if (expectedHash.length !== hash.length || !crypto.timingSafeEqual(Buffer.from(expectedHash), Buffer.from(hash))) {
+      console.error('[MercadoPago Webhook] Signature validation failed');
+      return NextResponse.json({ error: 'Invalid signature' }, { status: 403 });
+    }
+
+    const type = url.searchParams.get('type') || url.searchParams.get('topic');
 
     const client = new MercadoPagoConfig({
       accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN || '',
