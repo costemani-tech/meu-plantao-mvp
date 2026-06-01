@@ -42,8 +42,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true, results });
   } catch (error: unknown) {
-    const msg = error instanceof Error ? error.message : 'Erro desconhecido';
     console.error('Erro na rota de envio OneSignal:', error);
-    return NextResponse.json({ success: false, error: msg }, { status: 500 });
+    return NextResponse.json({ success: false, error: 'Erro interno ao enviar notificações' }, { status: 500 });
   }
 }

@@ -100,13 +100,13 @@ export async function POST(req: Request) {
 
     if (emailResult.error) {
       console.error('[Feedback] Erro Resend:', emailResult.error);
-      return NextResponse.json({ success: true, emailSent: false, emailError: emailResult.error });
+      return NextResponse.json({ success: true, emailSent: false, emailError: 'Erro ao enviar e-mail' });
     }
 
     return NextResponse.json({ success: true, emailSent: true, emailId: emailResult.data?.id });
 
   } catch (error: any) {
     console.error('[Feedback API] Erro interno:', error);
-    return NextResponse.json({ error: error?.message || 'Erro interno' }, { status: 500 });
+    return NextResponse.json({ error: 'Erro interno ao processar feedback' }, { status: 500 });
   }
 }
