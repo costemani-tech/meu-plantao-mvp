@@ -1,9 +1,20 @@
 import { NextResponse } from 'next/server';
 import { MercadoPagoConfig, Payment } from 'mercadopago';
 import { createClient } from '@supabase/supabase-js';
+import crypto from 'crypto';
 
 export async function POST(req: Request) {
   try {
+    const webhookSecret = process.env.MERCADOPAGO_WEBHOOK_SECRET;
+
+    if (!webhookSecret) {
+      console.error('[MercadoPago Webhook] MERCADOPAGO_WEBHOOK_SECRET is missing');
+      return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    }
+
+    const xSignature = req.headers.get('x-signature');
+    const xRequestId = req.headers.get('x-request-id');
+
     let dataId;
     let type;
 
@@ -23,6 +34,34 @@ export async function POST(req: Request) {
 
     if (!dataId) {
       return NextResponse.json({ received: true });
+    }
+
+    if (xSignature && xRequestId) {
+      // Validate signature
+      const tsMatch = xSignature.match(/ts=(\d+)/);
+      const v1Match = xSignature.match(/v1=([a-f0-9]+)/);
+
+      if (tsMatch && v1Match) {
+        const ts = tsMatch[1];
+        const v1 = v1Match[1];
+
+        const manifest = `id:${dataId};request-id:${xRequestId};ts:${ts};`;
+        const hmac = crypto.createHmac('sha256', webhookSecret);
+        hmac.update(manifest);
+        const expectedHash = hmac.digest('hex');
+
+        // Timing-safe comparison
+        if (expectedHash.length !== v1.length || !crypto.timingSafeEqual(Buffer.from(expectedHash), Buffer.from(v1))) {
+          console.error('[MercadoPago Webhook] Signature validation failed');
+          return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+      } else {
+        console.error('[MercadoPago Webhook] Invalid signature format');
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+    } else {
+       console.error('[MercadoPago Webhook] Missing signature headers');
+       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const client = new MercadoPagoConfig({
