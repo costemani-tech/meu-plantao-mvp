@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import AppShell from '../components/AppShell';
 import { PostHogProvider } from './providers';
+import PostHogPageView from './PostHogPageView';
 
 export const metadata: Metadata = {
   title: 'Meu Plantão — Controle de Escalas Médicas',
@@ -60,6 +61,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body>
         <PostHogProvider>
+          <PostHogPageView />
           <AppShell>{children}</AppShell>
           <Toaster position="top-center" richColors />
         </PostHogProvider>
