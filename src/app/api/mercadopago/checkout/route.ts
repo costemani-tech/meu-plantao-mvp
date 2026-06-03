@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { NextResponse } from 'next/server';
 import { MercadoPagoConfig, Preference } from 'mercadopago';
 import { createClient } from '@supabase/supabase-js';
@@ -71,4 +73,3 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: error.message || 'Erro interno do servidor' }, { status: 500 });
   }
 }
-
