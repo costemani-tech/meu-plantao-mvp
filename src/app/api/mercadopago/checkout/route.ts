@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { MercadoPagoConfig, Preference } from 'mercadopago';
 import { createClient } from '@supabase/supabase-js';
+import { cookies } from 'next/headers';
+import { createServerClient } from '@supabase/ssr';
 
 // Parâmetros da Oferta de Lançamento (devem bater com /api/mercadopago/oferta-status)
 const OFERTA_MAX_ASSINANTES = 100;
@@ -23,10 +25,31 @@ async function isOfertaAtiva(): Promise<boolean> {
 
 export async function POST(req: Request) {
   try {
-    const { userId, userEmail } = await req.json();
+    // ── Autenticação via Cookie/Sessão SSR ──
+    const cookieStore = await cookies();
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return cookieStore.getAll();
+          },
+        },
+      }
+    );
+
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+    }
+
+    const userId = user.id;
+    const userEmail = user.email;
 
     if (!userId || !userEmail) {
-      return NextResponse.json({ error: 'Faltando userId ou userEmail' }, { status: 400 });
+      return NextResponse.json({ error: 'Faltando userId ou userEmail na sessão' }, { status: 400 });
     }
 
     const client = new MercadoPagoConfig({

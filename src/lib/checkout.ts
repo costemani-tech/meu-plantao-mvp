@@ -7,7 +7,6 @@ export const handleDirectCheckout = async (): Promise<string> => {
   const response = await fetch('/api/mercadopago/checkout', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ userId: user.id, userEmail: user.email }),
   });
 
   const data = await response.json();

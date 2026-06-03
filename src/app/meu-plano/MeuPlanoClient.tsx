@@ -15,7 +15,6 @@ async function handleCheckout() {
     const res = await fetch('/api/mercadopago/checkout', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId: user.id, userEmail: user.email }),
     });
     const data = await res.json();
     if (!res.ok || !data.init_point) throw new Error(data.error || 'Erro ao gerar checkout');
