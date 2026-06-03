@@ -6,7 +6,7 @@
 -- 1. Criar Tabela de Notificações
 CREATE TABLE IF NOT EXISTS public.notificacoes (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  usuario_id UUID REFERENCES public.usuarios(id) ON DELETE CASCADE NOT NULL,
+  usuario_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
   escala_id UUID REFERENCES public.escalas(id) ON DELETE CASCADE,
   data_hora_inicio TIMESTAMP WITH TIME ZONE,
   publicar_em TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
@@ -36,7 +36,7 @@ CREATE POLICY "Usuários podem deletar suas próprias notificações"
 -- 2. Criar Tabela de Feedbacks
 CREATE TABLE IF NOT EXISTS public.feedbacks (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  usuario_id UUID REFERENCES public.usuarios(id) ON DELETE CASCADE NOT NULL,
+  usuario_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
   email VARCHAR NOT NULL,
   categoria VARCHAR DEFAULT 'Geral' NOT NULL,
   mensagem TEXT NOT NULL,

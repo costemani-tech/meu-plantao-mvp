@@ -73,7 +73,6 @@ export async function POST(req: Request) {
     await supabaseAdmin.from('locais_trabalho').delete().eq('usuario_id', user.id);
 
     // Apaga registros de perfis
-    await supabaseAdmin.from('usuarios').delete().eq('id', user.id);
     await supabaseAdmin.from('profiles').delete().eq('id', user.id);
 
     // 2. Excluir credenciais de login no Supabase Auth

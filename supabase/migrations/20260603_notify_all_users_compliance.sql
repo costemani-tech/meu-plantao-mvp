@@ -8,4 +8,4 @@ SELECT id,
        'Termos de Uso e Privacidade' AS titulo, 
        'Atualizamos nossos Termos de Uso e Política de Privacidade de acordo com a LGPD. Também adicionamos a opção de exclusão definitiva de conta na aba Meu Plano.' AS mensagem,
        now() AS publicar_em
-FROM public.usuarios;
+FROM public.profiles;
