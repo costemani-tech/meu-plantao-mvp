@@ -323,10 +323,14 @@ export default function LoginPage() {
         </div>
 
         {/* Outer Footer */}
-        <div style={{ marginTop: '40px', textAlign: 'center', opacity: 0.5 }}>
-           <p style={{ fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-              Sem senha. Sem complicação. <br/> Apenas acesso rápido.
-            </p>
+        <div style={{ marginTop: '40px', textAlign: 'center', opacity: 0.7, display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'center' }}>
+           <p style={{ fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.1em', margin: 0, color: '#64748b' }}>
+              Sem senha. Sem complicação. Apenas acesso rápido.
+           </p>
+           <div style={{ display: 'flex', gap: '16px', fontSize: '12px', fontWeight: '600' }}>
+              <a href="/termos-de-uso" style={{ color: '#94A3B8', textDecoration: 'underline', transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = '#fff'} onMouseLeave={(e) => e.currentTarget.style.color = '#94A3B8'}>Termos de Uso</a>
+              <a href="/politica-de-privacidade" style={{ color: '#94A3B8', textDecoration: 'underline', transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = '#fff'} onMouseLeave={(e) => e.currentTarget.style.color = '#94A3B8'}>Política de Privacidade</a>
+           </div>
         </div>
 
       </div>

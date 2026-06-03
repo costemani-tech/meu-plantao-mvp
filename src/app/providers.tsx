@@ -2,6 +2,7 @@
 
 import posthog from 'posthog-js';
 import { PostHogProvider as PHProvider } from 'posthog-js/react';
+import ConsentBanner from '../components/ConsentBanner';
 
 if (typeof window !== 'undefined') {
   const token = process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN;
@@ -11,11 +12,17 @@ if (typeof window !== 'undefined') {
     posthog.init(token, {
       api_host: host,
       person_profiles: 'identified_only',
-      capture_pageview: false // We can disable auto pageviews or let it capture if needed, standard is false for manual SPA tracking, but let's keep it safe.
+      capture_pageview: false,
+      opt_out_capturing_by_default: true // Opt-out por padrão (LGPD)
     });
   }
 }
 
 export function PostHogProvider({ children }: { children: React.ReactNode }) {
-  return <PHProvider client={posthog}>{children}</PHProvider>;
+  return (
+    <PHProvider client={posthog}>
+      {children}
+      <ConsentBanner />
+    </PHProvider>
+  );
 }

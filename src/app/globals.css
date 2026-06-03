@@ -709,3 +709,12 @@ h1, h2, h3, h4 {
     padding: 24px 32px;
   }
 }
+
+.legal-link-hover {
+  color: var(--text-muted);
+}
+
+.legal-link-hover:hover {
+  color: var(--text-secondary);
+}
+

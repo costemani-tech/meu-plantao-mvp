@@ -1,6 +1,7 @@
 'use client';
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { toast } from 'sonner';
 import { supabase } from '../../lib/supabase';
 import { Crown, Gift, Lock, Check, ChevronDown, ChevronRight, RefreshCw, MessageCircle, X, Shield, Zap, BarChart3, MapPin, FileText, Loader2 } from 'lucide-react';
@@ -144,7 +145,7 @@ function FeedbackModal({ onClose }: { onClose: () => void }) {
   );
 }
 
-function CancelModal({ onClose, onConfirm, loading, formattedEndDate }: { onClose: () => void; onConfirm: () => void; loading: boolean; formattedEndDate: string | null }) {
+function CancelModal({ onClose, onConfirm, loading, formattedEndDate }: { onClose: () => void; onConfirm: (motivo: string) => void; loading: boolean; formattedEndDate: string | null }) {
   const [motivo, setMotivo] = useState('');
   return (
     <div className="premium-modal-overlay" onClick={() => !loading && onClose()}>
@@ -172,7 +173,7 @@ function CancelModal({ onClose, onConfirm, loading, formattedEndDate }: { onClos
           <textarea className="mp-textarea" rows={3} placeholder="Seu feedback nos ajuda a melhorar..." value={motivo} onChange={e => setMotivo(e.target.value)} />
           <div className="mp-modal-actions">
             <button className="btn btn-secondary" onClick={onClose} disabled={loading}>Voltar</button>
-            <button className="mp-cancel-confirm-btn" onClick={onConfirm} disabled={loading}>{loading ? 'Processando...' : 'Confirmar downgrade'}</button>
+            <button className="mp-cancel-confirm-btn" onClick={() => onConfirm(motivo)} disabled={loading}>{loading ? 'Processando...' : 'Confirmar downgrade'}</button>
           </div>
         </div>
       </div>
@@ -180,7 +181,57 @@ function CancelModal({ onClose, onConfirm, loading, formattedEndDate }: { onClos
   );
 }
 
-function FreePlanView({ locaisUsados, locaisMax }: { locaisUsados: number; locaisMax: number }) {
+function ExcluirContaModal({ onClose }: { onClose: () => void }) {
+  const [loading, setLoading] = useState(false);
+
+  const handleExcluir = async () => {
+    if (!confirm('Você tem certeza absoluta? Essa ação NÃO pode ser desfeita e todas as suas escalas, locais de trabalho e históricos serão permanentemente excluídos.')) {
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await fetch('/api/usuarios/excluir', { method: 'POST' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Erro ao excluir conta');
+      toast.success('Sua conta foi excluída com sucesso.');
+      window.location.href = '/login';
+    } catch (e: any) {
+      toast.error(e.message || 'Erro ao processar exclusão. Tente novamente.');
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="premium-modal-overlay" onClick={() => !loading && onClose()}>
+      <div className="premium-modal-card mp-modal" onClick={e => e.stopPropagation()} style={{ border: '2px solid #ef4444' }}>
+        <div className="mp-modal-header">
+          <div className="mp-cancel-icon" style={{ background: 'rgba(239,68,68,0.1)', color: '#ef4444', borderColor: '#ef4444' }}>!</div>
+          <div>
+            <h3 style={{ color: '#ef4444' }}>Excluir permanentemente</h3>
+            <p style={{ margin: 0, fontSize: '13px' }}>Esta ação apagará todos os seus dados.</p>
+          </div>
+          <button className="mp-close-btn" onClick={onClose} disabled={loading}><X size={20} /></button>
+        </div>
+        <div className="mp-modal-body">
+          <div className="mp-pause-hint" style={{ background: 'rgba(239,68,68,0.05)', border: '1px solid rgba(239,68,68,0.15)' }}>
+            <p className="mp-hint-title" style={{ color: '#ef4444', margin: '0 0 6px 0', fontSize: '14px', fontWeight: 700 }}>⚠️ Atenção</p>
+            <p className="mp-hint-text" style={{ color: 'rgba(255,255,255,0.7)', margin: 0, fontSize: '12px', lineHeight: 1.5 }}>
+              Todos os seus locais de trabalho, escalas cadastradas, plantões agendados e históricos financeiros serão excluídos para sempre de nossos servidores, de acordo com as diretrizes da LGPD.
+            </p>
+          </div>
+          <div className="mp-modal-actions" style={{ marginTop: 24, display: 'flex', gap: 12 }}>
+            <button className="btn btn-secondary" style={{ flex: 1 }} onClick={onClose} disabled={loading}>Cancelar</button>
+            <button className="mp-cancel-confirm-btn" style={{ flex: 1, background: '#ef4444', color: '#fff', border: 'none', padding: '10px', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }} onClick={handleExcluir} disabled={loading}>
+              {loading ? 'Excluindo...' : 'Excluir minha conta'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FreePlanView({ locaisUsados, locaisMax, setShowExcluirConta }: { locaisUsados: number; locaisMax: number; setShowExcluirConta: (val: boolean) => void }) {
   const pct = Math.min(100, Math.round((locaisUsados / locaisMax) * 100));
   const [showFeedback, setShowFeedback] = useState(false);
   const [checkingOut, setCheckingOut] = useState(false);
@@ -256,16 +307,28 @@ function FreePlanView({ locaisUsados, locaisMax }: { locaisUsados: number; locai
 
       <FaqAccordion />
 
-      <div className="mp-feedback-link">
+      <div className="mp-feedback-link" style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'center', marginTop: 24 }}>
         <button onClick={() => setShowFeedback(true)} className="mp-text-btn">
           <MessageCircle size={14} /> Feedback & Suporte
+        </button>
+        <div style={{ display: 'flex', gap: 16, fontSize: '12px', marginTop: 4 }}>
+          <Link href="/termos-de-uso" className="mp-text-btn" style={{ fontSize: '12px', opacity: 0.7, textDecoration: 'none' }}>
+            Termos de Uso
+          </Link>
+          <span style={{ color: 'var(--text-muted)', opacity: 0.5 }}>•</span>
+          <Link href="/politica-de-privacidade" className="mp-text-btn" style={{ fontSize: '12px', opacity: 0.7, textDecoration: 'none' }}>
+            Política de Privacidade
+          </Link>
+        </div>
+        <button onClick={() => setShowExcluirConta(true)} className="mp-text-btn" style={{ color: '#ef4444', fontSize: '13px', opacity: 0.8, marginTop: 4 }}>
+          ⚠️ Excluir minha conta
         </button>
       </div>
     </div>
   );
 }
 
-function ProPlanView({ subStatus, endDate, autoRenew, diasRestantes }: { subStatus: string; endDate: string | null; autoRenew: boolean; diasRestantes: number | null }) {
+function ProPlanView({ subStatus, endDate, autoRenew, diasRestantes, setShowExcluirConta }: { subStatus: string; endDate: string | null; autoRenew: boolean; diasRestantes: number | null; setShowExcluirConta: (val: boolean) => void }) {
   const router = useRouter();
   const [showCancel, setShowCancel] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
@@ -283,10 +346,14 @@ function ProPlanView({ subStatus, endDate, autoRenew, diasRestantes }: { subStat
     ? new Date(endDate).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })
     : null;
 
-  const handleCancel = async () => {
+  const handleCancel = async (motivo: string) => {
     setLoading(true);
     try {
-      const res = await fetch('/api/assinatura/cancelar', { method: 'POST' });
+      const res = await fetch('/api/assinatura/cancelar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ motivo }),
+      });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       toast.success('Downgrade realizado. Seu acesso PRO continua até ' + formattedEndDate);
@@ -380,6 +447,24 @@ function ProPlanView({ subStatus, endDate, autoRenew, diasRestantes }: { subStat
             <ChevronRight size={16} className="mp-action-arrow" />
           </button>
 
+          <Link href="/termos-de-uso" className="mp-action-row" style={{ textDecoration: 'none' }}>
+            <div className="mp-action-icon"><FileText size={18} /></div>
+            <div className="mp-action-text">
+              <span className="mp-action-title">Termos de Uso</span>
+              <span className="mp-action-sub">Termos e condições de uso do Meu Plantão</span>
+            </div>
+            <ChevronRight size={16} className="mp-action-arrow" />
+          </Link>
+
+          <Link href="/politica-de-privacidade" className="mp-action-row" style={{ textDecoration: 'none' }}>
+            <div className="mp-action-icon"><Shield size={18} /></div>
+            <div className="mp-action-text">
+              <span className="mp-action-title">Política de Privacidade</span>
+              <span className="mp-action-sub">Sua privacidade e proteção de dados (LGPD)</span>
+            </div>
+            <ChevronRight size={16} className="mp-action-arrow" />
+          </Link>
+
           {!isCanceled && (
             <button className="mp-action-row mp-action-danger" onClick={() => {
               posthog.capture('open_cancel_modal');
@@ -393,6 +478,15 @@ function ProPlanView({ subStatus, endDate, autoRenew, diasRestantes }: { subStat
               <ChevronRight size={16} className="mp-action-arrow" />
             </button>
           )}
+
+          <button className="mp-action-row mp-action-danger" onClick={() => setShowExcluirConta(true)} style={{ marginTop: 8, borderColor: 'rgba(239,68,68,0.2)' }}>
+            <div className="mp-action-icon danger"><X size={18} /></div>
+            <div className="mp-action-text">
+              <span className="mp-action-title danger">Excluir minha conta</span>
+              <span className="mp-action-sub">Apagar permanentemente todos os seus dados</span>
+            </div>
+            <ChevronRight size={16} className="mp-action-arrow" />
+          </button>
 
           <div className="mp-action-row mp-action-info">
             <div className="mp-action-icon info">i</div>
@@ -408,8 +502,16 @@ function ProPlanView({ subStatus, endDate, autoRenew, diasRestantes }: { subStat
 }
 
 export default function MeuPlanoClient({ isPro, subStatus, endDate, autoRenew, launchOffer, locaisUsados, locaisMax, diasRestantes }: Props) {
-  if (isPro) {
-    return <ProPlanView subStatus={subStatus} endDate={endDate} autoRenew={autoRenew} diasRestantes={diasRestantes} />;
-  }
-  return <FreePlanView locaisUsados={locaisUsados} locaisMax={locaisMax} />;
+  const [showExcluir, setShowExcluir] = useState(false);
+
+  return (
+    <>
+      {showExcluir && <ExcluirContaModal onClose={() => setShowExcluir(false)} />}
+      {isPro ? (
+        <ProPlanView subStatus={subStatus} endDate={endDate} autoRenew={autoRenew} diasRestantes={diasRestantes} setShowExcluirConta={setShowExcluir} />
+      ) : (
+        <FreePlanView locaisUsados={locaisUsados} locaisMax={locaisMax} setShowExcluirConta={setShowExcluir} />
+      )}
+    </>
+  );
 }

@@ -41,3 +41,8 @@ yarn-error.log*
 next-env.d.ts
 
 .vercel
+
+# scratch and testing files
+/scratch/
+/test-resend.js
+/campanha_divulgacao_meu_plantao.md

@@ -363,6 +363,14 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             {/* Desktop spacer to push buttons to bottom */}
             <div className="desktop-spacer" style={{ flex: 1 }} />
             
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '0 16px', marginBottom: '16px' }}>
+              <Link href="/termos-de-uso" className="legal-link-hover" style={{ fontSize: '11px', textDecoration: 'none', transition: 'color 0.2s' }}>
+                Termos de Uso
+              </Link>
+              <Link href="/politica-de-privacidade" className="legal-link-hover" style={{ fontSize: '11px', textDecoration: 'none', transition: 'color 0.2s' }}>
+                Política de Privacidade
+              </Link>
+            </div>
 
             <button onClick={handleLogout} className="nav-item logout-btn" style={{ color: '#EF4444' }}>
               <LogOut className="nav-icon" size={20} />
