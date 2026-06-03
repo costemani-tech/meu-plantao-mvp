@@ -1,9 +1,40 @@
+export const dynamic = 'force-dynamic';
+
+import crypto from 'crypto';
 import { NextResponse } from 'next/server';
 import { MercadoPagoConfig, Payment } from 'mercadopago';
 import { createClient } from '@supabase/supabase-js';
 
 export async function POST(req: Request) {
   try {
+
+    const webhookSecret = process.env.MERCADOPAGO_WEBHOOK_SECRET;
+    if (!webhookSecret) {
+      return NextResponse.json({ error: 'Webhook secret not configured' }, { status: 500 });
+    }
+
+    const signature = req.headers.get('x-signature');
+    const requestId = req.headers.get('x-request-id');
+
+    if (!signature || !requestId) {
+      return NextResponse.json({ error: 'Missing signature headers' }, { status: 400 });
+    }
+
+    // signature format: ts=123,v1=hash
+    let ts = '';
+    let hash = '';
+    const parts = signature.split(',');
+    for (const part of parts) {
+      const [key, value] = part.split('=');
+      if (key === 'ts') ts = value;
+      if (key === 'v1') hash = value;
+    }
+
+    if (!ts || !hash) {
+      return NextResponse.json({ error: 'Invalid signature format' }, { status: 400 });
+    }
+
+    // We need to parse URL or body to get data.id before validating the signature
     let dataId;
     let type;
 
@@ -24,6 +55,16 @@ export async function POST(req: Request) {
     if (!dataId) {
       return NextResponse.json({ received: true });
     }
+
+    const manifest = `id:${dataId};request-id:${requestId};ts:${ts};`;
+    const hmac = crypto.createHmac('sha256', webhookSecret);
+    hmac.update(manifest);
+    const expectedHash = hmac.digest('hex');
+
+    if (expectedHash.length !== hash.length || !crypto.timingSafeEqual(Buffer.from(expectedHash), Buffer.from(hash))) {
+      return NextResponse.json({ error: 'Invalid signature' }, { status: 403 });
+    }
+
 
     const client = new MercadoPagoConfig({
       accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN || '',

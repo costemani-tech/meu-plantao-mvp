@@ -1,14 +1,20 @@
+export const dynamic = 'force-dynamic';
+
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-const ADMIN_TOKEN = 'ADMIN_SECRET_2026';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const email = searchParams.get('email');
   const token = searchParams.get('token');
 
-  if (token !== ADMIN_TOKEN) {
+  const adminToken = process.env.ADMIN_SECRET;
+  if (!adminToken) {
+    return NextResponse.json({ error: 'Erro interno de configuracao' }, { status: 500 });
+  }
+
+  if (token !== adminToken) {
     return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
   }
 
