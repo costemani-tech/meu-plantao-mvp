@@ -1,9 +1,69 @@
 import { NextResponse } from 'next/server';
 import { MercadoPagoConfig, Payment } from 'mercadopago';
 import { createClient } from '@supabase/supabase-js';
+import crypto from 'crypto';
 
 export async function POST(req: Request) {
   try {
+    const secret = process.env.MERCADOPAGO_WEBHOOK_SECRET;
+    if (!secret) {
+      console.error('[MercadoPago Webhook] Missing MERCADOPAGO_WEBHOOK_SECRET');
+      return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    }
+
+    const xSignature = req.headers.get('x-signature');
+    const xRequestId = req.headers.get('x-request-id');
+
+    if (!xSignature || !xRequestId) {
+      console.error('[MercadoPago Webhook] Missing x-signature or x-request-id');
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Extrair ts e v1 de x-signature
+    const signatureParts = xSignature.split(',');
+    let ts = '';
+    let v1 = '';
+    for (const part of signatureParts) {
+      const [key, value] = part.split('=');
+      if (key === 'ts') ts = value;
+      if (key === 'v1') v1 = value;
+    }
+
+    if (!ts || !v1) {
+      console.error('[MercadoPago Webhook] Invalid x-signature format');
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Precisamos do dataId para gerar o manifest
+    // Vamos parsear a URL para ver se é data.id ou id
+    const url = new URL(req.url);
+    let webhookDataId = url.searchParams.get('data.id') || url.searchParams.get('id');
+
+    // Se não tiver na URL, tenta pegar do body temporariamente só para validar o HMAC
+    let tempBody;
+    try {
+      const clonedReq = req.clone();
+      tempBody = await clonedReq.json();
+      if (!webhookDataId) webhookDataId = tempBody?.data?.id;
+    } catch (e) {
+      // Body não é JSON ou está vazio
+    }
+
+    if (webhookDataId) {
+      const manifest = `id:${webhookDataId};request-id:${xRequestId};ts:${ts};`;
+      const expectedHash = crypto.createHmac('sha256', secret).update(manifest).digest('hex');
+
+      const v1Buffer = Buffer.from(v1);
+      const expectedHashBuffer = Buffer.from(expectedHash);
+
+      if (v1Buffer.length !== expectedHashBuffer.length || !crypto.timingSafeEqual(v1Buffer, expectedHashBuffer)) {
+        console.error('[MercadoPago Webhook] Invalid HMAC signature');
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+    } else {
+       console.error('[MercadoPago Webhook] dataId not found for signature verification');
+       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     let dataId;
     let type;
 
