@@ -51,6 +51,8 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith('/demo') ||
     pathname.startsWith('/api/cron') ||
     pathname.startsWith('/api/webhooks') ||
+    pathname.startsWith('/api/mercadopago/webhook') ||
+    pathname.startsWith('/api/admin/') ||
     pathname.startsWith('/_next') ||
     pathname.startsWith('/auth/callback') ||
     pathname === '/manifest.json' ||
@@ -58,6 +60,11 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith('/icons/') ||
     pathname === '/favicon.ico'
   const isLoginPage = pathname.startsWith('/login')
+
+  // Se for uma rota de API e não estiver logado nem for rota pública, retorna 401 JSON em vez de redirecionar para HTML
+  if (!user && pathname.startsWith('/api/') && !isPublicRoute) {
+    return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
+  }
 
   // Redireciona para /login se não estiver logado e a rota não for pública
   if (!user && !isPublicRoute) {
