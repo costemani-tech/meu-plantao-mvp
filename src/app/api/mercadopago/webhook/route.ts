@@ -1,28 +1,71 @@
 import { NextResponse } from 'next/server';
 import { MercadoPagoConfig, Payment } from 'mercadopago';
 import { createClient } from '@supabase/supabase-js';
+import crypto from 'crypto';
 
 export async function POST(req: Request) {
   try {
-    let dataId;
-    let type;
+    const webhookSecret = process.env.MERCADOPAGO_WEBHOOK_SECRET;
+    if (!webhookSecret) {
+      console.error('[MercadoPago Webhook] MERCADOPAGO_WEBHOOK_SECRET is missing');
+      return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    }
+
+    const xSignature = req.headers.get('x-signature');
+    const xRequestId = req.headers.get('x-request-id');
+
+    if (!xSignature || !xRequestId) {
+      console.error('[MercadoPago Webhook] Missing x-signature or x-request-id headers');
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Parse signature
+    const parts = xSignature.split(',');
+    let ts;
+    let hash;
+    for (const part of parts) {
+      const [key, value] = part.split('=');
+      if (key && value) {
+        if (key.trim() === 'ts') ts = value.trim();
+        if (key.trim() === 'v1') hash = value.trim();
+      }
+    }
+
+    if (!ts || !hash) {
+      console.error('[MercadoPago Webhook] Invalid x-signature format');
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const url = new URL(req.url);
+    const dataIdQuery = url.searchParams.get('data.id') || url.searchParams.get('id') || '';
+
+    let dataId = dataIdQuery;
+    let type = url.searchParams.get('type') || url.searchParams.get('topic') || '';
+
+    let bodyJson = null;
 
     // Tentar ler do body (Webhook normal)
     try {
-      const body = await req.json();
-      dataId = body?.data?.id;
-      type = body?.type;
+      bodyJson = await req.json();
+      if (!dataId) dataId = bodyJson?.data?.id;
+      if (!type) type = bodyJson?.type;
     } catch {
       // Body não é JSON válido ou está vazio
     }
 
-    // Se não veio no body, tentar ler das query params (IPN)
-    const url = new URL(req.url);
-    if (!dataId) dataId = url.searchParams.get('data.id') || url.searchParams.get('id');
-    if (!type) type = url.searchParams.get('type') || url.searchParams.get('topic');
-
     if (!dataId) {
       return NextResponse.json({ received: true });
+    }
+
+    // HMAC validation
+    const manifest = `id:${dataId};request-id:${xRequestId};ts:${ts};`;
+    const hmac = crypto.createHmac('sha256', webhookSecret);
+    hmac.update(manifest);
+    const expectedHash = hmac.digest('hex');
+
+    if (expectedHash.length !== hash.length || !crypto.timingSafeEqual(Buffer.from(expectedHash), Buffer.from(hash))) {
+      console.error('[MercadoPago Webhook] Invalid HMAC signature');
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const client = new MercadoPagoConfig({
