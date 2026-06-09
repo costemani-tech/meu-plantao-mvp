@@ -3,6 +3,8 @@ import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
 import { Resend } from 'resend';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(req: Request) {
   try {
     // Instanciar dentro do try — se a env var falhar, retorna JSON de erro em vez de crashar
@@ -100,13 +102,13 @@ export async function POST(req: Request) {
 
     if (emailResult.error) {
       console.error('[Feedback] Erro Resend:', emailResult.error);
-      return NextResponse.json({ success: true, emailSent: false, emailError: emailResult.error });
+      return NextResponse.json({ success: true, emailSent: false, emailError: 'Falha ao enviar email' });
     }
 
     return NextResponse.json({ success: true, emailSent: true, emailId: emailResult.data?.id });
 
   } catch (error: any) {
     console.error('[Feedback API] Erro interno:', error);
-    return NextResponse.json({ error: error?.message || 'Erro interno' }, { status: 500 });
+    return NextResponse.json({ error: 'Erro interno do servidor' }, { status: 500 });
   }
 }
