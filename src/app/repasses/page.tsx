@@ -29,7 +29,6 @@ export default function RepassesPage() {
     setLoading(false);
   }, []);
 
-  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { fetchRepasses(); }, [fetchRepasses]);
 
   const showToast = (msg: string, type: 'success'|'error') => {
@@ -109,7 +108,7 @@ export default function RepassesPage() {
                 </div>
                 
                 <div>
-                  <button 
+                  <button type="button"
                     onClick={() => handleAceitar(r.repasse_id, isMeu)}
                     disabled={isMeu}
                     className="btn" 

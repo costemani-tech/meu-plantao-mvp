@@ -9,7 +9,7 @@ export default function PoliticaPrivacidadePage() {
   return (
     <div className="page-container" style={{ maxWidth: '800px', margin: '0 auto', paddingBottom: '80px' }}>
       <div style={{ marginBottom: '24px' }}>
-        <button className="btn btn-secondary" onClick={() => router.back()} style={{ padding: '8px 16px', display: 'flex', gap: '8px', alignItems: 'center' }}>
+        <button type="button" className="btn btn-secondary" onClick={() => router.back()} style={{ padding: '8px 16px', display: 'flex', gap: '8px', alignItems: 'center' }}>
           <ArrowLeft size={16} /> Voltar
         </button>
       </div>

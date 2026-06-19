@@ -171,7 +171,7 @@ export default function LoginPage() {
         }}>
           
           {/* Google Pill Button */}
-          <button 
+          <button type="button"
             onClick={signInWithGoogle}
             style={{
               width: '100%',

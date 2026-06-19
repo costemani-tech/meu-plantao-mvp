@@ -249,9 +249,9 @@ export default function CalendarioPage() {
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 24, marginBottom: 32 }}>
-        <button onClick={mesAnterior} style={{ background: 'rgba(30, 41, 59, 0.5)', border: '1px solid #1e293b', color: '#fff', padding: 12, borderRadius: '50%', cursor: 'pointer' }}><ChevronLeft size={20} /></button>
+        <button type="button" onClick={mesAnterior} style={{ background: 'rgba(30, 41, 59, 0.5)', border: '1px solid #1e293b', color: '#fff', padding: 12, borderRadius: '50%', cursor: 'pointer' }}><ChevronLeft size={20} /></button>
         <span style={{ fontSize: 20, fontWeight: 900, color: '#fff', minWidth: 160, textAlign: 'center' }}>{MESES[mes]} {ano}</span>
-        <button onClick={proximoMes} style={{ background: 'rgba(30, 41, 59, 0.5)', border: '1px solid #1e293b', color: '#fff', padding: 12, borderRadius: '50%', cursor: 'pointer' }}><ChevronRight size={20} /></button>
+        <button type="button" onClick={proximoMes} style={{ background: 'rgba(30, 41, 59, 0.5)', border: '1px solid #1e293b', color: '#fff', padding: 12, borderRadius: '50%', cursor: 'pointer' }}><ChevronRight size={20} /></button>
       </div>
 
       <div className="card" style={{ background: 'transparent', border: 'none', padding: 0, boxShadow: 'none' }}>
@@ -309,7 +309,7 @@ export default function CalendarioPage() {
           <div className="card" style={{ width: '100%', maxWidth: 420, background: '#0f172a', border: '1px solid #1e293b', borderRadius: 28, padding: 28 }} onClick={e => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
               <h2 style={{ fontSize: 20, fontWeight: 900, color: '#fff' }}>{diaSelecionado} de {MESES[mes]}</h2>
-              <button onClick={() => setDiaSelecionado(null)} style={{ background: 'rgba(30, 41, 59, 0.5)', border: 'none', color: '#fff', padding: 10, borderRadius: '50%', cursor: 'pointer' }}>X</button>
+              <button type="button" onClick={() => setDiaSelecionado(null)} style={{ background: 'rgba(30, 41, 59, 0.5)', border: 'none', color: '#fff', padding: 10, borderRadius: '50%', cursor: 'pointer' }}>X</button>
             </div>
             {plantoesNoDia(diaSelecionado).length === 0 ? (<p style={{ color: '#94a3b8', fontSize: 15, textAlign: 'center', padding: '20px 0' }}>Dia de folga livre! 🏖️</p>) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -325,8 +325,8 @@ export default function CalendarioPage() {
                         </div>
                         {!isExitOnly && (
                           <div style={{ display: 'flex', gap: 10 }}>
-                             <button onClick={() => { if (!isPro) { window.dispatchEvent(new CustomEvent('open-upgrade-modal')); return; } setShiftParaEditar(p); }} style={{ background: 'rgba(30, 41, 59, 0.6)', border: 'none', color: '#fff', padding: 10, borderRadius: 10, cursor: 'pointer' }}><Edit2 size={18} /></button>
-                             <button onClick={() => setModalExclusao(p)} style={{ background: 'rgba(239, 68, 68, 0.15)', border: 'none', color: '#ef4444', padding: 10, borderRadius: 10, cursor: 'pointer' }}><Trash2 size={18} /></button>
+                             <button type="button" onClick={() => { if (!isPro) { window.dispatchEvent(new CustomEvent('open-upgrade-modal')); return; } setShiftParaEditar(p); }} style={{ background: 'rgba(30, 41, 59, 0.6)', border: 'none', color: '#fff', padding: 10, borderRadius: 10, cursor: 'pointer' }}><Edit2 size={18} /></button>
+                             <button type="button" onClick={() => setModalExclusao(p)} style={{ background: 'rgba(239, 68, 68, 0.15)', border: 'none', color: '#ef4444', padding: 10, borderRadius: 10, cursor: 'pointer' }}><Trash2 size={18} /></button>
                           </div>
                         )}
                       </div>
@@ -351,9 +351,9 @@ export default function CalendarioPage() {
             <h2 style={{ fontSize: 20, fontWeight: 900, color: '#fff', marginBottom: 12 }}>Remover Plantão</h2>
             <p style={{ fontSize: 15, color: '#94a3b8', marginBottom: 28 }}><strong>{modalExclusao.local?.nome}</strong><br />{new Date(modalExclusao.data_hora_inicio).toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })}</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <button onClick={removerSomenteEste} disabled={excluindo} style={{ padding: 16, background: 'rgba(30, 41, 59, 0.6)', border: '1px solid #1e293b', borderRadius: 14, color: '#fff', fontWeight: 800, cursor: 'pointer', fontSize: 15 }}>Remover só este</button>
-              {!modalExclusao.is_extra && modalExclusao.escala_id && (<button onClick={removerEstEFuturos} disabled={excluindo} style={{ padding: 16, background: 'rgba(239, 68, 68, 0.15)', border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: 14, color: '#ef4444', fontWeight: 800, cursor: 'pointer', fontSize: 15 }}>Remover este e futuros</button>)}
-              <button onClick={() => setModalExclusao(null)} style={{ padding: 16, background: 'transparent', border: 'none', color: '#64748b', fontWeight: 800, cursor: 'pointer', fontSize: 15 }}>Cancelar</button>
+              <button type="button" onClick={removerSomenteEste} disabled={excluindo} style={{ padding: 16, background: 'rgba(30, 41, 59, 0.6)', border: '1px solid #1e293b', borderRadius: 14, color: '#fff', fontWeight: 800, cursor: 'pointer', fontSize: 15 }}>Remover só este</button>
+              {!modalExclusao.is_extra && modalExclusao.escala_id && (<button type="button" onClick={removerEstEFuturos} disabled={excluindo} style={{ padding: 16, background: 'rgba(239, 68, 68, 0.15)', border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: 14, color: '#ef4444', fontWeight: 800, cursor: 'pointer', fontSize: 15 }}>Remover este e futuros</button>)}
+              <button type="button" onClick={() => setModalExclusao(null)} style={{ padding: 16, background: 'transparent', border: 'none', color: '#64748b', fontWeight: 800, cursor: 'pointer', fontSize: 15 }}>Cancelar</button>
             </div>
           </div>
         </div>

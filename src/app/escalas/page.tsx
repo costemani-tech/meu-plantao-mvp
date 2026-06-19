@@ -631,7 +631,7 @@ export default function EscalasPage() {
           <p>Organize seus plantões de forma simples</p>
         </div>
         {!showForm && (
-          <button 
+          <button type="button"
             className="btn btn-primary" 
             onClick={() => setShowForm(true)}
             style={{ padding: '8px 16px', fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}
@@ -643,7 +643,7 @@ export default function EscalasPage() {
 
       {showForm && (
         <div style={{ marginBottom: 32, animation: 'fadeIn 0.3s ease' }}>
-          <button 
+          <button type="button"
             className="btn btn-secondary" 
             onClick={() => setShowForm(false)}
             style={{ marginBottom: 16, border: 'none', background: 'transparent', padding: 0, color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600 }}
@@ -740,14 +740,14 @@ export default function EscalasPage() {
           <div className="form-group" style={{ marginBottom: 20 }}>
             <label className="form-label">Tipo de Jornada</label>
             <div style={{ display: 'flex', gap: 12 }}>
-              <button 
+              <button type="button"
                 className={`btn ${tipoJornada === 'Plantonista' ? 'btn-primary' : 'btn-secondary'}`} 
                 style={{ flex: 1 }} 
                 onClick={() => setTipoJornada('Plantonista')}
               >
                 Plantonista
               </button>
-              <button 
+              <button type="button"
                 className={`btn ${tipoJornada === 'Diarista' ? 'btn-primary' : 'btn-secondary'}`} 
                 style={{ flex: 1 }} 
                 onClick={() => setTipoJornada('Diarista')}
@@ -985,7 +985,7 @@ export default function EscalasPage() {
           </div>
 
           <div style={{ display: 'flex', gap: 12, marginTop: 8 }}>
-            <button
+            <button type="button"
               className="btn btn-secondary"
               style={{ flex: 1, justifyContent: 'center', background: 'transparent', border: '1px solid var(--border-subtle)', color: 'var(--text-secondary)' }}
               onClick={() => setShowForm(false)}
@@ -993,7 +993,7 @@ export default function EscalasPage() {
             >
               Cancelar
             </button>
-            <button
+            <button type="button"
               className="btn btn-primary"
               style={{ flex: 1, justifyContent: 'center' }}
               onClick={() => salvarEscala()}
@@ -1115,7 +1115,7 @@ export default function EscalasPage() {
                           </div>
                         </div>
                         <div style={{ position: 'relative' }}>
-                          <button 
+                          <button type="button"
                             onClick={(event) => {
                               event.stopPropagation();
                               setMenuEscalaId(menuEscalaId === e.id ? null : e.id);
@@ -1131,7 +1131,7 @@ export default function EscalasPage() {
                               border: '1px solid var(--border-subtle)', borderRadius: 12, boxShadow: 'var(--shadow-lg)',
                               zIndex: 100, minWidth: 180, overflow: 'hidden', animation: 'fadeInDown 0.2s ease'
                             }}>
-                              <button 
+                              <button type="button"
                                 onClick={(event) => { 
                                   event.stopPropagation(); 
                                   if (!isPro) {
@@ -1147,7 +1147,7 @@ export default function EscalasPage() {
                                 <Edit2 size={16} /> Editar Plantões
                                 {!isPro && <Lock size={12} style={{ marginLeft: 'auto' }} />}
                               </button>
-                              <button 
+                              <button type="button"
                                 onClick={(event) => { 
                                   event.stopPropagation(); 
                                   if (!isPro) {
@@ -1164,7 +1164,7 @@ export default function EscalasPage() {
                                 <Bell size={16} /> Configurar Alertas
                                 {!isPro && <Lock size={12} style={{ marginLeft: 'auto' }} />}
                               </button>
-                              <button 
+                              <button type="button"
                                 onClick={(event) => { event.stopPropagation(); setModalEncerrar({ id: e.id, nome: e.local?.nome || 'Escala' }); setMenuEscalaId(null); }}
                                 style={{ width: '100%', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 10, background: 'none', border: 'none', color: '#EF4444', cursor: 'pointer', fontSize: 13, textAlign: 'left', userSelect: 'none' }}
                                 className="hover-bg"
@@ -1189,7 +1189,7 @@ export default function EscalasPage() {
           <div className="card" style={{ maxWidth: 400, width: '100%', borderRadius: 24, padding: 24 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
               <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800 }}>Alertas de Plantão</h3>
-              <button onClick={() => setModalAlertas(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}><X size={20} /></button>
+              <button type="button" onClick={() => setModalAlertas(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}><X size={20} /></button>
             </div>
             
             <p style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 24 }}>
@@ -1213,8 +1213,8 @@ export default function EscalasPage() {
             </div>
 
             <div style={{ display: 'flex', gap: 12 }}>
-              <button className="btn btn-secondary" style={{ flex: 1 }} onClick={() => setModalAlertas(null)}>Cancelar</button>
-              <button 
+              <button type="button" className="btn btn-secondary" style={{ flex: 1 }} onClick={() => setModalAlertas(null)}>Cancelar</button>
+              <button type="button"
                 className="btn btn-primary" 
                 style={{ flex: 1, background: 'var(--accent-blue)' }}
                 onClick={async () => {
@@ -1272,7 +1272,7 @@ export default function EscalasPage() {
                   onChange={e => setDataEncerramento(e.target.value)}
                   style={{ marginBottom: 12 }}
                 />
-                <button 
+                <button type="button"
                   className="btn btn-secondary" 
                   style={{ width: '100%', justifyContent: 'center', fontSize: 12 }}
                   onClick={() => {
@@ -1288,7 +1288,7 @@ export default function EscalasPage() {
               <div style={{ padding: 16, background: 'rgba(239, 68, 68, 0.05)', borderRadius: 16, border: '1px solid rgba(239, 68, 68, 0.1)' }}>
                 <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4, color: '#EF4444' }}>Exclusão Total</div>
                 <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 12 }}>Remove a escala e TODOS os plantões vinculados (passados e futuros).</p>
-                <button 
+                <button type="button"
                   className="btn btn-primary" 
                   style={{ width: '100%', justifyContent: 'center', background: '#EF4444', fontSize: 12 }}
                   onClick={() => {
@@ -1303,7 +1303,7 @@ export default function EscalasPage() {
               </div>
             </div>
 
-            <button className="btn btn-secondary" style={{ width: '100%', justifyContent: 'center' }} onClick={() => setModalEncerrar(null)}>Cancelar</button>
+            <button type="button" className="btn btn-secondary" style={{ width: '100%', justifyContent: 'center' }} onClick={() => setModalEncerrar(null)}>Cancelar</button>
           </div>
         </div>
       )}

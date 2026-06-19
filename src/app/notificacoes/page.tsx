@@ -35,7 +35,6 @@ export default function NotificacoesPage() {
     setLoading(false);
   }, []);
 
-  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { fetchNotificacoes(); }, [fetchNotificacoes]);
 
   const marcarComoLida = async (id: string) => {
@@ -85,7 +84,7 @@ export default function NotificacoesPage() {
           <p>Fique por dentro de todas as solicitações e alertas da sua equipe.</p>
         </div>
         {notis.some(n => !n.lida) && (
-          <button className="btn btn-secondary" onClick={marcarTodasLidas} style={{ fontSize: 13, padding: '8px 16px' }}>
+          <button type="button" className="btn btn-secondary" onClick={marcarTodasLidas} style={{ fontSize: 13, padding: '8px 16px' }}>
             Marcar todas como Lidas
           </button>
         )}
@@ -135,7 +134,7 @@ export default function NotificacoesPage() {
                 ) : (
                   <div style={{ width: 10, height: 10, borderRadius: '50%', background: 'var(--accent-blue)' }} />
                 )}
-                <button 
+                <button type="button"
                   onClick={(e) => deletarNotificacao(n.id, e)}
                   style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', display: 'flex' }}
                   title="Excluir notificação"
