@@ -1,9 +1,25 @@
 import { NextResponse } from 'next/server';
 import { MercadoPagoConfig, Payment } from 'mercadopago';
 import { createClient } from '@supabase/supabase-js';
+import crypto from 'crypto';
 
 export async function POST(req: Request) {
   try {
+    const webhookSecret = process.env.MERCADOPAGO_WEBHOOK_SECRET;
+    if (!webhookSecret) {
+      console.error('[MercadoPago Webhook] MERCADOPAGO_WEBHOOK_SECRET não configurado.');
+      return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    }
+
+    const xSignature = req.headers.get('x-signature');
+    const xRequestId = req.headers.get('x-request-id');
+
+    if (!xSignature || !xRequestId) {
+       console.error('[MercadoPago Webhook] Cabeçalhos de assinatura ausentes.');
+       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const url = new URL(req.url);
     let dataId;
     let type;
 
@@ -17,12 +33,37 @@ export async function POST(req: Request) {
     }
 
     // Se não veio no body, tentar ler das query params (IPN)
-    const url = new URL(req.url);
     if (!dataId) dataId = url.searchParams.get('data.id') || url.searchParams.get('id');
     if (!type) type = url.searchParams.get('type') || url.searchParams.get('topic');
 
     if (!dataId) {
       return NextResponse.json({ received: true });
+    }
+
+    // Validação de assinatura MercadoPago HMAC-SHA256
+    // x-signature: ts=...,v1=...
+    const parts = xSignature.split(',');
+    let ts = '';
+    let hash = '';
+    for (const part of parts) {
+      const [key, value] = part.split('=', 2);
+      if (key === 'ts') ts = value;
+      else if (key === 'v1') hash = value;
+    }
+
+    if (!ts || !hash) {
+      console.error('[MercadoPago Webhook] Formato de x-signature inválido.');
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const manifest = `id:${dataId};request-id:${xRequestId};ts:${ts};`;
+    const hmac = crypto.createHmac('sha256', webhookSecret);
+    hmac.update(manifest);
+    const expectedHash = hmac.digest('hex');
+
+    if (expectedHash.length !== hash.length || !crypto.timingSafeEqual(Buffer.from(expectedHash), Buffer.from(hash))) {
+      console.error('[MercadoPago Webhook] Assinatura inválida.');
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const client = new MercadoPagoConfig({
