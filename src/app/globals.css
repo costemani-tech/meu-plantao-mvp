@@ -571,10 +571,17 @@ h1, h2, h3, h4 {
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   z-index: 99999;
-  padding: 24px;
+  padding: 20px 16px;
+  overflow-y: auto;
+}
+
+@media (min-height: 700px) {
+  .premium-modal-overlay {
+    align-items: center;
+  }
 }
 
 .premium-modal-card {
@@ -587,6 +594,14 @@ h1, h2, h3, h4 {
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
   text-align: center;
   animation: modalSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+}
+
+@media (max-width: 480px) {
+  .premium-modal-card {
+    padding: 28px 20px;
+    border-radius: 1.5rem;
+  }
 }
 
 @keyframes modalSlideUp {

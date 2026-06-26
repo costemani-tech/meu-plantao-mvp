@@ -46,7 +46,33 @@ export default function PremiumModal() {
 
   return (
     <div className="premium-modal-overlay" style={{ zIndex: 10000 }}>
-      <div className="premium-modal-card">
+      <div className="premium-modal-card" style={{ position: 'relative' }}>
+        {/* Close Button X */}
+        <button 
+          onClick={() => setIsOpen(false)}
+          style={{
+            position: 'absolute',
+            top: 16,
+            right: 16,
+            background: 'rgba(255, 255, 255, 0.04)',
+            border: 'none',
+            color: 'var(--text-secondary)',
+            cursor: 'pointer',
+            width: 32,
+            height: 32,
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            transition: 'all 0.2s',
+            zIndex: 10
+          }}
+          className="hover-card"
+          aria-label="Fechar"
+        >
+          <X size={18} />
+        </button>
+
         <div style={{ fontSize: 14, fontWeight: 900, color: 'var(--accent-blue)', textTransform: 'uppercase', letterSpacing: 2, marginBottom: 8 }}>Meu Plantão</div>
         
         <h2 style={{ fontSize: 24, fontWeight: 900, marginBottom: 24, color: "var(--text-primary)", lineHeight: 1.2 }}>
@@ -103,7 +129,7 @@ export default function PremiumModal() {
           </button>
           
           <button 
-            style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }} 
+            style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', fontSize: 14, fontWeight: 700, cursor: 'pointer', padding: '8px 16px', textDecoration: 'underline', opacity: 0.9 }} 
             onClick={() => setIsOpen(false)}
           >
             Talvez mais tarde
