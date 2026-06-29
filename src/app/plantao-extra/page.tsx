@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { supabase, LocalTrabalho, isUserPro, isSubscriptionActive } from '../../lib/supabase';
+import { supabase, LocalTrabalho, isUserPro, isSubscriptionActive, clearCalendarioCache } from '../../lib/supabase';
 import { toast } from 'sonner';
 import { PlusCircle, Lock } from 'lucide-react';
 import PremiumLockCard from '../../components/PremiumLockCard';
@@ -144,6 +144,7 @@ export default function PlantaoExtraPage() {
       if (error) throw error;
 
       // ↓ Notifica o calendário para limpar cache e refazer fetch com is_extra correto
+      clearCalendarioCache();
       window.dispatchEvent(new CustomEvent('plantoes-atualizados'));
 
       toast.success('✅ Plantão registrado com sucesso!');

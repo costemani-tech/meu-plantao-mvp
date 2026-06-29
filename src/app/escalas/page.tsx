@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { supabase, LocalTrabalho, isUserPro, isSubscriptionActive } from '../../lib/supabase';
+import { supabase, LocalTrabalho, isUserPro, isSubscriptionActive, clearCalendarioCache } from '../../lib/supabase';
 import { gerarProximosPlantoes, SlotPlantao } from '../../lib/scale-generator';
 import { useRouter } from 'next/navigation';
 import EmptyState from '../../components/EmptyState';
@@ -560,6 +560,7 @@ export default function EscalasPage() {
       }
 
       showToast(editingId ? 'Escala atualizada com sucesso!' : 'Escala gerada com sucesso!', 'success');
+      clearCalendarioCache();
       window.dispatchEvent(new CustomEvent('plantoes-atualizados'));
       
       if (!editingId) {
@@ -602,6 +603,7 @@ export default function EscalasPage() {
         setModalEncerrar(null);
         setDataEncerramento('');
         fetchEscalas();
+        clearCalendarioCache();
         window.dispatchEvent(new CustomEvent('plantoes-atualizados'));
       }
     } catch {

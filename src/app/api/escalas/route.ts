@@ -102,10 +102,12 @@ export async function POST(req: NextRequest) {
     // ── 2. Validação do corpo da requisição ──────────────────────────────────
     let body: { 
       data_inicio?: string; 
+      data_inicio_escala?: string;
       regra?: string; 
       local_id?: string; 
       forcar_conflito?: boolean;
       tipo_jornada?: string;
+      modo_jornada?: string;
       hora_fim?: string;
       data_fim?: string;
       antecedencia?: string | number;
@@ -119,7 +121,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { data_inicio, regra, local_id, forcar_conflito, tipo_jornada, hora_fim } = body;
+    const { data_inicio, data_inicio_escala, regra, local_id, forcar_conflito, tipo_jornada, modo_jornada, hora_fim } = body;
 
     if (!data_inicio || !regra || !local_id) {
       return NextResponse.json(
@@ -216,13 +218,16 @@ export async function POST(req: NextRequest) {
     }
 
     // ── 7. Criar registro da escala ──────────────────────────────────────────
+    const dataInicioEscala = data_inicio_escala || new Date(data_inicio).toISOString().split('T')[0];
     const { data: escala, error: erroEscala } = await supabaseAdmin
       .from('escalas')
       .insert({
         usuario_id,
         local_id,
-        data_inicio: new Date(data_inicio).toISOString().split('T')[0],
+        data_inicio: dataInicioEscala,
         regra,
+        tipo_jornada,
+        modo_jornada,
       })
       .select()
       .single();

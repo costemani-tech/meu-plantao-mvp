@@ -1,16 +1,17 @@
 'use client';
 
 import { useEffect, useState, useCallback, useMemo } from 'react';
-import { supabase, Plantao, LocalTrabalho, isUserPro, isSubscriptionActive } from '../../lib/supabase';
+import { supabase, Plantao, LocalTrabalho, isUserPro, isSubscriptionActive, clearCalendarioCache } from '../../lib/supabase';
 import { Clock, ChevronLeft, ChevronRight, Info, Edit2, Trash2, Calendar as CalendarIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { ShareAgendaModal } from '../../components/ShareAgendaModal';
 import { ShiftEditScreen } from '../../components/ShiftEditScreen';
 import { formatDaysArray } from '../../lib/date-utils';
+import { toast } from 'sonner';
 
 interface PlantaoComLocal extends Plantao {
   local?: LocalTrabalho;
-  escala?: { regra: string };
+  escala?: { regra: string; tipo_jornada?: string; modo_jornada?: string };
   status_conflito?: boolean;
 }
 
@@ -71,7 +72,7 @@ export default function CalendarioPage() {
       
       const { data } = await supabase
         .from('plantoes')
-        .select('*, local:locais_trabalho(*), escala:escalas(regra)')
+        .select('*, local:locais_trabalho(*), escala:escalas(regra, tipo_jornada, modo_jornada)')
         .eq('usuario_id', user.id)
         .gte('data_hora_inicio', inicioMes)
         .lte('data_hora_inicio', fimMes)
@@ -106,9 +107,11 @@ export default function CalendarioPage() {
     if (!user) return;
     const { error } = await supabase.from('plantoes').delete().eq('usuario_id', user.id).eq('id', id);
     if (error) {
+      toast.error('Erro ao remover plantão no banco de dados.');
       fetchPlantoes();
     } else {
-      localStorage.removeItem(`calendario_cache_${ano}_${mes}`);
+      toast.success('Plantão removido com sucesso!');
+      clearCalendarioCache();
       window.dispatchEvent(new CustomEvent('plantoes-atualizados'));
     }
     setExcluindo(false);
@@ -130,11 +133,18 @@ export default function CalendarioPage() {
         body: JSON.stringify({ modo: 'encerrar_em', data_encerramento: p.data_hora_inicio }),
       });
       if (response.ok) {
-        localStorage.removeItem(`calendario_cache_${ano}_${mes}`);
-        fetchPlantoes();
+        toast.success('Plantões futuros removidos com sucesso!');
+        clearCalendarioCache();
         window.dispatchEvent(new CustomEvent('plantoes-atualizados'));
+      } else {
+        const err = await response.json().catch(() => ({}));
+        toast.error(err.message || 'Erro ao remover plantões.');
+        fetchPlantoes();
       }
-    } catch { /* silence */ }
+    } catch {
+      toast.error('Erro de conexão ao remover plantões.');
+      fetchPlantoes();
+    }
     setExcluindo(false);
   };
 
@@ -200,42 +210,63 @@ export default function CalendarioPage() {
     setSalvandoCiclo(true);
     try {
       const { regra, horaInicio, horaFim, cor, dataInicio } = data;
-      const dataNovaFormatada = dataInicio + 'T' + horaInicio + ':00';
+      
+      const localDateInicio = new Date(`${dataInicio}T${horaInicio}:00`);
+      const localDateFim = new Date(`${dataInicio}T${horaFim}:00`);
+      if (horaFim < horaInicio) {
+        localDateFim.setDate(localDateFim.getDate() + 1);
+      }
+      
+      const dataNovaFormatada = localDateInicio.toISOString();
+      const dataFimFormatada = localDateFim.toISOString();
       
       if (shiftParaEditar.local_id && cor !== shiftParaEditar.local?.cor_calendario) {
         await supabase.from('locais_trabalho').update({ cor_calendario: cor }).eq('id', shiftParaEditar.local_id);
       }
 
       if (shiftParaEditar.escala_id) {
-        await fetch(`/api/escalas/${shiftParaEditar.escala_id}`, { 
+        const delRes = await fetch(`/api/escalas/${shiftParaEditar.escala_id}`, { 
           method: 'DELETE', 
           headers: { 'Content-Type': 'application/json' }, 
           body: JSON.stringify({ modo: 'encerrar_em', data_encerramento: dataNovaFormatada }) 
         });
+        if (!delRes.ok) {
+          const errData = await delRes.json().catch(() => ({}));
+          throw new Error(errData.message || 'Erro ao deletar plantões antigos da escala.');
+        }
         
-        await fetch('/api/escalas', { 
+        const postRes = await fetch('/api/escalas', { 
           method: 'POST', 
           headers: { 'Content-Type': 'application/json' }, 
           body: JSON.stringify({ 
             local_id: shiftParaEditar.local_id, 
             regra: regra, 
             data_inicio: dataNovaFormatada, 
-            hora_fim: horaFim 
+            data_inicio_escala: dataInicio,
+            hora_fim: horaFim,
+            tipo_jornada: shiftParaEditar.escala?.tipo_jornada || 'Plantonista',
+            modo_jornada: shiftParaEditar.escala?.modo_jornada
           }) 
         });
+        if (!postRes.ok) {
+          const errData = await postRes.json().catch(() => ({}));
+          throw new Error(errData.message || 'Erro ao gerar novos plantões da escala.');
+        }
       } else {
-        await supabase.from('plantoes').update({
+        const { error } = await supabase.from('plantoes').update({
            data_hora_inicio: dataNovaFormatada,
-           data_hora_fim: dataInicio + 'T' + horaFim + ':00'
+           data_hora_fim: dataFimFormatada
         }).eq('id', shiftParaEditar.id);
+        if (error) throw error;
       }
 
-      localStorage.removeItem(`calendario_cache_${ano}_${mes}`);
+      clearCalendarioCache();
       fetchPlantoes();
       setShiftParaEditar(null);
       setDiaSelecionado(null);
-    } catch (e) {
-      alert('Erro ao salvar alterações.');
+      toast.success('Alterações salvas com sucesso!');
+    } catch (e: any) {
+      toast.error(e.message || 'Erro ao salvar alterações.');
     } finally {
       setSalvandoCiclo(false);
     }

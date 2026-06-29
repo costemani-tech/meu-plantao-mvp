@@ -46,7 +46,11 @@ export function ShiftEditScreen({ shift, onSave, onCancel }: ShiftEditScreenProp
   });
 
   const [cor, setCor] = useState(shift.local?.cor_calendario || '#3b82f6');
-  const [dataInicio, setDataInicio] = useState(shift.data_hora_inicio.substring(0, 10));
+  const [dataInicio, setDataInicio] = useState(() => {
+    const d = new Date(shift.data_hora_inicio);
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  });
   const [horaInicio, setHoraInicio] = useState(new Date(shift.data_hora_inicio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }));
   const [horaFim, setHoraFim] = useState(new Date(shift.data_hora_fim).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }));
   

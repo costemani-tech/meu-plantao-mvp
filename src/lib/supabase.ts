@@ -75,3 +75,16 @@ export function isSubscriptionActive(profile?: any | null): boolean {
   // Fallback para is_pro legado
   return profile.is_pro === true;
 }
+
+export function clearCalendarioCache() {
+  if (typeof window === 'undefined') return;
+  const keysToRemove: string[] = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && key.startsWith('calendario_cache_')) {
+      keysToRemove.push(key);
+    }
+  }
+  keysToRemove.forEach(key => localStorage.removeItem(key));
+}
+
