@@ -1,25 +1,72 @@
 import { NextResponse } from 'next/server';
 import { MercadoPagoConfig, Payment } from 'mercadopago';
 import { createClient } from '@supabase/supabase-js';
+import crypto from 'crypto';
 
 export async function POST(req: Request) {
   try {
+    const webhookSecret = process.env.MERCADOPAGO_WEBHOOK_SECRET;
+    if (!webhookSecret) {
+      console.error('[MercadoPago Webhook] MERCADOPAGO_WEBHOOK_SECRET não configurado.');
+      return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    }
+
+    const xSignature = req.headers.get('x-signature');
+    const xRequestId = req.headers.get('x-request-id');
+
+    if (!xSignature || !xRequestId) {
+      console.error('[MercadoPago Webhook] Headers x-signature ou x-request-id ausentes.');
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     let dataId;
     let type;
 
-    // Tentar ler do body (Webhook normal)
-    try {
-      const body = await req.json();
-      dataId = body?.data?.id;
-      type = body?.type;
-    } catch {
-      // Body não é JSON válido ou está vazio
+    const url = new URL(req.url);
+    dataId = url.searchParams.get('data.id') || url.searchParams.get('id');
+    type = url.searchParams.get('type') || url.searchParams.get('topic');
+
+    // Se não veio das query params (IPN), tentar ler do body (Webhook normal)
+    if (!dataId || !type) {
+      try {
+        const bodyText = await req.clone().text(); // Need clone to read json again if needed
+        const body = JSON.parse(bodyText);
+        dataId = dataId || body?.data?.id;
+        type = type || body?.type;
+      } catch {
+        // Body não é JSON válido ou está vazio
+      }
     }
 
-    // Se não veio no body, tentar ler das query params (IPN)
-    const url = new URL(req.url);
-    if (!dataId) dataId = url.searchParams.get('data.id') || url.searchParams.get('id');
-    if (!type) type = url.searchParams.get('type') || url.searchParams.get('topic');
+    // Validate Signature
+    const parts = xSignature.split(',');
+    let ts;
+    let hash;
+
+    parts.forEach(part => {
+      const [key, value] = part.split('=');
+      if (key && value) {
+        const trimmedKey = key.trim();
+        const trimmedValue = value.trim();
+        if (trimmedKey === 'ts') ts = trimmedValue;
+        if (trimmedKey === 'v1') hash = trimmedValue;
+      }
+    });
+
+    if (!ts || !hash || !dataId) {
+       console.error('[MercadoPago Webhook] x-signature malformada ou dataId ausente.');
+       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const manifest = `id:${dataId};request-id:${xRequestId};ts:${ts};`;
+    const hmac = crypto.createHmac('sha256', webhookSecret);
+    hmac.update(manifest);
+    const expectedHash = hmac.digest('hex');
+
+    if (expectedHash.length !== hash.length || !crypto.timingSafeEqual(Buffer.from(expectedHash), Buffer.from(hash))) {
+      console.error('[MercadoPago Webhook] Assinatura inválida.');
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
     if (!dataId) {
       return NextResponse.json({ received: true });
