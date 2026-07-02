@@ -4,11 +4,16 @@ import { isUserPro } from '@/lib/supabase';
 
 export async function GET(request: NextRequest) {
   // Validação de segurança flexível (Header ou Query Parameter)
-  const authHeader = request.headers.get('authorization');
-  const secretParam = request.nextUrl.searchParams.get('secret');
   const expectedSecret = process.env.CRON_SECRET;
 
-  if (expectedSecret && process.env.NODE_ENV !== 'development') {
+  if (!expectedSecret) {
+    return NextResponse.json({ error: 'Missing CRON_SECRET configuration' }, { status: 500 });
+  }
+
+  const authHeader = request.headers.get('authorization');
+  const secretParam = request.nextUrl.searchParams.get('secret');
+
+  if (process.env.NODE_ENV !== 'development') {
     const isAuthorized = 
       authHeader === `Bearer ${expectedSecret}` || 
       secretParam === expectedSecret;
@@ -17,7 +22,6 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
   }
-
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
