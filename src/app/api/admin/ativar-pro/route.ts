@@ -3,9 +3,12 @@ import { createClient } from '@supabase/supabase-js';
 
 export async function POST(request: Request) {
   try {
-    const authHeader = request.headers.get('authorization');
-    const expectedSecret = process.env.ADMIN_TOKEN || 'ADMIN_SECRET_2026';
+    const expectedSecret = process.env.ADMIN_TOKEN;
+    if (!expectedSecret) {
+      return NextResponse.json({ error: 'Configuração de servidor inválida' }, { status: 500 });
+    }
 
+    const authHeader = request.headers.get('authorization');
     const isAuthorized = authHeader === `Bearer ${expectedSecret}`;
     if (!isAuthorized) {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
