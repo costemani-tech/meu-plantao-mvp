@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
@@ -30,9 +32,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'A lista de notificações é obrigatória' }, { status: 400 });
     }
 
-    const restKey = process.env.ONESIGNAL_REST_KEY || 'SUA_REST_API_KEY';
-    const appId = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID || 'SUA_APP_ID';
+    const restKey = process.env.ONESIGNAL_REST_KEY;
+    const appId = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID;
     
+    if (!restKey || !appId) {
+      return NextResponse.json({ success: false, error: 'Erro de configuração do servidor' }, { status: 500 });
+    }
+
     const pushHeader = {
       "Content-Type": "application/json; charset=utf-8",
       "Authorization": `Key ${restKey}`
