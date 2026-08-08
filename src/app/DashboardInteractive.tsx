@@ -66,7 +66,7 @@ export function EarningsPrivacyWrapper({ total, isPro }: { total: number, isPro:
   return (
     <div style={{ position: 'relative', marginBottom: 12 }}>
       {isPro && (
-        <button 
+        <button type="button"
           onClick={toggle}
           style={{ 
             position: 'absolute',
@@ -160,7 +160,7 @@ export function DashboardInteractive({ isPro, hasLocations }: { isPro: boolean, 
   return (
     <>
       {/* FAB - FLOATING ACTION BUTTON */}
-      <button 
+      <button type="button"
         className="fab"
         onClick={handleFabClick}
         title="Adicionar Plantão"
@@ -214,7 +214,7 @@ export function DashboardInteractive({ isPro, hasLocations }: { isPro: boolean, 
             </div>
           </>
 
-          <button 
+          <button type="button"
             className="btn btn-primary" 
             style={{ 
               width: '100%',
@@ -238,7 +238,7 @@ export function DesbloquearGanhosBtn() {
   };
 
   return (
-    <button 
+    <button type="button"
       className="btn btn-primary" 
       onClick={handleUpgradeClick}
       style={{ 
@@ -258,7 +258,7 @@ export function ShareAgendaButton({ proximos: initialProximos, userName, totalGa
 
   return (
     <>
-      <button onClick={() => setShowModal(true)} style={{ background: 'none', border: 'none', color: 'var(--accent-blue)', fontSize: '12px', fontWeight: 700, cursor: 'pointer', padding: 0 }}>
+      <button type="button" onClick={() => setShowModal(true)} style={{ background: 'none', border: 'none', color: 'var(--accent-blue)', fontSize: '12px', fontWeight: 700, cursor: 'pointer', padding: 0 }}>
         <span style={{ display: "flex", alignItems: "center", gap: 4 }}><Share2 size={12} /> Compartilhar</span>
       </button>
 

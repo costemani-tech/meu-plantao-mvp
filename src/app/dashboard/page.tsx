@@ -76,7 +76,7 @@ async function StatsSection({ userId, isPro, greeting }: { userId: string, isPro
           Sua agenda está pronta para ser organizada. Comece cadastrando onde você trabalha.
         </p>
         <Link href="/locais" style={{ textDecoration: 'none' }}>
-          <button className="btn btn-primary" style={{ padding: '16px 40px', fontSize: 16, borderRadius: '1.5rem', background: '#2563EB', boxShadow: '0 0 15px rgba(37, 99, 235, 0.25)' }}>
+          <button type="button" className="btn btn-primary" style={{ padding: '16px 40px', fontSize: 16, borderRadius: '1.5rem', background: '#2563EB', boxShadow: '0 0 15px rgba(37, 99, 235, 0.25)' }}>
             <Plus size={20} className="mr-2" /> Adicionar Primeiro Local
           </button>
         </Link>

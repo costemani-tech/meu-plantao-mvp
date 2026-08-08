@@ -52,7 +52,7 @@ function FAQItem({ question, answer }: { question: string, answer: string }) {
       }}
       className="faq-card"
     >
-      <button 
+      <button type="button"
         onClick={() => setIsOpen(!isOpen)}
         className="flex w-full items-center justify-between text-left focus:outline-none cursor-pointer"
         style={{ background: 'transparent', border: 'none' }}
