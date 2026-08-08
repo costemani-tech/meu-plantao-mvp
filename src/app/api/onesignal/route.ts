@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: Request) {
   try {
     // ── Autenticação via Cookie/Sessão SSR ──
@@ -64,8 +66,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true, results });
   } catch (error: unknown) {
-    const msg = error instanceof Error ? error.message : 'Erro desconhecido';
     console.error('Erro na rota de envio OneSignal:', error);
-    return NextResponse.json({ success: false, error: msg }, { status: 500 });
+    return NextResponse.json({ success: false, error: 'Erro interno do servidor' }, { status: 500 });
   }
 }

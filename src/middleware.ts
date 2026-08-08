@@ -2,6 +2,15 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
+  const url = request.nextUrl.clone()
+  const hostname = request.headers.get('host') || ''
+
+  // Redirect www to non-www for canonical domain (prevents OneSignal domain mismatch)
+  if (hostname.startsWith('www.')) {
+    url.hostname = hostname.replace('www.', '')
+    return NextResponse.redirect(url, 308)
+  }
+
   let supabaseResponse = NextResponse.next({
     request,
   })

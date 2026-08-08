@@ -3,6 +3,8 @@ import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(req: Request) {
   try {
     const cookieStore = await cookies();
@@ -96,6 +98,6 @@ export async function POST(req: Request) {
 
   } catch (error: any) {
     console.error('[API Excluir Usuário] Erro interno:', error);
-    return NextResponse.json({ error: error.message || 'Erro interno do servidor' }, { status: 500 });
+    return NextResponse.json({ error: 'Erro interno do servidor' }, { status: 500 });
   }
 }
