@@ -2,22 +2,25 @@ import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
 import { isUserPro } from '@/lib/supabase';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   // Validação de segurança flexível (Header ou Query Parameter)
   const authHeader = request.headers.get('authorization');
   const secretParam = request.nextUrl.searchParams.get('secret');
   const expectedSecret = process.env.CRON_SECRET;
 
-  if (expectedSecret && process.env.NODE_ENV !== 'development') {
-    const isAuthorized = 
-      authHeader === `Bearer ${expectedSecret}` || 
-      secretParam === expectedSecret;
-      
-    if (!isAuthorized) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+  if (!expectedSecret) {
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 
+  const isAuthorized =
+    authHeader === `Bearer ${expectedSecret}` ||
+    secretParam === expectedSecret;
+
+  if (!isAuthorized) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;

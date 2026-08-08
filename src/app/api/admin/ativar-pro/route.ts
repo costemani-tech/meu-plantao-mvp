@@ -1,10 +1,16 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: Request) {
   try {
     const authHeader = request.headers.get('authorization');
-    const expectedSecret = process.env.ADMIN_TOKEN || 'ADMIN_SECRET_2026';
+    const expectedSecret = process.env.ADMIN_TOKEN;
+
+    if (!expectedSecret) {
+      return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    }
 
     const isAuthorized = authHeader === `Bearer ${expectedSecret}`;
     if (!isAuthorized) {
