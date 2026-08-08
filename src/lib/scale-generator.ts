@@ -41,11 +41,12 @@ export function gerarProximosPlantoes(
     let duracaoTrabalho = 12;
     let cicloHoras = 48;
     
-    if (regra.includes('x')) {
+    if (regra && regra.includes('x')) {
       const parts = regra.split('x');
-      duracaoTrabalho = parseInt(parts[0], 10) || 12;
-      const duracaoDescanso = parseInt(parts[1], 10) || 36;
-      cicloHoras = duracaoTrabalho + duracaoDescanso;
+      duracaoTrabalho = parseInt(parts[0], 10);
+      if (isNaN(duracaoTrabalho) || duracaoTrabalho <= 0) duracaoTrabalho = 12;
+      const duracaoDescanso = parseInt(parts[1], 10);
+      cicloHoras = duracaoTrabalho + (isNaN(duracaoDescanso) || duracaoDescanso < 0 ? 36 : duracaoDescanso);
     }
 
     for (let i = 0; i < quantidade; i++) {
@@ -58,8 +59,10 @@ export function gerarProximosPlantoes(
   } else if (tipoJornada === 'Diarista-Corridos') {
     // Dias corridos: trabalha X dias, folga Y dias (ex: 6x1, 5x2)
     const parts = regra.split('x');
-    const dTrabalho = parseInt(parts[0], 10) || 5;
-    const dDescanso = parseInt(parts[1], 10) || 2;
+    let dTrabalho = parseInt(parts[0], 10);
+    if (isNaN(dTrabalho) || dTrabalho <= 0) dTrabalho = 5;
+    let dDescanso = parseInt(parts[1], 10);
+    if (isNaN(dDescanso) || dDescanso < 0) dDescanso = 2;
     const cicloDias = dTrabalho + dDescanso;
     const [hFim, mFim] = horaFim.split(':').map(Number);
     let idx = 0;
