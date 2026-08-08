@@ -35,7 +35,7 @@ export default function NotificacoesPage() {
     setLoading(false);
   }, []);
 
-  // eslint-disable-next-line react-hooks/set-state-in-effect
+
   useEffect(() => { fetchNotificacoes(); }, [fetchNotificacoes]);
 
   const marcarComoLida = async (id: string) => {

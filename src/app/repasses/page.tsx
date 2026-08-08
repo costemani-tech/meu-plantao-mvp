@@ -29,7 +29,7 @@ export default function RepassesPage() {
     setLoading(false);
   }, []);
 
-  // eslint-disable-next-line react-hooks/set-state-in-effect
+
   useEffect(() => { fetchRepasses(); }, [fetchRepasses]);
 
   const showToast = (msg: string, type: 'success'|'error') => {

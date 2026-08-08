@@ -51,7 +51,7 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith('/demo') ||
     pathname.startsWith('/api/cron') ||
     pathname.startsWith('/api/webhooks') ||
-    pathname.startsWith('/api/mercadopago/webhook') ||
+    pathname.startsWith('/api/mercadopago') ||
     pathname.startsWith('/api/admin/') ||
     pathname.startsWith('/_next') ||
     pathname.startsWith('/auth/callback') ||

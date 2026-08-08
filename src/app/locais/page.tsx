@@ -55,7 +55,7 @@ export default function LocaisPage() {
     setLoading(false);
   }, []);
 
-  // eslint-disable-next-line react-hooks/set-state-in-effect
+
   useEffect(() => { fetchLocais(); }, [fetchLocais]);
 
   const adicionarLocal = async () => {
