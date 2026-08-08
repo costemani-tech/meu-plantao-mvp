@@ -3,6 +3,8 @@ import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
 import { Resend } from 'resend';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(req: Request) {
   try {
     // Instanciar dentro do try — se a env var falhar, retorna JSON de erro em vez de crashar
@@ -58,7 +60,7 @@ export async function POST(req: Request) {
     console.log('[Feedback] RESEND_API_KEY presente:', !!process.env.RESEND_API_KEY, '| primeiros chars:', process.env.RESEND_API_KEY?.substring(0, 8));
 
     const emailResult = await resend.emails.send({
-      from: 'Meu Plantão <onboarding@resend.dev>',
+      from: 'Meu Plantão <contato@xn--appmeuplanto-dcb.com.br>',
       to: [ADMIN_EMAIL],
       replyTo: userEmail,
       subject: `${emoji} [${categoria}] Novo feedback — Meu Plantão`,
