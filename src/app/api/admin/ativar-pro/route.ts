@@ -4,7 +4,11 @@ import { createClient } from '@supabase/supabase-js';
 export async function POST(request: Request) {
   try {
     const authHeader = request.headers.get('authorization');
-    const expectedSecret = process.env.ADMIN_TOKEN || 'ADMIN_SECRET_2026';
+    const expectedSecret = process.env.ADMIN_TOKEN;
+
+    if (!expectedSecret) {
+      return NextResponse.json({ error: 'Erro interno' }, { status: 500 });
+    }
 
     const isAuthorized = authHeader === `Bearer ${expectedSecret}`;
     if (!isAuthorized) {
@@ -18,10 +22,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Email é obrigatório' }, { status: 400 });
     }
 
-    // Usar service role key se disponível para ignorar RLS
+    // Usar service role key para ignorar RLS
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!supabaseKey) {
+      return NextResponse.json({ error: 'Erro interno' }, { status: 500 });
+    }
+
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-      process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+      supabaseKey
     );
 
     const expiresAt = new Date();
