@@ -1,9 +1,37 @@
 import { NextResponse } from 'next/server';
 import { MercadoPagoConfig, Payment } from 'mercadopago';
 import { createClient } from '@supabase/supabase-js';
+import crypto from 'crypto';
 
 export async function POST(req: Request) {
   try {
+    const webhookSecret = process.env.MERCADOPAGO_WEBHOOK_SECRET;
+
+    if (!webhookSecret) {
+      console.error('[MercadoPago Webhook] MERCADOPAGO_WEBHOOK_SECRET is missing');
+      return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    }
+
+    const xSignature = req.headers.get('x-signature');
+    const xRequestId = req.headers.get('x-request-id');
+
+    if (!xSignature || !xRequestId) {
+      console.error('[MercadoPago Webhook] Missing x-signature or x-request-id headers');
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    let ts;
+    let hash;
+
+    const parts = xSignature.split(',');
+    for (const part of parts) {
+      const [key, value] = part.split('=');
+      if (key && value) {
+        if (key.trim() === 'ts') ts = value.trim();
+        if (key.trim() === 'v1') hash = value.trim();
+      }
+    }
+
     let dataId;
     let type;
 
@@ -23,6 +51,21 @@ export async function POST(req: Request) {
 
     if (!dataId) {
       return NextResponse.json({ received: true });
+    }
+
+    if (!ts || !hash) {
+      console.error('[MercadoPago Webhook] Invalid x-signature format');
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const manifest = `id:${dataId};request-id:${xRequestId};ts:${ts};`;
+    const hmac = crypto.createHmac('sha256', webhookSecret);
+    hmac.update(manifest);
+    const expectedHash = hmac.digest('hex');
+
+    if (expectedHash.length !== hash.length || !crypto.timingSafeEqual(Buffer.from(expectedHash), Buffer.from(hash))) {
+      console.error('[MercadoPago Webhook] Invalid signature');
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const client = new MercadoPagoConfig({
