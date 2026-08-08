@@ -1,28 +1,68 @@
 import { NextResponse } from 'next/server';
 import { MercadoPagoConfig, Payment } from 'mercadopago';
 import { createClient } from '@supabase/supabase-js';
+import crypto from 'crypto';
 
 export async function POST(req: Request) {
   try {
+    const webhookSecret = process.env.MERCADOPAGO_WEBHOOK_SECRET;
+    if (!webhookSecret) {
+      return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    }
+
+    const xSignature = req.headers.get('x-signature');
+    const xRequestId = req.headers.get('x-request-id');
+
+    if (!xSignature || !xRequestId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Parse x-signature
+    const signatureParts = xSignature.split(',');
+    let ts = '';
+    let v1 = '';
+    for (const part of signatureParts) {
+      const [key, value] = part.split('=');
+      if (key === 'ts') ts = value;
+      if (key === 'v1') v1 = value;
+    }
+
+    if (!ts || !v1) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     let dataId;
     let type;
 
     // Tentar ler do body (Webhook normal)
+    const url = new URL(req.url);
     try {
-      const body = await req.json();
-      dataId = body?.data?.id;
-      type = body?.type;
+      const bodyText = await req.text();
+      if (bodyText) {
+        const body = JSON.parse(bodyText);
+        dataId = body?.data?.id;
+        type = body?.type;
+      }
     } catch {
       // Body não é JSON válido ou está vazio
     }
 
     // Se não veio no body, tentar ler das query params (IPN)
-    const url = new URL(req.url);
     if (!dataId) dataId = url.searchParams.get('data.id') || url.searchParams.get('id');
     if (!type) type = url.searchParams.get('type') || url.searchParams.get('topic');
 
     if (!dataId) {
       return NextResponse.json({ received: true });
+    }
+
+    // Validate Signature
+    const manifest = `id:${dataId};request-id:${xRequestId};ts:${ts};`;
+    const hmac = crypto.createHmac('sha256', webhookSecret);
+    hmac.update(manifest);
+    const expectedSignature = hmac.digest('hex');
+
+    if (expectedSignature.length !== v1.length || !crypto.timingSafeEqual(Buffer.from(expectedSignature), Buffer.from(v1))) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const client = new MercadoPagoConfig({
