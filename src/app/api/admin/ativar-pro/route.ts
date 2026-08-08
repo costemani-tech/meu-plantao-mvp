@@ -3,8 +3,11 @@ import { createClient } from '@supabase/supabase-js';
 
 export async function POST(request: Request) {
   try {
+    const expectedSecret = process.env.ADMIN_SECRET;
+    if (!expectedSecret) {
+      return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    }
     const authHeader = request.headers.get('authorization');
-    const expectedSecret = process.env.ADMIN_TOKEN || 'ADMIN_SECRET_2026';
 
     const isAuthorized = authHeader === `Bearer ${expectedSecret}`;
     if (!isAuthorized) {
@@ -19,9 +22,13 @@ export async function POST(request: Request) {
     }
 
     // Usar service role key se disponível para ignorar RLS
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!supabaseServiceKey) {
+      return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    }
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-      process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+      supabaseServiceKey
     );
 
     const expiresAt = new Date();
@@ -41,11 +48,13 @@ export async function POST(request: Request) {
       .eq('email', email.toLowerCase());
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      console.error('[Admin Ativar Pro] Erro ao atualizar usuário:', error.message);
+      return NextResponse.json({ error: 'Erro interno do servidor' }, { status: 500 });
     }
 
     return NextResponse.json({ success: true, message: `Usuário ${email} agora é PRO até ${expiresAt.toLocaleDateString('pt-BR')}.` });
   } catch (err: any) {
-    return NextResponse.json({ error: err.message || 'Erro interno' }, { status: 500 });
+    console.error('[Admin Ativar Pro] Erro interno:', err);
+    return NextResponse.json({ error: 'Erro interno do servidor' }, { status: 500 });
   }
 }

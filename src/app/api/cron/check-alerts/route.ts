@@ -8,7 +8,12 @@ export async function GET(request: NextRequest) {
   const secretParam = request.nextUrl.searchParams.get('secret');
   const expectedSecret = process.env.CRON_SECRET;
 
-  if (expectedSecret && process.env.NODE_ENV !== 'development') {
+  if (!expectedSecret) {
+    console.error('[cron/check-alerts] Missing CRON_SECRET');
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  }
+
+  if (process.env.NODE_ENV !== 'development') {
     const isAuthorized = 
       authHeader === `Bearer ${expectedSecret}` || 
       secretParam === expectedSecret;
@@ -48,7 +53,7 @@ export async function GET(request: NextRequest) {
 
   if (error) {
     console.error('[cron/check-alerts] Supabase query error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 
   if (!plantoes || plantoes.length === 0) {

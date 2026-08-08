@@ -1,9 +1,37 @@
 import { NextResponse } from 'next/server';
 import { MercadoPagoConfig, Payment } from 'mercadopago';
 import { createClient } from '@supabase/supabase-js';
+import crypto from 'crypto';
 
 export async function POST(req: Request) {
   try {
+    const webhookSecret = process.env.MERCADOPAGO_WEBHOOK_SECRET;
+    if (!webhookSecret) {
+      console.error('[MercadoPago Webhook] Missing MERCADOPAGO_WEBHOOK_SECRET');
+      return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    }
+
+    const signatureHeader = req.headers.get('x-signature');
+    const requestIdHeader = req.headers.get('x-request-id');
+
+    if (!signatureHeader || !requestIdHeader) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // signatureHeader format: "ts=1234567890,v1=hash"
+    const parts = signatureHeader.split(',');
+    let ts = '';
+    let hash = '';
+    for (const part of parts) {
+      const [key, value] = part.split('=');
+      if (key === 'ts') ts = value;
+      if (key === 'v1') hash = value;
+    }
+
+    if (!ts || !hash) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     let dataId;
     let type;
 
@@ -23,6 +51,14 @@ export async function POST(req: Request) {
 
     if (!dataId) {
       return NextResponse.json({ received: true });
+    }
+
+    const manifest = `id:${dataId};request-id:${requestIdHeader};ts:${ts};`;
+    const expectedHash = crypto.createHmac('sha256', webhookSecret).update(manifest).digest('hex');
+
+    if (expectedHash.length !== hash.length || !crypto.timingSafeEqual(Buffer.from(expectedHash), Buffer.from(hash))) {
+      console.error('[MercadoPago Webhook] Invalid signature');
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const client = new MercadoPagoConfig({
